@@ -32,15 +32,15 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/user-dashboard',
-      builder: (context, state) => const UserDashboardScreen(),
+      builder: (context, state) => UserDashboardScreen(initialTab: state.uri.queryParameters['tab']),
     ),
     GoRoute(
       path: '/account',
-      builder: (context, state) => const UserDashboardScreen(),
+      builder: (context, state) => UserDashboardScreen(initialTab: state.uri.queryParameters['tab']),
     ),
     GoRoute(
       path: '/dashboard',
-      builder: (context, state) => const UserDashboardScreen(),
+      builder: (context, state) => UserDashboardScreen(initialTab: state.uri.queryParameters['tab']),
     ),
     GoRoute(
       path: '/signup',

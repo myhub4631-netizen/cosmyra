@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../repositories/order_repository.dart';
@@ -502,15 +503,18 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
             final bool isSelected = _selectedSidebarItem == title;
 
             return InkWell(
-              onTap: () {
+              onTap: () async {
                 if (isLogout) {
-                  context.go('/signup');
+                  await ref.read(authControllerProvider.notifier).signOut();
+                  if (context.mounted) context.go('/login');
                 } else if (title == 'Dashboard') {
                   context.go('/dashboard');
                 } else if (title == 'Wishlist') {
                   context.go('/wishlist');
+                } else if (title == 'My Orders') {
+                  setState(() => _selectedSidebarItem = 'My Orders');
                 } else {
-                  setState(() => _selectedSidebarItem = title);
+                  context.go('/dashboard?tab=$title');
                 }
               },
               borderRadius: BorderRadius.circular(8),

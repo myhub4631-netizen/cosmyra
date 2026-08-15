@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
@@ -580,18 +581,21 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
             ),
           ),
           const Divider(height: 1, color: _borderGray),
-          _sidebarItem(Icons.grid_view, 'Dashboard', onTap: () => context.push('/dashboard')),
-          _sidebarItem(Icons.shopping_bag_outlined, 'My Orders', onTap: () => context.push('/orders')),
+          _sidebarItem(Icons.grid_view, 'Dashboard', onTap: () => context.go('/dashboard')),
+          _sidebarItem(Icons.shopping_bag_outlined, 'My Orders', onTap: () => context.go('/orders')),
           _sidebarItem(Icons.favorite_outline, 'Wishlist', isActive: true),
-          _sidebarItem(Icons.location_on_outlined, 'Addresses'),
-          _sidebarItem(Icons.payment_outlined, 'Payment Methods'),
-          _sidebarItem(Icons.confirmation_number_outlined, 'Coupons'),
-          _sidebarItem(Icons.notifications_none_outlined, 'Notifications', badge: '3'),
-          _sidebarItem(Icons.assignment_return_outlined, 'Returns & Refunds'),
-          _sidebarItem(Icons.help_outline, 'Help & Support'),
-          _sidebarItem(Icons.settings_outlined, 'Account Settings'),
+          _sidebarItem(Icons.location_on_outlined, 'Addresses', onTap: () => context.go('/dashboard?tab=Addresses')),
+          _sidebarItem(Icons.payment_outlined, 'Payment Methods', onTap: () => context.go('/dashboard?tab=Payment Methods')),
+          _sidebarItem(Icons.confirmation_number_outlined, 'Coupons', onTap: () => context.go('/dashboard?tab=Coupons')),
+          _sidebarItem(Icons.notifications_none_outlined, 'Notifications', badge: '3', onTap: () => context.go('/dashboard?tab=Notifications')),
+          _sidebarItem(Icons.assignment_return_outlined, 'Returns & Refunds', onTap: () => context.go('/dashboard?tab=Returns & Refunds')),
+          _sidebarItem(Icons.help_outline, 'Help & Support', onTap: () => context.go('/dashboard?tab=Help & Support')),
+          _sidebarItem(Icons.settings_outlined, 'Account Settings', onTap: () => context.go('/dashboard?tab=Account Settings')),
           const Divider(height: 1, color: _borderGray),
-          _sidebarItem(Icons.logout, 'Logout', isLogout: true, onTap: () => context.go('/')),
+          _sidebarItem(Icons.logout, 'Logout', isLogout: true, onTap: () async {
+            await ref.read(authControllerProvider.notifier).signOut();
+            if (context.mounted) context.go('/login');
+          }),
           const SizedBox(height: 8),
         ],
       ),
