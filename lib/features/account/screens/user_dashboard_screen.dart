@@ -130,6 +130,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     super.initState();
     _selectedTab = _normalizeTabName(widget.initialTab) ?? 'Dashboard';
     _loadSavedAddresses();
+    _loadSavedPaymentMethods();
   }
 
   Future<void> _loadSavedAddresses() async {
@@ -151,6 +152,81 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('cosmyra_user_addresses_v1', jsonEncode(_userAddresses));
     } catch (_) {}
+  }
+
+  Future<void> _loadSavedPaymentMethods() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_user_payment_methods_v1');
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        setState(() {
+          _paymentMethods.clear();
+          _paymentMethods.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _savePaymentMethodsToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cosmyra_user_payment_methods_v1', jsonEncode(_paymentMethods));
+    } catch (_) {}
+  }
+
+  Future<void> _confirmDeletePaymentMethod(BuildContext context, int idx) async {
+    final pay = _paymentMethods[idx];
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+            SizedBox(width: 8),
+            Text('Remove Payment Method?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to remove ${pay['name']} (${pay['detail']})?\n\nThis action cannot be undone.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove Payment Method', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _paymentMethods.removeAt(idx);
+      });
+      await _savePaymentMethodsToStorage();
+      if (context.mounted) {
+        showCenterActionToast(
+          context,
+          title: 'Payment Method Removed! 💳',
+          message: 'Selected payment option has been removed.',
+          icon: Icons.credit_card_off_outlined,
+          iconColor: const Color(0xFFDC2626),
+          primaryActionLabel: null,
+        );
+      }
+    }
   }
 
   Future<void> _confirmDeleteAddress(BuildContext context, int idx) async {
@@ -380,9 +456,15 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                     'isDefault': false,
                   });
                 });
+                _savePaymentMethodsToStorage();
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('UPI payment method saved!')),
+                showCenterActionToast(
+                  context,
+                  title: 'Payment Method Saved! 💳',
+                  message: 'Your UPI ID (${upiCtrl.text.trim()}) is saved for 1-Click checkout.',
+                  icon: Icons.credit_card_rounded,
+                  iconColor: const Color(0xFF4F46E5),
+                  primaryActionLabel: null,
                 );
               }
             },
@@ -991,55 +1073,83 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
           ),
           const SizedBox(height: 24),
 
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _paymentMethods.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, idx) {
-              final pay = _paymentMethods[idx];
-              final isUpi = pay['type'] == 'UPI';
+          if (_paymentMethods.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.credit_card_off_outlined, size: 48, color: Color(0xFF9CA3AF)),
+                  const SizedBox(height: 12),
+                  const Text('No Saved Payment Methods', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF111827))),
+                  const SizedBox(height: 4),
+                  const Text('Save a card or UPI ID for faster 1-Click checkout on Cosmyra.', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddPaymentMethodDialog(context),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add Payment Method', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F46E5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _paymentMethods.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, idx) {
+                final pay = _paymentMethods[idx];
+                final isUpi = pay['type'] == 'UPI';
 
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2FF),
-                        borderRadius: BorderRadius.circular(10),
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(isUpi ? Icons.account_balance_wallet_outlined : Icons.credit_card_outlined, color: const Color(0xFF4F46E5), size: 24),
                       ),
-                      child: Icon(isUpi ? Icons.account_balance_wallet_outlined : Icons.credit_card_outlined, color: const Color(0xFF4F46E5), size: 24),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(pay['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF111827))),
-                          const SizedBox(height: 2),
-                          Text(pay['detail'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                        ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(pay['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF111827))),
+                            const SizedBox(height: 2),
+                            Text(pay['detail'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                          ],
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                      onPressed: () {
-                        setState(() => _paymentMethods.removeAt(idx));
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment method removed.')));
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                        onPressed: () => _confirmDeletePaymentMethod(context, idx),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
