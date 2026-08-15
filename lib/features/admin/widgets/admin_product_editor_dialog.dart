@@ -1,0 +1,665 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../config/theme/app_colors.dart';
+import '../../catalog/models/product_model.dart';
+import '../../catalog/repositories/product_repository.dart';
+
+class AdminProductEditorDialog extends ConsumerStatefulWidget {
+  final ProductModel? product;
+
+  const AdminProductEditorDialog({super.key, this.product});
+
+  @override
+  ConsumerState<AdminProductEditorDialog> createState() => _AdminProductEditorDialogState();
+}
+
+class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDialog> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Tab 1: Basic & Pricing
+  late TextEditingController _nameController;
+  late TextEditingController _slugController;
+  late TextEditingController _skuController;
+  late TextEditingController _sizeController;
+  late TextEditingController _priceController;
+  late TextEditingController _mrpController;
+  late TextEditingController _stockController;
+  String _selectedCategory = 'cat-haircare';
+  bool _isFeatured = false;
+
+  // Tab 2: Descriptions & Botanicals
+  late TextEditingController _taglineController;
+  late TextEditingController _descController;
+  late TextEditingController _ingredientsController;
+  late TextEditingController _howToUseController;
+  bool _vataBalance = true;
+  bool _pittaBalance = true;
+  bool _kaphaBalance = false;
+
+  // Tab 3: Images
+  late List<String> _imageUrls;
+  final TextEditingController _newImageUrlController = TextEditingController();
+  int _primaryImageIndex = 0;
+  late TextEditingController _imageAltController;
+
+  // Tab 4: SEO Metadata
+  late TextEditingController _metaTitleController;
+  late TextEditingController _metaDescController;
+  late TextEditingController _keywordsController;
+  late TextEditingController _canonicalUrlController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    final p = widget.product;
+    final v = p?.defaultVariant;
+
+    _nameController = TextEditingController(text: p?.name ?? '');
+    _slugController = TextEditingController(text: p?.slug ?? '');
+    _skuController = TextEditingController(text: v?.sku ?? 'VDM-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}');
+    _sizeController = TextEditingController(text: v?.sizeLabel ?? '200 ml');
+    _priceController = TextEditingController(text: v != null ? v.price.toInt().toString() : '399');
+    _mrpController = TextEditingController(text: v != null ? v.mrp.toInt().toString() : '499');
+    _stockController = TextEditingController(text: v != null ? v.stock.toString() : '100');
+    
+    final validCats = ['cat-haircare', 'cat-skincare', 'cat-wellness'];
+    _selectedCategory = (p != null && validCats.contains(p.categoryId)) ? p.categoryId : 'cat-haircare';
+    _isFeatured = p?.isFeatured ?? false;
+
+    _taglineController = TextEditingController(text: p?.tagline ?? 'Clinically proven botanical formulation');
+    _descController = TextEditingController(text: p?.description ?? '');
+    _ingredientsController = TextEditingController(text: p?.ingredients ?? '');
+    _howToUseController = TextEditingController(text: p?.howToUse ?? 'Apply generously onto damp area and massage gently for 2 minutes.');
+
+    _imageUrls = p != null && p.imageUrls.isNotEmpty
+        ? List.from(p.imageUrls)
+        : [
+            'assets/images/shampoo.jpg',
+            'assets/images/soap.jpg',
+          ];
+    _imageAltController = TextEditingController(text: '${p?.name ?? "Cosmyra Product"} - Vaidyam Botanicals');
+
+    _metaTitleController = TextEditingController(text: p != null ? '${p.name} | Cosmyra Vaidyam Botanicals' : 'Ayurvedic Botanical Skin & Haircare | Cosmyra');
+    _metaDescController = TextEditingController(
+      text: p != null
+          ? 'Buy ${p.name} online. ${p.tagline ?? p.description}'
+          : 'Pure Ayurvedic botanical cosmetics handcrafted with organic ingredients for modern wellness.',
+    );
+    _keywordsController = TextEditingController(text: 'ayurveda, botanical haircare, sulfate free, herbal shampoo, organic cosmetics');
+    _canonicalUrlController = TextEditingController(text: 'https://cosmyra.com/product/${p?.slug ?? "botanical-product"}');
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nameController.dispose();
+    _slugController.dispose();
+    _skuController.dispose();
+    _sizeController.dispose();
+    _priceController.dispose();
+    _mrpController.dispose();
+    _stockController.dispose();
+    _taglineController.dispose();
+    _descController.dispose();
+    _ingredientsController.dispose();
+    _howToUseController.dispose();
+    _newImageUrlController.dispose();
+    _imageAltController.dispose();
+    _metaTitleController.dispose();
+    _metaDescController.dispose();
+    _keywordsController.dispose();
+    _canonicalUrlController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEditing = widget.product != null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Calculate discount %
+    final priceVal = double.tryParse(_priceController.text) ?? 0.0;
+    final mrpVal = double.tryParse(_mrpController.text) ?? 0.0;
+    final discountPct = mrpVal > priceVal && mrpVal > 0 ? (((mrpVal - priceVal) / mrpVal) * 100).round() : 0;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: 780,
+        height: 680,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Header Bar
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.forestSage.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.edit_note, color: AppColors.forestSage, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isEditing ? 'Edit Botanical Product & SEO Specs' : 'Add New Botanical Product & Master Specs',
+                        style: const TextStyle(fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Configure pricing, descriptions, multi-image gallery, and Google SERP metadata.',
+                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.textLightSecondary : AppColors.textDarkSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Tab Bar
+            TabBar(
+              controller: _tabController,
+              labelColor: isDark ? AppColors.goldAccent : AppColors.forestSage,
+              indicatorColor: isDark ? AppColors.goldAccent : AppColors.forestSage,
+              tabs: const [
+                Tab(icon: Icon(Icons.sell_outlined), text: '1. Basic & Pricing'),
+                Tab(icon: Icon(Icons.description_outlined), text: '2. Botanicals & Details'),
+                Tab(icon: Icon(Icons.collections_outlined), text: '3. Image Gallery'),
+                Tab(icon: Icon(Icons.travel_explore), text: '4. SEO & Metadata'),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Tab Bar Body
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Tab 1: Basic & Pricing
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: _nameController,
+                                decoration: const InputDecoration(labelText: 'Product Name *', hintText: 'e.g. Vaidyam Anti-Dandruff Shampoo'),
+                                onChanged: (val) {
+                                  if (!isEditing) {
+                                    final slug = val.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-|-$'), '');
+                                    _slugController.text = slug;
+                                    _canonicalUrlController.text = 'https://cosmyra.com/product/$slug';
+                                    setState(() {});
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 1,
+                              child: DropdownButtonFormField<String>(
+                                initialValue: _selectedCategory,
+                                decoration: const InputDecoration(labelText: 'Category *'),
+                                items: const [
+                                  DropdownMenuItem(value: 'cat-haircare', child: Text('Haircare')),
+                                  DropdownMenuItem(value: 'cat-skincare', child: Text('Skincare')),
+                                  DropdownMenuItem(value: 'cat-wellness', child: Text('Wellness')),
+                                ],
+                                onChanged: (val) => setState(() => _selectedCategory = val ?? 'cat-haircare'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _slugController,
+                                decoration: const InputDecoration(labelText: 'URL Slug', hintText: 'vaidyam-anti-dandruff-shampoo'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _skuController,
+                                decoration: const InputDecoration(labelText: 'SKU Code *'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _sizeController,
+                                decoration: const InputDecoration(labelText: 'Size / Volume *', hintText: '200 ml'),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+                        const Text('Pricing & Inventory Controls', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'serif')),
+                        const SizedBox(height: 8),
+
+                        Card(
+                          color: AppColors.forestSage.withValues(alpha: 0.05),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _priceController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(labelText: 'Selling Price (₹) *'),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _mrpController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(labelText: 'MRP (₹) *'),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.goldAccent.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text('Calculated Savings', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                                      Text(
+                                        '$discountPct% OFF',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.goldAccent),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _stockController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(labelText: 'Available Stock *'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        SwitchListTile(
+                          title: const Text('Mark as Featured Formulation'),
+                          subtitle: const Text('Display in Bestsellers hero carousel'),
+                          value: _isFeatured,
+                          activeTrackColor: AppColors.goldAccent,
+                          onChanged: (val) => setState(() => _isFeatured = val),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tab 2: Botanicals & Details
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _taglineController,
+                          decoration: const InputDecoration(
+                            labelText: 'Product Tagline / Punchline *',
+                            hintText: 'e.g. Clinically proven botanical defense against flakes & scalp itch',
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _descController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            labelText: 'Full Formulation Description *',
+                            hintText: 'Detailed breakdown of ingredients, therapeutic benefits, and scalp microbiome balance.',
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _ingredientsController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Botanical Ingredients (INCI List) *',
+                            hintText: 'Aqua, Tea Tree Leaf Oil, Azadirachta Indica (Neem) Leaf Extract...',
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _howToUseController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Application Rituals & Directions *',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Ayurvedic Dosha Balancing Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            FilterChip(
+                              label: const Text('Vata Balancing'),
+                              selected: _vataBalance,
+                              selectedColor: AppColors.forestSage.withValues(alpha: 0.2),
+                              onSelected: (val) => setState(() => _vataBalance = val),
+                            ),
+                            const SizedBox(width: 8),
+                            FilterChip(
+                              label: const Text('Pitta Soothing'),
+                              selected: _pittaBalance,
+                              selectedColor: AppColors.goldAccent.withValues(alpha: 0.2),
+                              onSelected: (val) => setState(() => _pittaBalance = val),
+                            ),
+                            const SizedBox(width: 8),
+                            FilterChip(
+                              label: const Text('Kapha Cleansing'),
+                              selected: _kaphaBalance,
+                              selectedColor: AppColors.info.withValues(alpha: 0.2),
+                              onSelected: (val) => setState(() => _kaphaBalance = val),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tab 3: Image Gallery
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _newImageUrlController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Add Product Image Asset URL or File Path',
+                                  hintText: 'assets/images/shampoo.jpg or https://...',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (_newImageUrlController.text.trim().isNotEmpty) {
+                                  setState(() {
+                                    _imageUrls.add(_newImageUrlController.text.trim());
+                                    _newImageUrlController.clear();
+                                  });
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(backgroundColor: AppColors.forestSage, foregroundColor: AppColors.softWhite),
+                              icon: const Icon(Icons.add_photo_alternate, size: 18),
+                              label: const Text('Add Image'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Configured Product Gallery Assets:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(height: 12),
+
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: List.generate(_imageUrls.length, (idx) {
+                            final url = _imageUrls[idx];
+                            final isPrimary = _primaryImageIndex == idx;
+
+                            return Container(
+                              width: 160,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardTheme.color,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: isPrimary ? AppColors.goldAccent : AppColors.creamBorder, width: isPrimary ? 2 : 1),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 90,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.forestSage.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                      image: DecorationImage(
+                                        image: url.startsWith('http') ? NetworkImage(url) as ImageProvider : AssetImage(url),
+                                        fit: BoxFit.cover,
+                                        onError: (_, __) {},
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      InkWell(
+                                        onTap: () => setState(() => _primaryImageIndex = idx),
+                                        child: Text(
+                                          isPrimary ? '★ Primary' : 'Set Primary',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: isPrimary ? FontWeight.bold : FontWeight.normal,
+                                            color: isPrimary ? AppColors.goldAccent : AppColors.textDarkSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.error),
+                                        onPressed: () {
+                                          if (_imageUrls.length > 1) {
+                                            setState(() {
+                                              _imageUrls.removeAt(idx);
+                                              if (_primaryImageIndex >= _imageUrls.length) {
+                                                _primaryImageIndex = 0;
+                                              }
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                        ),
+
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _imageAltController,
+                          decoration: const InputDecoration(
+                            labelText: 'Image Accessibility Alt Text',
+                            hintText: 'Vaidyam Botanical Shampoo bottle with natural ingredients',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tab 4: SEO & Metadata
+                  SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _metaTitleController,
+                          decoration: const InputDecoration(
+                            labelText: 'SEO Title Tag (60 chars max) *',
+                            hintText: 'Vaidyam Anti-Dandruff Herbal Shampoo | Cosmyra',
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _metaDescController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'SEO Meta Description (160 chars max) *',
+                            hintText: 'Buy Vaidyam Anti-Dandruff Herbal Shampoo online. Pure Ayurvedic botanical scalp defense.',
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _keywordsController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Target Keywords (Comma Separated)',
+                                  hintText: 'herbal shampoo, scalp care, ayurvedic shampoo',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextField(
+                                controller: _canonicalUrlController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Canonical URL',
+                                  hintText: 'https://cosmyra.com/product/vaidyam-shampoo',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+                        const Text('Live Google Search Snippet Preview:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'serif')),
+                        const SizedBox(height: 8),
+
+                        // SERP Card Preview
+                        Card(
+                          color: Colors.white,
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _canonicalUrlController.text,
+                                  style: const TextStyle(fontSize: 11, color: Color(0xFF202124)),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _metaTitleController.text,
+                                  style: const TextStyle(fontSize: 16, color: Color(0xFF1A0DAB), fontWeight: FontWeight.w500),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _metaDescController.text,
+                                  style: const TextStyle(fontSize: 13, color: Color(0xFF4D5156)),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Dialog Actions Footer
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = _nameController.text.trim().isEmpty ? 'New Botanical Product' : _nameController.text.trim();
+                    final price = double.tryParse(_priceController.text) ?? 399.0;
+                    final mrp = double.tryParse(_mrpController.text) ?? 499.0;
+                    final stock = int.tryParse(_stockController.text) ?? 100;
+                    final sku = _skuController.text.trim().isEmpty ? 'VDY-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}' : _skuController.text.trim();
+                    final size = _sizeController.text.trim().isEmpty ? '200 ml' : _sizeController.text.trim();
+                    final prodId = widget.product?.id ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
+
+                    final variant = ProductVariant(
+                      id: widget.product?.defaultVariant.id ?? 'var-${DateTime.now().millisecondsSinceEpoch}',
+                      productId: prodId,
+                      sku: sku,
+                      sizeLabel: size,
+                      price: price,
+                      mrp: mrp,
+                      stock: stock,
+                      isDefault: true,
+                    );
+
+                    final updatedProd = ProductModel(
+                      id: prodId,
+                      brandId: 'brand-vaidyam',
+                      categoryId: _selectedCategory,
+                      name: name,
+                      slug: _slugController.text.trim().isEmpty ? 'botanical-product' : _slugController.text.trim(),
+                      tagline: _taglineController.text.trim(),
+                      description: _descController.text.trim().isEmpty ? 'Pure botanical formulation.' : _descController.text.trim(),
+                      ingredients: _ingredientsController.text.trim().isEmpty ? 'Aqua, Botanical Extracts.' : _ingredientsController.text.trim(),
+                      howToUse: _howToUseController.text.trim(),
+                      freeFromClaims: const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
+                      variants: [variant],
+                      imageUrls: _imageUrls,
+                      isFeatured: _isFeatured,
+                    );
+
+                    if (isEditing) {
+                      ref.read(adminProductsProvider.notifier).updateProduct(updatedProd);
+                    } else {
+                      ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
+                    }
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(isEditing ? 'Updated $name in catalog' : 'Added $name to catalog')),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.forestSage, foregroundColor: AppColors.softWhite),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(isEditing ? 'Save Product & SEO Specs' : 'Publish Product'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
