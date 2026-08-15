@@ -40,14 +40,22 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          user?.email ?? 'Priya Verma (Guest)',
-                          style: const TextStyle(
-                            fontFamily: 'serif',
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final auth = ref.watch(authControllerProvider);
+                            final displayName = auth.isGuest
+                                ? (auth.guestName ?? 'Mahboob Hasan (Guest)')
+                                : (user?.email ?? 'Mahboob Hasan (1mdollar2027@gmail.com)');
+                            return Text(
+                              displayName,
+                              style: const TextStyle(
+                                fontFamily: 'serif',
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 4),
                         Container(

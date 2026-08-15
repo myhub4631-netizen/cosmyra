@@ -13,6 +13,18 @@ class _AdminSubscriptionsViewState extends ConsumerState<AdminSubscriptionsView>
   // Mock subscriptions data list
   final List<Map<String, dynamic>> _subscriptions = [
     {
+      'id': 'SUB-9820',
+      'customerName': 'Mahboob Hasan',
+      'email': '1mdollar2027@gmail.com',
+      'productName': 'Vaidyam Royal Hair Nourishing Oil (200 ml)',
+      'frequency': 'Monthly (Every 30 Days)',
+      'discountPct': 20,
+      'pricePerCycle': 449,
+      'nextRefillDate': '2026-09-01',
+      'status': 'Active',
+      'refillsDelivered': 6,
+    },
+    {
       'id': 'SUB-9821',
       'customerName': 'Priya Verma',
       'email': 'priya.verma@example.com',

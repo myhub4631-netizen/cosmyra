@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../config/supabase_config.dart';
 import '../../../config/theme/app_colors.dart';
 
 class AdminCustomersView extends ConsumerStatefulWidget {
@@ -11,8 +13,23 @@ class AdminCustomersView extends ConsumerStatefulWidget {
 
 class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
   String _searchQuery = '';
+  List<Map<String, dynamic>> _registeredProfiles = [];
+  bool _isLoadingProfiles = true;
 
-  final List<Map<String, dynamic>> _customers = [
+  final List<Map<String, dynamic>> _defaultCustomers = [
+    {
+      'id': 'CUST-100',
+      'name': 'Mahboob Hasan',
+      'email': '1mdollar2027@gmail.com',
+      'phone': '+91 94730 40903',
+      'role': 'Master Admin',
+      'isVip': true,
+      'totalOrders': 18,
+      'totalSpent': 15450.0,
+      'activeSubscriptions': 2,
+      'city': 'New Delhi, DL',
+      'joinedDate': '2026-08-15',
+    },
     {
       'id': 'CUST-101',
       'name': 'Priya Verma',
@@ -68,10 +85,62 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _fetchSupabaseProfiles();
+  }
+
+  Future<void> _fetchSupabaseProfiles() async {
+    if (!SupabaseConfig.isConfigured) {
+      setState(() => _isLoadingProfiles = false);
+      return;
+    }
+    try {
+      final data = await supabase.from('profiles').select('*');
+      if (mounted && data is List && data.isNotEmpty) {
+        final List<Map<String, dynamic>> fetched = [];
+        for (final row in data) {
+          final email = row['email'] ?? '';
+          final name = row['full_name'] ?? (email.contains('@') ? email.split('@').first : 'User');
+          final role = (email.toLowerCase() == '1mdollar2027@gmail.com')
+              ? 'Master Admin'
+              : (row['role']?.toString().toUpperCase() ?? 'CUSTOMER');
+          fetched.add({
+            'id': 'SUPA-${row['id']?.toString().substring(0, 5) ?? '00'}',
+            'name': name,
+            'email': email,
+            'phone': row['phone'] ?? '+91 94730 40903',
+            'role': role,
+            'isVip': role == 'Master Admin',
+            'totalOrders': row['total_orders'] ?? 1,
+            'totalSpent': (row['total_spent'] ?? 999.0).toDouble(),
+            'activeSubscriptions': 0,
+            'city': row['city'] ?? 'India',
+            'joinedDate': row['created_at']?.toString().substring(0, 10) ?? '2026-08-15',
+          });
+        }
+        setState(() {
+          _registeredProfiles = fetched;
+          _isLoadingProfiles = false;
+        });
+      } else {
+        setState(() => _isLoadingProfiles = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingProfiles = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final filteredCustomers = _customers.where((c) {
+    final combinedCustomers = [
+      ..._registeredProfiles,
+      ..._defaultCustomers.where((def) => !_registeredProfiles.any((reg) => reg['email']?.toString().toLowerCase() == def['email']?.toString().toLowerCase())),
+    ];
+
+    final filteredCustomers = combinedCustomers.where((c) {
       if (_searchQuery.isNotEmpty) {
         final nameMatch = c['name'].toString().toLowerCase().contains(_searchQuery);
         final emailMatch = c['email'].toString().toLowerCase().contains(_searchQuery);
