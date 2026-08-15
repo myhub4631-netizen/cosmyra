@@ -9,6 +9,7 @@ import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../../navigation/widgets/vaidyam_header_widget.dart';
 
 class VaidyamWishlistScreen extends ConsumerStatefulWidget {
   const VaidyamWishlistScreen({super.key});
@@ -242,14 +243,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top Purple Banner
-            _buildTopBanner(),
-
-            // Header Bar
-            _buildHeaderBar(cartState.totalItemCount, wishlistIds.length),
-
-            // Nav Bar
-            _buildNavBar(),
+            const VaidyamHeaderWidget(activeTab: 'Wishlist', showValuePropositions: true),
 
             // Two Column Layout
             Padding(

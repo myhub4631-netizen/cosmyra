@@ -9,6 +9,7 @@ import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../../navigation/widgets/vaidyam_header_widget.dart';
 
 class VaidyamHomeScreen extends ConsumerStatefulWidget {
   const VaidyamHomeScreen({super.key});
@@ -175,14 +176,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. Top Announcement Bar
-            _buildTopAnnouncementBar(),
-
-            // 2. Main Header (Logo, Search Bar, Quick Links)
-            _buildMainHeader(cartState.totalItemCount, wishlist.length),
-
-            // 3. Navigation Bar
-            _buildNavigationBar(),
+            const VaidyamHeaderWidget(activeTab: 'Home', showValuePropositions: true),
 
             // 4. Hero Banner Section
             Padding(
