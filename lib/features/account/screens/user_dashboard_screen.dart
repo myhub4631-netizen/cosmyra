@@ -1596,113 +1596,529 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   // ═════════════════════════════════════════════════════════════
   // 7. HELP & SUPPORT VIEW
   // ═════════════════════════════════════════════════════════════
+  String _faqSelectedFilter = 'All';
+
   Widget _buildHelpSupportView(BuildContext context) {
-    final faqs = [
-      {'q': 'How do I track my order shipment?', 'a': 'You can track your order in real-time by visiting "My Orders" tab on your dashboard or using the tracking link sent to your SMS and email.'},
-      {'q': 'What is Vaidyam Botanicals return policy?', 'a': 'We offer a 10-day 100% money-back return policy on unopened botanical products. Contact support to schedule a free doorstep pickup.'},
-      {'q': 'Are all ingredients 100% natural and certified organic?', 'a': 'Yes! All Vaidyam Botanicals formulations use certified organic herbs, cold-pressed oils, and zero synthetic parabens or sulfates.'},
-      {'q': 'How do I apply coupon codes during checkout?', 'a': 'On the checkout screen, enter your promo code in the "Apply Coupon" box and click Apply to claim instant discounts.'},
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktop = screenWidth >= 1100;
+
+    final allFaqs = [
+      {
+        'category': 'Orders',
+        'q': 'How do I track my order?',
+        'a': 'You can track your order in real-time under "My Orders" or using your AWB tracking link sent via SMS and email.'
+      },
+      {
+        'category': 'Returns',
+        'q': 'What is your return and refund policy?',
+        'a': 'We offer a 10-day 100% money-back return policy on unopened botanical products. Free doorstep pickup is arranged automatically.'
+      },
+      {
+        'category': 'Orders',
+        'q': 'How long does delivery take?',
+        'a': 'Standard express delivery takes 2-4 business days across all major pin codes in India.'
+      },
+      {
+        'category': 'Orders',
+        'q': 'How can I cancel or change my order?',
+        'a': 'You can cancel or modify your order details from "My Orders" tab before the shipment status changes to Dispatched.'
+      },
+      {
+        'category': 'Products',
+        'q': 'Are your products 100% natural and safe?',
+        'a': 'Yes! All Vaidyam Botanicals formulations are 100% Ayurvedic, toxin-free, cruelty-free, and certified by AYUSH.'
+      },
+      {
+        'category': 'Coupons',
+        'q': 'How do I apply a coupon code?',
+        'a': 'During checkout, enter your promo code in the "Apply Coupon" input field and click Apply to instantly claim discounts.'
+      },
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Help & Customer Support', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-          const SizedBox(height: 4),
-          const Text('We are available 24/7 to assist you with order tracking, skincare guidance, and refunds.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-          const SizedBox(height: 24),
+    final filteredFaqs = _faqSelectedFilter == 'All'
+        ? allFaqs
+        : allFaqs.where((f) => f['category'] == _faqSelectedFilter).toList();
 
-          // 3 Contact Channels
-          Row(
+    Widget mainContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header Title
+        const Text(
+          'Help & Support',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'We are here to help you! Get quick solutions and expert assistance.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+        ),
+        const SizedBox(height: 24),
+
+        // 5 Quick Category Action Cards Row
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _buildQuickCategoryCard('Track Your Order', 'Check real-time status of your orders', Icons.local_shipping_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5)),
+            _buildQuickCategoryCard('Returns & Refunds', 'Easy returns and refund support', Icons.published_with_changes, const Color(0xFFECFDF5), const Color(0xFF059669)),
+            _buildQuickCategoryCard('Coupons & Offers', 'Learn how to use coupons and offers', Icons.local_offer_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706)),
+            _buildQuickCategoryCard('Payment Help', 'Payment methods, failures & refunds', Icons.credit_card_outlined, const Color(0xFFE0F2FE), const Color(0xFF0284C7)),
+            _buildQuickCategoryCard('Product Support', 'Get help with product usage & queries', Icons.inventory_2_outlined, const Color(0xFFFCE7F3), const Color(0xFFDB2777)),
+          ],
+        ),
+        const SizedBox(height: 32),
+
+        // Frequently Asked Questions Section
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFA7F3D0))),
-                  child: Column(
-                    children: const [
-                      Icon(Icons.chat_bubble_outline, color: Color(0xFF059669), size: 28),
-                      SizedBox(height: 8),
-                      Text('WhatsApp Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF065F46))),
-                      SizedBox(height: 2),
-                      Text('+91 94730 40903', style: TextStyle(fontSize: 11, color: Color(0xFF047857))),
-                    ],
+              Row(
+                children: [
+                  const Text('Frequently Asked Questions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                  const Spacer(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: ['All', 'Orders', 'Returns', 'Payments', 'Products', 'Account', 'Coupons'].map((cat) {
+                        final bool isSel = _faqSelectedFilter == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: InkWell(
+                            onTap: () => setState(() => _faqSelectedFilter = cat),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSel ? const Color(0xFF3B82F6) : const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                cat,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isSel ? FontWeight.bold : FontWeight.w500,
+                                  color: isSel ? Colors.white : const Color(0xFF4B5563),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFC7D2FE))),
-                  child: Column(
-                    children: const [
-                      Icon(Icons.phone_outlined, color: Color(0xFF4F46E5), size: 28),
-                      SizedBox(height: 8),
-                      Text('Toll-Free Helpline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF312E81))),
-                      SizedBox(height: 2),
-                      Text('1800-123-8243', style: TextStyle(fontSize: 11, color: Color(0xFF4338CA))),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+
+              // FAQ Accordion
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filteredFaqs.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, idx) {
+                  final bool isExp = _faqExpanded[idx] == true;
+                  final f = filteredFaqs[idx];
+
+                  return Column(
+                    children: [
+                      ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                        title: Text(f['q']!, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF111827))),
+                        trailing: Icon(isExp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, size: 18, color: const Color(0xFF6B7280)),
+                        onTap: () => setState(() => _faqExpanded[idx] = !isExp),
+                      ),
+                      if (isExp)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12, left: 4, right: 16),
+                          child: Text(f['a']!, style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563), height: 1.5)),
+                        ),
                     ],
-                  ),
-                ),
+                  );
+                },
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFFDE68A))),
-                  child: Column(
+              const SizedBox(height: 16),
+
+              // View All FAQs Centered Outlined Button
+              Center(
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFFC7D2FE)),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: const [
-                      Icon(Icons.email_outlined, color: Color(0xFFD97706), size: 28),
-                      SizedBox(height: 8),
-                      Text('Email Care', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF92400E))),
-                      SizedBox(height: 2),
-                      Text('support@cosmyra.cloud', style: TextStyle(fontSize: 11, color: Color(0xFFB45309))),
+                      Text('View All FAQs', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward, size: 14, color: Color(0xFF4F46E5)),
                     ],
                   ),
                 ),
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 24),
 
-          const SizedBox(height: 32),
-          const Text('Frequently Asked Questions (FAQ)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-          const SizedBox(height: 12),
+        // 4 Value Proposition Boxes Row
+        Row(
+          children: [
+            Expanded(child: _buildHelpValuePropBox('24/7 Support', 'We are here anytime you need us', Icons.headset_mic_outlined, const Color(0xFFF3E8FF), const Color(0xFF9333EA))),
+            const SizedBox(width: 12),
+            Expanded(child: _buildHelpValuePropBox('Fast Response', 'Get quick solutions to your queries', Icons.timer_outlined, const Color(0xFFECFDF5), const Color(0xFF059669))),
+            const SizedBox(width: 12),
+            Expanded(child: _buildHelpValuePropBox('Customer First', 'Your satisfaction is our top priority', Icons.group_outlined, const Color(0xFFE0F2FE), const Color(0xFF0284C7))),
+            const SizedBox(width: 12),
+            Expanded(child: _buildHelpValuePropBox('Secure & Safe', 'Your information is always protected', Icons.verified_user_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706))),
+          ],
+        ),
+      ],
+    );
 
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: faqs.length,
-            itemBuilder: (context, idx) {
-              final bool isExp = _faqExpanded[idx] == true;
-              final f = faqs[idx];
-
-              return Column(
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(f['q']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF111827))),
-                    trailing: Icon(isExp ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: const Color(0xFF4F46E5)),
-                    onTap: () => setState(() => _faqExpanded[idx] = !isExp),
+    Widget rightSidebarStack = Column(
+      children: [
+        // Top Search Input Box
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Row(
+            children: const [
+              Expanded(
+                child: TextField(
+                  style: TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: 'Search help topics...',
+                    hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                    border: InputBorder.none,
                   ),
-                  if (isExp)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(f['a']!, style: const TextStyle(fontSize: 12, color: Color(0xFF4B5563), height: 1.5)),
+                ),
+              ),
+              Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Card 1: Need help with a recent order?
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Need help with a recent order?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+              const SizedBox(height: 2),
+              const Text('Select your order to get instant support', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+              const SizedBox(height: 12),
+
+              // Order Box
+              InkWell(
+                onTap: () => context.go('/orders'),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text('Order #VB-2026-983412', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF111827))),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: const Color(0xFFD1FAE5), borderRadius: BorderRadius.circular(4)),
+                                  child: const Text('Delivered', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            const Text('15 Aug 2026  •  ₹538  •  3 Items', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFF9CA3AF)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // View All Orders Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => context.go('/orders'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    side: const BorderSide(color: Color(0xFFE5E7EB)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('View All Orders', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Card 2: Still need help? Contact us
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Still need help? Contact us', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+              const SizedBox(height: 2),
+              const Text('Our support team is available 24/7 to assist you.', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+              const SizedBox(height: 14),
+
+              // WhatsApp Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(color: Color(0xFFECFDF5), shape: BoxShape.circle),
+                    child: const Icon(Icons.chat, size: 16, color: Color(0xFF059669)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('WhatsApp Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF111827))),
+                        Text('+91 94730 40903', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                      ],
                     ),
-                  const Divider(height: 1),
+                  ),
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF10B981)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: const Size(60, 28),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('Chat Now', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                  ),
                 ],
-              );
-            },
+              ),
+              const SizedBox(height: 12),
+
+              // Toll-Free Helpline Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(color: Color(0xFFEEF2FF), shape: BoxShape.circle),
+                    child: const Icon(Icons.phone_in_talk, size: 16, color: Color(0xFF4F46E5)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Toll-Free Helpline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF111827))),
+                        Text('1800-123-8243', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF6366F1)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: const Size(60, 28),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('Call Now', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Email Support Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(color: Color(0xFFFEF3C7), shape: BoxShape.circle),
+                    child: const Icon(Icons.email, size: 16, color: Color(0xFFD97706)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Email Support', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF111827))),
+                        Text('support@vaidyam.com', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFF59E0B)),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: const Size(60, 28),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: const Text('Send Email', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Card 3: Helpful Resources
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Helpful Resources', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+              const SizedBox(height: 10),
+              _buildHelpResourceLink(Icons.local_shipping_outlined, 'Shipping Information'),
+              const Divider(height: 1),
+              _buildHelpResourceLink(Icons.description_outlined, 'Cancellation Policy'),
+              const Divider(height: 1),
+              _buildHelpResourceLink(Icons.shield_outlined, 'Privacy Policy'),
+              const Divider(height: 1),
+              _buildHelpResourceLink(Icons.article_outlined, 'Terms & Conditions'),
+              const Divider(height: 1),
+              _buildHelpResourceLink(Icons.help_outline, 'How to use coupons?'),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return isDesktop
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 7, child: mainContent),
+              const SizedBox(width: 24),
+              SizedBox(width: 320, child: rightSidebarStack),
+            ],
+          )
+        : Column(
+            children: [
+              mainContent,
+              const SizedBox(height: 24),
+              rightSidebarStack,
+            ],
+          );
+  }
+
+  Widget _buildQuickCategoryCard(String title, String subtitle, IconData icon, Color bgColor, Color iconColor) {
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: bgColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(height: 10),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF111827))),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)), maxLines: 2, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 10),
+          Icon(Icons.arrow_forward, size: 14, color: iconColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHelpValuePropBox(String title, String subtitle, IconData icon, Color bgColor, Color iconColor) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: bgColor),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF111827))),
+                Text(subtitle, style: const TextStyle(fontSize: 9, color: Color(0xFF6B7280)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHelpResourceLink(IconData icon, String title) {
+    return InkWell(
+      onTap: () {},
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF4B5563)),
+            const SizedBox(width: 8),
+            Text(title, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF374151))),
+            const Spacer(),
+            const Icon(Icons.chevron_right, size: 16, color: Color(0xFF9CA3AF)),
+          ],
+        ),
       ),
     );
   }
