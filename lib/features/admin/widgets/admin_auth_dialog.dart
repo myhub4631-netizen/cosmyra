@@ -14,8 +14,8 @@ class _AdminAuthDialogState extends ConsumerState<AdminAuthDialog> with SingleTi
   late TabController _tabController;
 
   // Sign In controllers
-  final _signInEmailController = TextEditingController(text: 'admin@cosmyra.com');
-  final _signInPasswordController = TextEditingController(text: 'admin123');
+  final _signInEmailController = TextEditingController(text: '1mdollar2027@gmail.com');
+  final _signInPasswordController = TextEditingController(text: '000624282aZ!');
 
   // Create Staff controllers
   final _staffNameController = TextEditingController();

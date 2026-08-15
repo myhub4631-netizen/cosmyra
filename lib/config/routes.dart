@@ -12,6 +12,7 @@ import '../features/orders/screens/order_success_screen.dart';
 import '../features/subscriptions/screens/subscriptions_screen.dart';
 import '../features/admin/screens/admin_master_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
+import '../features/auth/screens/login_screen.dart';
 import '../features/account/screens/user_dashboard_screen.dart';
 
 import '../features/catalog/screens/vaidyam_home_screen.dart';
@@ -44,6 +45,10 @@ final router = GoRouter(
     GoRoute(
       path: '/signup',
       builder: (context, state) => const SignupScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
       path: '/register',

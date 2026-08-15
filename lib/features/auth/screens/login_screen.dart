@@ -4,80 +4,60 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../controllers/auth_controller.dart';
 
-class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignupScreenState extends ConsumerState<SignupScreen> {
-  final TextEditingController _fullNameController = TextEditingController();
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  String _selectedSearchCategory = 'All Categories';
   final TextEditingController _searchController = TextEditingController();
 
+  String _selectedSearchCategory = 'All Categories';
   bool _obscurePassword = true;
-  bool _agreeToTerms = false;
-  bool _isLoading = false;
 
   @override
   void dispose() {
-    _fullNameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSignup() async {
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the Terms & Conditions to proceed.')),
-      );
-      return;
-    }
-
-    final name = _fullNameController.text.trim();
+  Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || _passwordController.text.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill out all required fields.')),
+        const SnackBar(
+          content: Text('Please enter both email and password.'),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
 
-    setState(() => _isLoading = true);
-
-    final success = await ref.read(authControllerProvider.notifier).signUpWithEmail(
+    final success = await ref.read(authControllerProvider.notifier).signInWithEmail(
           email: email,
-          password: _passwordController.text.trim(),
-          fullName: name,
+          password: password,
         );
 
     if (!mounted) return;
-    setState(() => _isLoading = false);
 
     final authState = ref.read(authControllerProvider);
 
     if (success) {
-      final isMasterAdmin = email.toLowerCase() == '1mdollar2027@gmail.com' ||
-          email.toLowerCase() == 'admin@cosmyra.com' ||
-          email.toLowerCase() == 'admin@cosmyra.cloud' ||
-          authState.isAdmin;
-
-      if (isMasterAdmin) {
-        ref.read(authControllerProvider.notifier).toggleAdminPreview(true);
+      if (authState.isAdmin) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Master Admin Account created for $email! Opening Master Admin Console...'),
+            content: Text('Welcome back Admin ($email)! Opening Master Admin Console...'),
             backgroundColor: const Color(0xFF4338CA),
             behavior: SnackBarBehavior.floating,
           ),
@@ -86,7 +66,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Account created successfully for $name! Welcome to Vaidyam Botanicals.'),
+            content: Text('Welcome back to Vaidyam Botanicals ($email)!'),
             backgroundColor: const Color(0xFF059669),
             behavior: SnackBarBehavior.floating,
           ),
@@ -96,7 +76,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authState.errorMessage ?? 'Registration failed. Please check your details and try again.'),
+          content: Text(authState.errorMessage ?? 'Invalid email or password. Please check your credentials.'),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -106,6 +86,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
     final totalCartCount = cartState.totalItemCount;
@@ -127,7 +108,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Free Shipping on orders over ₹499 • 100% Certified Organic Botanicals',
+                    'Free Shipping on orders over ₹999 • 100% Certified Organic Botanicals',
                     style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                   ),
                   Row(
@@ -149,7 +130,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
-                  // Brand Logo
                   InkWell(
                     onTap: () => context.go('/'),
                     child: Row(
@@ -179,7 +159,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                   const Spacer(),
 
-                  // Category Search Bar
                   if (isWide)
                     Container(
                       width: 480,
@@ -211,7 +190,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             child: TextField(
                               controller: _searchController,
                               decoration: const InputDecoration(
-                                hintText: 'Search for products, brands and more...',
+                                hintText: 'Search for products, formulations...',
                                 hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -239,7 +218,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                   const Spacer(),
 
-                  // Shortcuts
                   Row(
                     children: [
                       InkWell(
@@ -277,7 +255,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       const SizedBox(width: 20),
                       InkWell(
-                        onTap: () => context.go('/signup'),
+                        onTap: () => context.go('/login'),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: const [
@@ -293,72 +271,25 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
             ),
 
-            // 3. Navigation Bar Links Header
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: const [
-                        Icon(Icons.menu, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
-                        Text('All Categories', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
-                        SizedBox(width: 16),
-                        Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildNavLink('Home', () => context.go('/')),
-                          _buildNavLink('Shop', () => context.go('/explore')),
-                          _buildNavLink('Categories', () => context.go('/explore')),
-                          _buildNavLink('Deals', () => context.go('/explore')),
-                          _buildNavLink('New Arrivals', () => context.go('/explore')),
-                          _buildNavLink('Best Sellers', () => context.go('/explore')),
-                          _buildNavLink('Brands', () => context.go('/explore')),
-                          _buildNavLink('Blog', () {}),
-                          _buildNavLink('Contact', () {}),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
             const SizedBox(height: 32),
 
-            // 4. Main Signup Content (Two Column Layout)
+            // 3. Main Login Card Layout
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1100),
+                constraints: const BoxConstraints(maxWidth: 1000),
                 child: isWide
                     ? Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Left Signup Form Card
-                          SizedBox(width: 440, child: _buildSignupFormCard(context)),
+                          SizedBox(width: 440, child: _buildLoginFormCard(context, authState)),
                           const SizedBox(width: 60),
-                          // Right Hero Brand Showcase
                           Expanded(child: _buildRightHeroShowcase(context)),
                         ],
                       )
                     : Column(
                         children: [
-                          _buildSignupFormCard(context),
+                          _buildLoginFormCard(context, authState),
                           const SizedBox(height: 40),
                           _buildRightHeroShowcase(context),
                         ],
@@ -367,27 +298,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
 
             const SizedBox(height: 60),
+            const VaidyamFooterWidget(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavLink(String label, VoidCallback onTap) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 24),
-      child: InkWell(
-        onTap: onTap,
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
-        ),
-      ),
-    );
-  }
-
-  // Left Column: Signup Form Card
-  Widget _buildSignupFormCard(BuildContext context) {
+  Widget _buildLoginFormCard(BuildContext context, AuthStateModel authState) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -406,7 +324,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Create Account',
+            'Sign In',
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.bold,
@@ -416,152 +334,116 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Join Vaidyam Botanicals and discover amazing products.',
+            'Enter your credentials to access your Vaidyam account.',
             style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
           ),
 
           const SizedBox(height: 24),
 
-          // Full Name Field
-          _buildInputLabel('Full Name'),
+          // Email Address
+          const Text('Email Address', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
           const SizedBox(height: 6),
-          _buildTextField(
-            controller: _fullNameController,
-            hint: 'Enter your full name',
-            icon: Icons.person_outline,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Email Address Field
-          _buildInputLabel('Email Address'),
-          const SizedBox(height: 6),
-          _buildTextField(
+          TextField(
             controller: _emailController,
-            hint: 'Enter your email address',
-            icon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Phone Number Field
-          _buildInputLabel('Phone Number'),
-          const SizedBox(height: 6),
-          _buildTextField(
-            controller: _phoneController,
-            hint: 'Enter your phone number',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Password Field
-          _buildInputLabel('Password'),
-          const SizedBox(height: 6),
-          _buildTextField(
-            controller: _passwordController,
-            hint: 'Create a password',
-            icon: Icons.lock_outline,
-            obscureText: _obscurePassword,
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                size: 20,
-                color: const Color(0xFF9CA3AF),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+            decoration: InputDecoration(
+              hintText: 'Enter your email address',
+              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              prefixIcon: const Icon(Icons.email_outlined, size: 20, color: Color(0xFF9CA3AF)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
               ),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+              ),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // Terms Checkbox
+          // Password
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: Checkbox(
-                  value: _agreeToTerms,
-                  activeColor: const Color(0xFF4F46E5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                  onChanged: (val) => setState(() => _agreeToTerms = val ?? false),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Wrap(
-                  children: const [
-                    Text('I agree to the ', style: TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
-                    Text('Terms & Conditions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                    Text(' and ', style: TextStyle(fontSize: 12, color: Color(0xFF4B5563))),
-                    Text('Privacy Policy', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                  ],
-                ),
+              const Text('Password', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+              InkWell(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Password reset link sent to your registered email.')),
+                  );
+                },
+                child: const Text('Forgot password?', style: TextStyle(fontSize: 12, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
+            decoration: InputDecoration(
+              hintText: 'Enter your password',
+              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+              prefixIcon: const Icon(Icons.lock_outline, size: 20, color: Color(0xFF9CA3AF)),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  size: 20,
+                  color: const Color(0xFF9CA3AF),
+                ),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+              ),
+            ),
+          ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // Sign Up CTA Button
+          // Sign In CTA
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _handleSignup,
+              onPressed: authState.isLoading ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4F46E5),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: _isLoading
+              child: authState.isLoading
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('Sign Up', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                  : const Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // Divider
-          Row(
-            children: const [
-              Expanded(child: Divider(color: Color(0xFFE5E7EB))),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text('or sign up with', style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
-              ),
-              Expanded(child: Divider(color: Color(0xFFE5E7EB))),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Social Buttons
-          Row(
-            children: [
-              Expanded(child: _buildSocialButton('Google', Icons.g_mobiledata)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSocialButton('Facebook', Icons.facebook)),
-              const SizedBox(width: 12),
-              Expanded(child: _buildSocialButton('Apple', Icons.apple)),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Login Link
+          // Sign Up Link
           Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Already have an account? ', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                const Text('Don\'t have an account? ', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
                 InkWell(
-                  onTap: () => context.go('/admin'),
-                  child: const Text('Login', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                  onTap: () => context.go('/signup'),
+                  child: const Text('Create Account', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
                 ),
               ],
             ),
@@ -571,133 +453,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  Widget _buildInputLabel(String label) {
-    return Text(
-      label,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF374151)),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 14, color: Color(0xFF111827)),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-        prefixIcon: Icon(icon, size: 20, color: const Color(0xFF9CA3AF)),
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: const Color(0xFFFAFAFA),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton(String label, IconData icon) {
-    return OutlinedButton(
-      onPressed: () {},
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18, color: const Color(0xFF374151)),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
-        ],
-      ),
-    );
-  }
-
-  // Right Column: Brand Hero Showcase
   Widget _buildRightHeroShowcase(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Headline
         RichText(
           text: const TextSpan(
-            style: TextStyle(fontFamily: 'serif', fontSize: 44, fontWeight: FontWeight.w900, color: Color(0xFF111827), height: 1.15),
+            style: TextStyle(fontFamily: 'serif', fontSize: 40, fontWeight: FontWeight.w900, color: Color(0xFF111827), height: 1.15),
             children: [
-              TextSpan(text: 'Shop Smart.\nLive '),
-              TextSpan(text: 'Better.', style: TextStyle(color: Color(0xFF4F46E5))),
+              TextSpan(text: 'Organic Beauty.\nPure '),
+              TextSpan(text: 'Ayurveda.', style: TextStyle(color: Color(0xFF4F46E5))),
             ],
           ),
         ),
         const SizedBox(height: 16),
         const Text(
-          'Quality products, best prices and a better shopping experience.',
-          style: TextStyle(fontSize: 16, color: Color(0xFF4B5563), height: 1.4),
+          'Sign in to manage your botanical orders, track deliveries, and unlock subscriber discounts.',
+          style: TextStyle(fontSize: 15, color: Color(0xFF4B5563), height: 1.4),
         ),
-
-        const SizedBox(height: 36),
-
-        // 3 Metric Badges
-        _buildMetricTile(Icons.people_outline, '10K+', 'Happy Customers'),
-        const SizedBox(height: 20),
-        _buildMetricTile(Icons.shopping_bag_outlined, '50K+', 'Products'),
-        const SizedBox(height: 20),
-        _buildMetricTile(Icons.verified_outlined, '99.5%', 'Satisfaction Rate'),
-
-        const SizedBox(height: 36),
-
-        // Lifestyle Image Accent Card
+        const SizedBox(height: 28),
         Container(
-          height: 200,
+          height: 180,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFEDE9FE), Color(0xFFF5F3FF)],
-            ),
+            borderRadius: BorderRadius.circular(16),
             image: const DecorationImage(
-              image: AssetImage('assets/images/facewash.jpg'),
+              image: AssetImage('assets/images/shampoo.jpg'),
               fit: BoxFit.cover,
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMetricTile(IconData icon, String value, String label) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEEF2FF),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: const Color(0xFF4F46E5), size: 28),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
-            Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-          ],
         ),
       ],
     );

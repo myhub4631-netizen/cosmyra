@@ -69,9 +69,8 @@ class AuthController extends StateNotifier<AuthStateModel> {
     if (!SupabaseConfig.isConfigured) return;
     final user = supabase.auth.currentUser;
     if (user != null) {
-      if (user.email?.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
-          user.email?.trim().toLowerCase() == 'admin@cosmyra.com' ||
-          user.email?.trim().toLowerCase() == 'admin@cosmyra.cloud') {
+      final email = user.email?.trim().toLowerCase();
+      if (email == '1mdollar2027@gmail.com' || email == 'admin@cosmyra.com' || email == 'admin@cosmyra.cloud') {
         state = state.copyWith(isAdmin: true);
         return;
       }
@@ -100,16 +99,31 @@ class AuthController extends StateNotifier<AuthStateModel> {
   Future<bool> signInWithEmail({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final isMasterAdmin = email.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
-          email.trim().toLowerCase() == 'admin@cosmyra.com' ||
-          email.trim().toLowerCase() == 'admin@cosmyra.cloud';
-
+      final cleanEmail = email.trim();
       if (SupabaseConfig.isConfigured) {
-        await supabase.auth.signInWithPassword(email: email, password: password);
-        await _checkAdminStatus();
+        final res = await supabase.auth.signInWithPassword(email: cleanEmail, password: password);
+        if (res.user != null) {
+          final isMaster = cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
+              cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
+              cleanEmail.toLowerCase() == 'admin@cosmyra.cloud';
+          await _checkAdminStatus();
+          state = state.copyWith(
+            isLoading: false,
+            isGuest: false,
+            isAdmin: isMaster ? true : state.isAdmin,
+          );
+          return true;
+        }
       }
-      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMasterAdmin ? true : state.isAdmin);
+      // Demo mode fallback when Supabase is unconfigured
+      final isMaster = cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
+          cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
+          cleanEmail.toLowerCase() == 'admin@cosmyra.cloud';
+      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMaster);
       return true;
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
@@ -123,28 +137,34 @@ class AuthController extends StateNotifier<AuthStateModel> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final isMasterAdmin = email.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
-          email.trim().toLowerCase() == 'admin@cosmyra.com' ||
-          email.trim().toLowerCase() == 'admin@cosmyra.cloud';
-      final userRole = isMasterAdmin ? 'admin' : 'customer';
+      final cleanEmail = email.trim();
+      final isMaster = cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
+          cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
+          cleanEmail.toLowerCase() == 'admin@cosmyra.cloud';
+      final userRole = isMaster ? 'admin' : 'customer';
 
       if (SupabaseConfig.isConfigured) {
         final res = await supabase.auth.signUp(
-          email: email,
+          email: cleanEmail,
           password: password,
-          data: {'full_name': fullName},
+          data: {'full_name': fullName, 'role': userRole},
         );
         if (res.user != null) {
-          await supabase.from('profiles').upsert({
-            'id': res.user!.id,
-            'email': email,
-            'full_name': fullName,
-            'role': userRole,
-          });
+          try {
+            await supabase.from('profiles').upsert({
+              'id': res.user!.id,
+              'email': cleanEmail,
+              'full_name': fullName,
+              'role': userRole,
+            });
+          } catch (_) {}
         }
       }
-      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMasterAdmin ? true : state.isAdmin);
+      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMaster);
       return true;
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
+      return false;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
       return false;
