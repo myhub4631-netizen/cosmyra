@@ -13,6 +13,9 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
   bool _isSaving = false;
   bool _allChangesSaved = true;
 
+  // Track collapsed section IDs
+  final Set<String> _collapsedSectionIds = {};
+
   // SEO Controller State
   final _metaTitleCtrl = TextEditingController(text: 'Vaidyam Botanicals • Pure Herbal Skincare & Wellness');
   final _metaDescCtrl = TextEditingController(text: 'Discover 100% authentic Ayurvedic formulations, herbal hair oils, serums, and natural soaps.');
@@ -22,7 +25,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
   final _customJsCtrl = TextEditingController(text: '// Custom Analytics & Scripts\nconsole.log("Cosmyra Homepage Loaded");');
 
   // Homepage Sections Data
-  final List<Map<String, dynamic>> _sectionsList = [
+  List<Map<String, dynamic>> _sectionsList = [
     {
       'id': 'sec-1',
       'number': 1,
@@ -141,6 +144,104 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
     },
   ];
 
+  void _reindexSections() {
+    for (int i = 0; i < _sectionsList.length; i++) {
+      _sectionsList[i]['number'] = i + 1;
+    }
+  }
+
+  void _moveSection(int currentIndex, int direction) {
+    final newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= _sectionsList.length) return;
+
+    setState(() {
+      final item = _sectionsList.removeAt(currentIndex);
+      _sectionsList.insert(newIndex, item);
+      _reindexSections();
+      _allChangesSaved = false;
+    });
+  }
+
+  void _showReorderSectionsModal() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Reorder Homepage Sections', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              content: SizedBox(
+                width: 500,
+                height: 400,
+                child: ReorderableListView.builder(
+                  itemCount: _sectionsList.length,
+                  onReorder: (oldIndex, newIndex) {
+                    setState(() {
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      final item = _sectionsList.removeAt(oldIndex);
+                      _sectionsList.insert(newIndex, item);
+                      _reindexSections();
+                      _allChangesSaved = false;
+                    });
+                    setModalState(() {});
+                  },
+                  itemBuilder: (context, index) {
+                    final sec = _sectionsList[index];
+                    return Card(
+                      key: ValueKey(sec['id']),
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: const Color(0xFFEEF2FF),
+                          child: Text('${index + 1}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                        ),
+                        title: Text(sec['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        subtitle: Text(sec['description'], style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_upward, size: 16),
+                              onPressed: index > 0
+                                  ? () {
+                                      _moveSection(index, -1);
+                                      setModalState(() {});
+                                    }
+                                  : null,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_downward, size: 16),
+                              onPressed: index < _sectionsList.length - 1
+                                  ? () {
+                                      _moveSection(index, 1);
+                                      setModalState(() {});
+                                    }
+                                  : null,
+                            ),
+                            const Icon(Icons.drag_handle, color: Color(0xFF9CA3AF)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showAddSectionModal() {
     showDialog(
       context: context,
@@ -194,6 +295,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
             'items': [],
             'addLabel': '+ Add Item',
           });
+          _reindexSections();
           _allChangesSaved = false;
         });
         Navigator.pop(context);
@@ -233,6 +335,110 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                 Navigator.pop(context);
               },
               child: const Text('Save Changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSectionSettingsDialog(Map<String, dynamic> section) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Section Settings: ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(title: Text('Layout Width'), subtitle: Text('Full Width (100%)')),
+              const ListTile(title: Text('Background Style'), subtitle: Text('Light Clean Background')),
+              const ListTile(title: Text('Mobile Animation'), subtitle: Text('Smooth Fade Slide')),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddItemDialog(Map<String, dynamic> section) {
+    final titleCtrl = TextEditingController();
+    final subCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Add Item to ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Item Name / Title', hintText: 'e.g. Kumkumadi Serum')),
+              const SizedBox(height: 12),
+              TextField(controller: subCtrl, decoration: const InputDecoration(labelText: 'Subtitle / Discount Tag / Price', hintText: 'e.g. 20% OFF or ₹399')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () {
+                if (titleCtrl.text.trim().isNotEmpty) {
+                  setState(() {
+                    final items = section['items'] as List;
+                    items.add({
+                      'title': titleCtrl.text.trim(),
+                      'name': titleCtrl.text.trim(),
+                      'sub': subCtrl.text.trim(),
+                      'tag': subCtrl.text.trim().isNotEmpty ? subCtrl.text.trim() : 'New',
+                      'price': subCtrl.text.trim().contains('₹') ? subCtrl.text.trim() : '₹299',
+                      'color': const Color(0xFFEEF2FF),
+                      'icon': Icons.star,
+                    });
+                    _allChangesSaved = false;
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added "${titleCtrl.text}" to ${section['title']}')));
+                }
+              },
+              child: const Text('Add Item'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteSection(Map<String, dynamic> section) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Section?'),
+          content: Text('Are you sure you want to delete "${section['title']}"?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _sectionsList.removeWhere((s) => s['id'] == section['id']);
+                  _reindexSections();
+                  _allChangesSaved = false;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted "${section['title']}"')));
+              },
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -432,7 +638,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
           separatorBuilder: (_, __) => const SizedBox(height: 16),
           itemBuilder: (context, index) {
             final sec = _sectionsList[index];
-            return _buildSectionCard(sec);
+            return _buildSectionCard(sec, index);
           },
         ),
 
@@ -457,11 +663,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                 ],
               ),
               OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Reorder drag-and-drop mode active!')),
-                  );
-                },
+                onPressed: _showReorderSectionsModal,
                 icon: const Icon(Icons.swap_vert, size: 16, color: Color(0xFF374151)),
                 label: const Text('Reorder Sections', style: TextStyle(fontSize: 12, color: Color(0xFF374151))),
                 style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFD1D5DB))),
@@ -473,8 +675,9 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
     );
   }
 
-  Widget _buildSectionCard(Map<String, dynamic> sec) {
+  Widget _buildSectionCard(Map<String, dynamic> sec, int index) {
     final isActive = sec['isActive'] == true;
+    final isCollapsed = _collapsedSectionIds.contains(sec['id']);
 
     return Container(
       decoration: BoxDecoration(
@@ -491,9 +694,21 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
         children: [
           Row(
             children: [
-              // Drag Handle
-              const Icon(Icons.drag_indicator, color: Color(0xFF9CA3AF), size: 20),
-              const SizedBox(width: 10),
+              // Up / Down Reorder Buttons
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    onTap: index > 0 ? () => _moveSection(index, -1) : null,
+                    child: Icon(Icons.arrow_drop_up, color: index > 0 ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB), size: 20),
+                  ),
+                  InkWell(
+                    onTap: index < _sectionsList.length - 1 ? () => _moveSection(index, 1) : null,
+                    child: Icon(Icons.arrow_drop_down, color: index < _sectionsList.length - 1 ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB), size: 20),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 6),
 
               // Number Badge Circle
               Container(
@@ -544,7 +759,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                 children: [
                   Switch(
                     value: isActive,
-                    activeColor: const Color(0xFF4F46E5),
+                    activeThumbColor: const Color(0xFF4F46E5),
                     onChanged: (val) {
                       setState(() {
                         sec['isActive'] = val;
@@ -555,126 +770,169 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                   const SizedBox(width: 4),
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF6B7280)),
+                    tooltip: 'Edit Title & Subtitle',
                     onPressed: () => _showEditSectionDialog(sec),
                   ),
                   IconButton(
                     icon: const Icon(Icons.add, size: 18, color: Color(0xFF6B7280)),
-                    onPressed: () {},
+                    tooltip: 'Add Item',
+                    onPressed: () => _showAddItemDialog(sec),
                   ),
                   IconButton(
                     icon: const Icon(Icons.settings_outlined, size: 18, color: Color(0xFF6B7280)),
-                    onPressed: () {},
+                    tooltip: 'Section Settings',
+                    onPressed: () => _showSectionSettingsDialog(sec),
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy, size: 18, color: Color(0xFF6B7280)),
+                    tooltip: 'Duplicate Section',
                     onPressed: () {
                       setState(() {
                         final copy = Map<String, dynamic>.from(sec);
                         copy['id'] = 'sec-${_sectionsList.length + 1}';
                         copy['number'] = _sectionsList.length + 1;
                         copy['title'] = '${sec['title']} (Copy)';
-                        _sectionsList.add(copy);
+                        _sectionsList.insert(index + 1, copy);
+                        _reindexSections();
                         _allChangesSaved = false;
                       });
                     },
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFDC2626)),
+                    tooltip: 'Delete Section',
+                    onPressed: () => _confirmDeleteSection(sec),
+                  ),
+                  IconButton(
+                    icon: Icon(isCollapsed ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_down, size: 18, color: const Color(0xFF9CA3AF)),
+                    tooltip: isCollapsed ? 'Expand Preview' : 'Collapse Preview',
                     onPressed: () {
                       setState(() {
-                        _sectionsList.removeWhere((s) => s['id'] == sec['id']);
-                        _allChangesSaved = false;
+                        if (isCollapsed) {
+                          _collapsedSectionIds.remove(sec['id']);
+                        } else {
+                          _collapsedSectionIds.add(sec['id'] as String);
+                        }
                       });
                     },
                   ),
-                  const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFF9CA3AF)),
                 ],
               ),
             ],
           ),
 
-          const SizedBox(height: 14),
+          if (!isCollapsed) ...[
+            const SizedBox(height: 14),
 
-          // Visual Preview Strip for Items
-          if (sec['type'] == 'newsletter') ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0B132B),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Subscribe to our newsletter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                      Text('Get updates on offers, new formulations and botanical rituals.', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10)),
-                    ],
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 180,
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+            // Visual Preview Strip for Items
+            if (sec['type'] == 'newsletter') ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B132B),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text('Subscribe to our newsletter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('Get updates on offers, new formulations and botanical rituals.', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10)),
+                      ],
                     ),
-                    child: const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Enter your email address', style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(color: const Color(0xFF4F46E5), borderRadius: BorderRadius.circular(6)),
-                    child: const Text('Subscribe', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ...(sec['items'] as List).map((item) {
-                    return Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFAFAFA),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFF3F4F6)),
-                      ),
-                      child: _buildItemPreviewWidget(sec['type'], item),
-                    );
-                  }).toList(),
-
-                  // Add Item CTA Button Card
-                  if (sec['addLabel'].toString().isNotEmpty)
+                    const Spacer(),
                     Container(
-                      width: 90,
-                      height: 54,
+                      width: 180,
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.add, size: 16, color: Color(0xFF6B7280)),
-                          const SizedBox(height: 2),
-                          Text(sec['addLabel'], style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
-                        ],
+                      child: const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Enter your email address', style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
                       ),
                     ),
-                ],
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(color: const Color(0xFF4F46E5), borderRadius: BorderRadius.circular(6)),
+                      child: const Text('Subscribe', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ...(sec['items'] as List).asMap().entries.map((entry) {
+                      final itemIdx = entry.key;
+                      final item = entry.value;
+
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFAFAFA),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFF3F4F6)),
+                            ),
+                            child: _buildItemPreviewWidget(sec['type'], item),
+                          ),
+                          Positioned(
+                            top: -6,
+                            right: 4,
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  (sec['items'] as List).removeAt(itemIdx);
+                                  _allChangesSaved = false;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle),
+                                child: const Icon(Icons.close, size: 10, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+
+                    // Add Item CTA Button Card
+                    if (sec['addLabel'].toString().isNotEmpty)
+                      InkWell(
+                        onTap: () => _showAddItemDialog(sec),
+                        child: Container(
+                          width: 90,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add, size: 16, color: Color(0xFF6B7280)),
+                              const SizedBox(height: 2),
+                              Text(sec['addLabel'], style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ],
       ),
