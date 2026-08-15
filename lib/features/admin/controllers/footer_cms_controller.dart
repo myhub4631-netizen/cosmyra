@@ -4,6 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FooterCmsState {
   final List<Map<String, dynamic>> sections;
+  final String brandName;
+  final String brandDescription;
+  final String newsletterTitle;
+  final String newsletterSubtitle;
+  final String copyrightText;
   final String metaTitle;
   final String schemaOrg;
   final String customCss;
@@ -11,6 +16,11 @@ class FooterCmsState {
 
   FooterCmsState({
     required this.sections,
+    this.brandName = 'Vaidyam Botanicals',
+    this.brandDescription = 'Your premier destination for certified organic Ayurveda formulation. Pure wellness delivered to your doorstep.',
+    this.newsletterTitle = 'Subscribe to our newsletter',
+    this.newsletterSubtitle = 'Get updates on offers, new formulations and botanical rituals.',
+    this.copyrightText = '© 2026 Vaidyam Botanicals. All Rights Reserved.',
     this.metaTitle = 'Vaidyam Botanicals • Authentic Herbal & Ayurvedic Formulations',
     this.schemaOrg = '{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Vaidyam Botanicals",\n  "url": "https://cosmyra.cloud"\n}',
     this.customCss = '/* Footer Specific Styles */\n.footer-bg { background-color: #0B132B; }\n.footer-link:hover { color: #818CF8; }',
@@ -19,6 +29,11 @@ class FooterCmsState {
 
   FooterCmsState copyWith({
     List<Map<String, dynamic>>? sections,
+    String? brandName,
+    String? brandDescription,
+    String? newsletterTitle,
+    String? newsletterSubtitle,
+    String? copyrightText,
     String? metaTitle,
     String? schemaOrg,
     String? customCss,
@@ -26,6 +41,11 @@ class FooterCmsState {
   }) {
     return FooterCmsState(
       sections: sections ?? this.sections,
+      brandName: brandName ?? this.brandName,
+      brandDescription: brandDescription ?? this.brandDescription,
+      newsletterTitle: newsletterTitle ?? this.newsletterTitle,
+      newsletterSubtitle: newsletterSubtitle ?? this.newsletterSubtitle,
+      copyrightText: copyrightText ?? this.copyrightText,
       metaTitle: metaTitle ?? this.metaTitle,
       schemaOrg: schemaOrg ?? this.schemaOrg,
       customCss: customCss ?? this.customCss,
@@ -36,6 +56,7 @@ class FooterCmsState {
 
 class FooterCmsNotifier extends StateNotifier<FooterCmsState> {
   static const _prefsKey = 'cosmyra_footer_cms_sections_v2';
+  static const _metaPrefsKey = 'cosmyra_footer_brand_meta_v2';
 
   FooterCmsNotifier() : super(FooterCmsState(sections: _defaultSections)) {
     _loadFromPrefs();
@@ -169,6 +190,18 @@ class FooterCmsNotifier extends StateNotifier<FooterCmsState> {
         final List<Map<String, dynamic>> loadedSections = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
         state = state.copyWith(sections: loadedSections);
       }
+
+      final String? metaJsonStr = prefs.getString(_metaPrefsKey);
+      if (metaJsonStr != null && metaJsonStr.isNotEmpty) {
+        final Map<String, dynamic> meta = json.decode(metaJsonStr);
+        state = state.copyWith(
+          brandName: meta['brandName']?.toString() ?? state.brandName,
+          brandDescription: meta['brandDescription']?.toString() ?? state.brandDescription,
+          newsletterTitle: meta['newsletterTitle']?.toString() ?? state.newsletterTitle,
+          newsletterSubtitle: meta['newsletterSubtitle']?.toString() ?? state.newsletterSubtitle,
+          copyrightText: meta['copyrightText']?.toString() ?? state.copyrightText,
+        );
+      }
     } catch (_) {}
   }
 
@@ -177,7 +210,33 @@ class FooterCmsNotifier extends StateNotifier<FooterCmsState> {
       final prefs = await SharedPreferences.getInstance();
       final String jsonStr = json.encode(state.sections);
       await prefs.setString(_prefsKey, jsonStr);
+
+      final String metaJsonStr = json.encode({
+        'brandName': state.brandName,
+        'brandDescription': state.brandDescription,
+        'newsletterTitle': state.newsletterTitle,
+        'newsletterSubtitle': state.newsletterSubtitle,
+        'copyrightText': state.copyrightText,
+      });
+      await prefs.setString(_metaPrefsKey, metaJsonStr);
     } catch (_) {}
+  }
+
+  void updateBrandInfo({
+    String? brandName,
+    String? brandDescription,
+    String? newsletterTitle,
+    String? newsletterSubtitle,
+    String? copyrightText,
+  }) {
+    state = state.copyWith(
+      brandName: brandName ?? state.brandName,
+      brandDescription: brandDescription ?? state.brandDescription,
+      newsletterTitle: newsletterTitle ?? state.newsletterTitle,
+      newsletterSubtitle: newsletterSubtitle ?? state.newsletterSubtitle,
+      copyrightText: copyrightText ?? state.copyrightText,
+    );
+    _saveToPrefs();
   }
 
   void updateSections(List<Map<String, dynamic>> newSections) {

@@ -71,7 +71,7 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Column 1: Brand Info & Newsletter
-                    Expanded(flex: 3, child: _buildBrandNewsletterCol()),
+                    Expanded(flex: 3, child: _buildBrandNewsletterCol(footerState)),
                     const SizedBox(width: 32),
 
                     // Dynamic Section Columns from Footer Manager State
@@ -97,7 +97,7 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildBrandNewsletterCol(),
+                    _buildBrandNewsletterCol(footerState),
                     const SizedBox(height: 32),
                     Wrap(
                       spacing: 32,
@@ -158,9 +158,9 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '© 2026 Vaidyam Botanicals. All Rights Reserved.',
-                style: TextStyle(color: _textMuted, fontSize: 12),
+              Text(
+                footerState.copyrightText,
+                style: const TextStyle(color: _textMuted, fontSize: 12),
               ),
               Row(
                 children: [
@@ -203,7 +203,7 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
   }
 
   // --- BRAND INFO & NEWSLETTER COLUMN ---
-  Widget _buildBrandNewsletterCol() {
+  Widget _buildBrandNewsletterCol(FooterCmsState footerState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -219,9 +219,9 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
               child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 10),
-            const Text(
-              'Vaidyam Botanicals',
-              style: TextStyle(
+            Text(
+              footerState.brandName,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -231,20 +231,20 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
           ],
         ),
         const SizedBox(height: 14),
-        const Text(
-          'Your premier destination for certified organic Ayurvedic formulations. Quality, purity, and daily wellness – delivered to your doorstep.',
-          style: TextStyle(color: _textMuted, fontSize: 13, height: 1.5),
+        Text(
+          footerState.brandDescription,
+          style: const TextStyle(color: _textMuted, fontSize: 13, height: 1.5),
         ),
         const SizedBox(height: 20),
 
-        const Text(
-          'Subscribe to our newsletter',
-          style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+        Text(
+          footerState.newsletterTitle,
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Get updates on offers, new formulations and botanical rituals.',
-          style: TextStyle(color: _textMuted, fontSize: 12),
+        Text(
+          footerState.newsletterSubtitle,
+          style: const TextStyle(color: _textMuted, fontSize: 12),
         ),
         const SizedBox(height: 12),
 

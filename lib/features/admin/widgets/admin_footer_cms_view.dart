@@ -85,6 +85,84 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
     );
   }
 
+  // Edit Store Info & About Us Text Modal
+  void _showEditBrandInfoDialog() {
+    final footerState = ref.read(footerCmsProvider);
+    final brandNameCtrl = TextEditingController(text: footerState.brandName);
+    final brandDescCtrl = TextEditingController(text: footerState.brandDescription);
+    final newsTitleCtrl = TextEditingController(text: footerState.newsletterTitle);
+    final newsSubCtrl = TextEditingController(text: footerState.newsletterSubtitle);
+    final copyCtrl = TextEditingController(text: footerState.copyrightText);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Edit Store Info & Footer Brand Text', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: SizedBox(
+            width: 550,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: brandNameCtrl,
+                    decoration: const InputDecoration(labelText: 'Store / Brand Title (e.g. Vaidyam Botanicals)', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: brandDescCtrl,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'About Us / Brand Description',
+                      hintText: 'Your premier destination for certified organic Ayurveda formulation...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: newsTitleCtrl,
+                    decoration: const InputDecoration(labelText: 'Newsletter Box Title', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: newsSubCtrl,
+                    decoration: const InputDecoration(labelText: 'Newsletter Subtitle / Offer Info', border: OutlineInputBorder()),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: copyCtrl,
+                    decoration: const InputDecoration(labelText: 'Bottom Copyright Line', border: OutlineInputBorder()),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () {
+                ref.read(footerCmsProvider.notifier).updateBrandInfo(
+                      brandName: brandNameCtrl.text.trim(),
+                      brandDescription: brandDescCtrl.text.trim(),
+                      newsletterTitle: newsTitleCtrl.text.trim(),
+                      newsletterSubtitle: newsSubCtrl.text.trim(),
+                      copyrightText: copyCtrl.text.trim(),
+                    );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Footer Store Info updated!')));
+              },
+              child: const Text('Save Changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Edit Link Item Dialog (Single Link Edit)
   void _showEditSingleLinkDialog(int sectionIndex, int linkIndex, Map<String, dynamic> linkData) {
     final textCtrl = TextEditingController(text: linkData['text']?.toString() ?? '');
@@ -190,8 +268,13 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   // Comprehensive Section & Links Editor Modal
   void _showEditSectionDialog(int sectionIndex, Map<String, dynamic> section) {
+    final footerState = ref.read(footerCmsProvider);
     final titleCtrl = TextEditingController(text: section['title']);
     final descCtrl = TextEditingController(text: section['description']);
+    final isNewsletterSection = section['type'] == 'newsletter_info';
+
+    final brandNameCtrl = TextEditingController(text: footerState.brandName);
+    final brandDescCtrl = TextEditingController(text: footerState.brandDescription);
 
     showDialog(
       context: context,
@@ -224,8 +307,43 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                     children: [
                       TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Section Title', border: OutlineInputBorder())),
                       const SizedBox(height: 12),
-                      TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description / Subtitle', border: OutlineInputBorder())),
-                      const SizedBox(height: 20),
+                      TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Section Subtitle / Description', border: OutlineInputBorder())),
+                      const SizedBox(height: 16),
+
+                      // If Store Info & Newsletter Section, show Store About & Bio Text Editors!
+                      if (isNewsletterSection) ...[
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFC7D2FE)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Store Info & About Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF4F46E5))),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: brandNameCtrl,
+                                decoration: const InputDecoration(labelText: 'Store / Brand Title', border: OutlineInputBorder(), fillColor: Colors.white, filled: true),
+                              ),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: brandDescCtrl,
+                                maxLines: 3,
+                                decoration: const InputDecoration(
+                                  labelText: 'About Us / Brand Description ("Your premier destination...")',
+                                  border: OutlineInputBorder(),
+                                  fillColor: Colors.white,
+                                  filled: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
 
                       // Links Items Section Editor
                       Row(
@@ -321,6 +439,14 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                       updatedSections[sectionIndex]['description'] = descCtrl.text;
                       ref.read(footerCmsProvider.notifier).updateSections(updatedSections);
                     }
+
+                    if (isNewsletterSection) {
+                      ref.read(footerCmsProvider.notifier).updateBrandInfo(
+                            brandName: brandNameCtrl.text.trim(),
+                            brandDescription: brandDescCtrl.text.trim(),
+                          );
+                    }
+
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Footer section updated!')));
                   },
@@ -622,9 +748,61 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   // ---------------- LEFT COLUMN: MANAGE FOOTER SECTIONS ----------------
   Widget _buildManageFooterSectionsColumn(List<Map<String, dynamic>> footerSectionsList) {
+    final footerState = ref.watch(footerCmsProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Store Bio Quick Edit Box Banner
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFC7D2FE)),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(color: Color(0xFFEEF2FF), shape: BoxShape.circle),
+                child: const Icon(Icons.storefront, color: Color(0xFF4F46E5), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(footerState.brandName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                    const SizedBox(height: 2),
+                    Text(
+                      footerState.brandDescription,
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF4B5563)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: _showEditBrandInfoDialog,
+                icon: const Icon(Icons.edit_outlined, size: 14),
+                label: const Text('Edit Store Info & Bio', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -688,8 +866,11 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
   }
 
   Widget _buildFooterSectionCard(Map<String, dynamic> sec, int index, int totalSections) {
+    final footerState = ref.watch(footerCmsProvider);
     final isActive = sec['isActive'] == true;
     final isCollapsed = _collapsedSectionIds.contains(sec['id']);
+    final isNewsletterSection = sec['type'] == 'newsletter_info';
+
     final rawItems = sec['items'] as List? ?? [];
     final itemsList = rawItems.map((e) {
       if (e is Map) return Map<String, dynamic>.from(e);
@@ -808,8 +989,40 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
             ],
           ),
 
-          // Interactive Link Pill Tags
+          // Interactive Link Pill Tags & Store Bio Preview
           if (!isCollapsed) ...[
+            if (isNewsletterSection) ...[
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: _showEditBrandInfoDialog,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_note, color: Color(0xFF4F46E5), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'About Text: "${footerState.brandDescription}"',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF374151), fontStyle: FontStyle.italic),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const Text('Edit Bio ✏️', style: TextStyle(fontSize: 11, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -872,7 +1085,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   // ---------------- RIGHT COLUMN: LIVE PREVIEW & QUICK TIPS ----------------
   Widget _buildRightPreviewAndTipsColumn(List<Map<String, dynamic>> footerSectionsList) {
-    // Extract active link sections dynamically
+    final footerState = ref.watch(footerCmsProvider);
     final activeSections = footerSectionsList.where((s) => s['isActive'] == true).toList();
 
     return Column(
@@ -934,16 +1147,16 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          children: const [
-                            Icon(Icons.spa, color: Colors.white, size: 18),
-                            SizedBox(width: 6),
-                            Text('Vaidyam Botanicals', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
+                          children: [
+                            const Icon(Icons.spa, color: Colors.white, size: 18),
+                            const SizedBox(width: 6),
+                            Text(footerState.brandName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
                           ],
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Your premier destination for certified organic Ayurveda formulation. Pure wellness delivered to your doorstep.',
-                          style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10, height: 1.4),
+                        Text(
+                          footerState.brandDescription,
+                          style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 10, height: 1.4),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -1094,9 +1307,9 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
               // Bottom Copyright Line
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text('© 2026 Vaidyam Botanicals. All Rights Reserved.', style: TextStyle(color: Color(0xFF6B7280), fontSize: 8)),
-                  Text('🇮🇳 India  |  🌐 English ▾', style: TextStyle(color: Color(0xFF6B7280), fontSize: 8)),
+                children: [
+                  Text(footerState.copyrightText, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 8)),
+                  const Text('🇮🇳 India  |  🌐 English ▾', style: TextStyle(color: Color(0xFF6B7280), fontSize: 8)),
                 ],
               ),
             ],
@@ -1124,10 +1337,10 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                 ],
               ),
               SizedBox(height: 8),
+              Text('| Click "Edit Store Info & Bio" to change brand tagline & text.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
               Text('| Click any link tag to edit label and target URL.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
               Text('| Use "Edit Section & Links" for reordering and bulk managing links.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
               Text('| Changes automatically persist in SharedPreferences & update storefront.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
-              Text("| Click 'Preview Footer' to view real-time changes.", style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
             ],
           ),
         ),
@@ -1137,18 +1350,36 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   // ---------------- TAB 1: FOOTER SETTINGS ----------------
   Widget _buildFooterSettingsTabBody() {
+    final footerState = ref.watch(footerCmsProvider);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('Global Footer Layout & Styling Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-          SizedBox(height: 16),
-          ListTile(title: Text('Footer Background Color'), subtitle: Text('Dark Navy (#0B132B)')),
-          ListTile(title: Text('Text & Link Accent Color'), subtitle: Text('Indigo Accent (#818CF8)')),
-          ListTile(title: Text('Show Payment Badges'), subtitle: Text('Enabled (VISA, Mastercard, UPI, Paytm)')),
-          ListTile(title: Text('Show App Download Banner'), subtitle: Text('Enabled (Google Play & App Store)')),
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Global Footer Layout & Styling Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+              ElevatedButton.icon(
+                onPressed: _showEditBrandInfoDialog,
+                icon: const Icon(Icons.edit_outlined, size: 14),
+                label: const Text('Edit Store Info & About Text'),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ListTile(title: const Text('Brand Name'), subtitle: Text(footerState.brandName)),
+          ListTile(title: const Text('About Us / Store Description'), subtitle: Text(footerState.brandDescription)),
+          ListTile(title: const Text('Newsletter Title'), subtitle: Text(footerState.newsletterTitle)),
+          ListTile(title: const Text('Copyright Line'), subtitle: Text(footerState.copyrightText)),
+          const Divider(),
+          const ListTile(title: Text('Footer Background Color'), subtitle: Text('Dark Navy (#0B132B)')),
+          const ListTile(title: Text('Text & Link Accent Color'), subtitle: Text('Indigo Accent (#818CF8)')),
+          const ListTile(title: Text('Show Payment Badges'), subtitle: Text('Enabled (VISA, Mastercard, UPI, Paytm)')),
+          const ListTile(title: Text('Show App Download Banner'), subtitle: Text('Enabled (Google Play & App Store)')),
         ],
       ),
     );
@@ -1204,15 +1435,15 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           SizedBox(height: 16),
           ListTile(
             leading: Icon(Icons.history, color: Color(0xFF4F46E5)),
-            title: Text('v2.4 - Added Popular Categories & Payment Badges'),
-            subtitle: Text('15 Aug 2026, 08:12 PM by Mahboob Hasan'),
+            title: Text('v2.5 - Enabled Brand Info & Bio Description Editor'),
+            subtitle: Text('15 Aug 2026, 10:05 PM by Mahboob Hasan'),
             trailing: Text('Active', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.bold)),
           ),
           Divider(),
           ListTile(
             leading: Icon(Icons.history, color: Color(0xFF6B7280)),
-            title: Text('v2.3 - Updated Customer Service Links'),
-            subtitle: Text('14 Aug 2026, 04:30 PM by Mahboob Hasan'),
+            title: Text('v2.4 - Added Popular Categories & Payment Badges'),
+            subtitle: Text('15 Aug 2026, 08:12 PM by Mahboob Hasan'),
           ),
         ],
       ),
