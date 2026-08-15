@@ -299,6 +299,19 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                       _buildSubMenuItem('Permissions', false),
                       const SizedBox(height: 4),
                     ],
+
+                    // Expanded Sub-menu for Products
+                    if (item['title'] == 'Products' && isSelected) ...[
+                      _buildSubMenuItem('All Products', true),
+                      _buildSubMenuItem('Add New Product', false),
+                      _buildSubMenuItem('Categories', false),
+                      _buildSubMenuItem('Brands', false),
+                      _buildSubMenuItem('Attributes', false),
+                      _buildSubMenuItem('Units', false),
+                      _buildSubMenuItem('Bulk Import', false),
+                      _buildSubMenuItem('Export Products', false),
+                      const SizedBox(height: 4),
+                    ],
                   ],
                 );
               },
