@@ -59,7 +59,7 @@ final wishlistProvider = StateNotifierProvider<WishlistNotifier, Set<String>>((r
 });
 
 class WishlistNotifier extends StateNotifier<Set<String>> {
-  WishlistNotifier() : super({'prod-1'});
+  WishlistNotifier() : super({'prod-1', 'prod-2', 'prod-3', 'prod-4', 'prod-5', 'prod-6'});
 
   void toggleWishlist(String productId) {
     if (state.contains(productId)) {
@@ -67,6 +67,14 @@ class WishlistNotifier extends StateNotifier<Set<String>> {
     } else {
       state = {...state, productId};
     }
+  }
+
+  void removeFromWishlist(String productId) {
+    state = {...state}..remove(productId);
+  }
+
+  void clearWishlist() {
+    state = {};
   }
 
   bool isWishlisted(String productId) => state.contains(productId);

@@ -14,6 +14,7 @@ import '../features/admin/screens/admin_master_screen.dart';
 import '../features/auth/screens/signup_screen.dart';
 import '../features/account/screens/user_dashboard_screen.dart';
 
+import '../features/catalog/screens/vaidyam_wishlist_screen.dart';
 import '../features/orders/screens/vaidyam_orders_screen.dart';
 
 final router = GoRouter(
@@ -53,7 +54,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/wishlist',
-      builder: (context, state) => const WishlistScreen(),
+      builder: (context, state) => const VaidyamWishlistScreen(),
     ),
     GoRoute(
       path: '/product/:id',
