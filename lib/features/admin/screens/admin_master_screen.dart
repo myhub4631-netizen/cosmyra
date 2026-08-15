@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../widgets/admin_analytics_view.dart';
 import '../widgets/admin_auth_dialog.dart';
 import '../widgets/admin_catalog_view.dart';
@@ -154,17 +155,25 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                     children: [
                       const CircleAvatar(
                         radius: 16,
-                        backgroundImage: AssetImage('assets/images/shampoo.jpg'),
+                        backgroundColor: Color(0xFF6366F1),
                         child: Icon(Icons.person, size: 16, color: Colors.white),
                       ),
                       const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text('Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                          Text('Super Admin', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
-                        ],
+                      Builder(
+                        builder: (context) {
+                          final currentUser = ref.watch(currentUserProvider);
+                          final email = currentUser?.email ?? '1mdollar2027@gmail.com';
+                          final name = currentUser?.userMetadata?['full_name'] ??
+                              (email == '1mdollar2027@gmail.com' ? 'Mahboob Hasan' : email.split('@').first);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                              Text(email, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),

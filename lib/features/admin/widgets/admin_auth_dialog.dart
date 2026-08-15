@@ -124,7 +124,7 @@ class _AdminAuthDialogState extends ConsumerState<AdminAuthDialog> with SingleTi
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    'Active Admin Session: ${currentUser?.email ?? "Dr. Rajesh Vaidya (Master Admin)"}',
+                                    'Active Admin Session: ${currentUser?.email ?? "Mahboob Hasan (1mdollar2027@gmail.com)"}',
                                     style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
                                   ),
                                 ),

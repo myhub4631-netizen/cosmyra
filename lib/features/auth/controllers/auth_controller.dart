@@ -113,9 +113,12 @@ class AuthController extends StateNotifier<AuthStateModel> {
             isAdmin: isMaster ? true : state.isAdmin,
           );
           return true;
+        } else {
+          state = state.copyWith(isLoading: false, errorMessage: 'Invalid email or password.');
+          return false;
         }
       }
-      // Demo mode fallback when Supabase is unconfigured
+      // Demo mode fallback only when Supabase API key is unconfigured
       final isMaster = cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
           cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
           cleanEmail.toLowerCase() == 'admin@cosmyra.cloud';
@@ -158,6 +161,11 @@ class AuthController extends StateNotifier<AuthStateModel> {
               'role': userRole,
             });
           } catch (_) {}
+          state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMaster);
+          return true;
+        } else {
+          state = state.copyWith(isLoading: false, errorMessage: 'Registration failed. Please check your details.');
+          return false;
         }
       }
       state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMaster);
