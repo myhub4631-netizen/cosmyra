@@ -264,16 +264,6 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
                       .where((p) => wishlistIds.contains(p.id))
                       .toList();
 
-                  if (wishlistedProducts.isEmpty && wishlistIds.isNotEmpty) {
-                    wishlistedProducts = _demoWishlistProducts
-                        .where((p) => wishlistIds.contains(p.id))
-                        .toList();
-                  }
-
-                  if (wishlistedProducts.isEmpty) {
-                    wishlistedProducts = _demoWishlistProducts;
-                  }
-
                   if (_selectedProductIds.isEmpty && wishlistedProducts.isNotEmpty) {
                     _selectedProductIds.addAll(wishlistedProducts.map((p) => p.id));
                   }
@@ -306,7 +296,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
                     child: CircularProgressIndicator(color: _primaryPurple),
                   ),
                 ),
-                error: (_, __) => _buildWishlistMainArea(_demoWishlistProducts),
+                error: (_, __) => _buildWishlistMainArea(const []),
               ),
             ),
             const SizedBox(height: 48),

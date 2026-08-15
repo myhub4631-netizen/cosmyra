@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme/app_colors.dart';
+import 'package:intl/intl.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../../orders/repositories/order_repository.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
@@ -135,6 +136,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
+    final ordersAsync = ref.watch(userOrdersFutureProvider);
     final totalCartCount = cartState.totalItemCount;
 
     final user = ref.watch(currentUserProvider);
@@ -160,6 +162,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
+
+    final int realOrdersCount = ordersAsync.value?.length ?? 0;
+    final int wishlistCount = wishlist.length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F6),
@@ -411,7 +416,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
                   // Right Dynamic Dashboard View (Flex 9.5)
                   Expanded(
-                    child: _buildDashboardContent(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, isWide),
+                    child: _buildDashboardContent(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, isWide, realOrdersCount, wishlistCount),
                   ),
                 ],
               ),
@@ -536,7 +541,17 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     );
   }
 
-  Widget _buildDashboardContent(BuildContext context, String displayName, String firstFirstName, String displayEmail, String displayPhone, String referCode, bool isWide) {
+  Widget _buildDashboardContent(
+    BuildContext context,
+    String displayName,
+    String firstFirstName,
+    String displayEmail,
+    String displayPhone,
+    String referCode,
+    bool isWide,
+    int totalOrdersCount,
+    int wishlistCount,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -561,23 +576,23 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         isWide
             ? Row(
                 children: [
-                  Expanded(child: _buildStatCard('Total Orders', '12', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
+                  Expanded(child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard('Wishlist Items', '8', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
+                  Expanded(child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard('Addresses', '3', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () {})),
+                  Expanded(child: _buildStatCard('Addresses', '1', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () {})),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard('Account Balance', '₹1,250', 'View balance', Icons.account_balance_wallet_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), () {})),
+                  Expanded(child: _buildStatCard('Account Balance', '₹0', 'View balance', Icons.account_balance_wallet_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), () {})),
                 ],
               )
             : Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Total Orders', '12', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Wishlist Items', '8', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Addresses', '3', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () {})),
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Account Balance', '₹1,250', 'View balance', Icons.account_balance_wallet_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), () {})),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Addresses', '1', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () {})),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Account Balance', '₹0', 'View balance', Icons.account_balance_wallet_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), () {})),
                 ],
               ),
 
@@ -659,12 +674,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   }
 
   Widget _buildRecentOrdersCard(BuildContext context) {
-    final sampleOrders = [
-      {'id': '#ORD12543', 'date': 'May 26, 2026', 'total': '₹2,499', 'status': 'Delivered', 'color': const Color(0xFF059669), 'bg': const Color(0xFFD1FAE5)},
-      {'id': '#ORD12542', 'date': 'May 26, 2026', 'total': '₹1,850', 'status': 'Delivered', 'color': const Color(0xFF059669), 'bg': const Color(0xFFD1FAE5)},
-      {'id': '#ORD12541', 'date': 'May 24, 2026', 'total': '₹7,499', 'status': 'Processing', 'color': const Color(0xFFD97706), 'bg': const Color(0xFFFEF3C7)},
-      {'id': '#ORD12540', 'date': 'May 20, 2026', 'total': '₹1,299', 'status': 'Cancelled', 'color': const Color(0xFFDC2626), 'bg': const Color(0xFFFEE2E2)},
-    ];
+    final ordersAsync = ref.watch(userOrdersFutureProvider);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -688,41 +698,75 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
           ),
           const SizedBox(height: 16),
 
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: sampleOrders.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, idx) {
-              final ord = sampleOrders[idx];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          ordersAsync.when(
+            data: (realOrders) {
+              if (realOrders.isEmpty) {
+                return Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.shopping_bag_outlined, size: 48, color: Color(0xFF9CA3AF)),
+                      const SizedBox(height: 12),
+                      const Text('No Recent Orders', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                      const SizedBox(height: 4),
+                      const Text('You have not placed any orders yet. Explore our Ayurvedic formulations to start shopping.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => context.go('/explore'),
+                        icon: const Icon(Icons.local_mall_outlined, size: 16),
+                        label: const Text('Explore Formulations'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4F46E5),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: realOrders.take(4).length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, idx) {
+                  final ord = realOrders[idx];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Row(
                       children: [
-                        Text(ord['id'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
-                        Text(ord['date'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(ord.orderNumber, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+                            Text(DateFormat('MMM dd, yyyy').format(ord.createdAt), style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text('₹${ord.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+                        const SizedBox(width: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(6)),
+                          child: Text(ord.fulfillmentStatus, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                        ),
+                        const SizedBox(width: 16),
+                        InkWell(
+                          onTap: () => context.go('/orders'),
+                          child: const Text('Track Order', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                        ),
                       ],
                     ),
-                    const Spacer(),
-                    Text(ord['total'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: ord['bg'] as Color, borderRadius: BorderRadius.circular(6)),
-                      child: Text(ord['status'] as String, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: ord['color'] as Color)),
-                    ),
-                    const SizedBox(width: 16),
-                    InkWell(
-                      onTap: () => context.go('/orders'),
-                      child: const Text('Track Order', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
             },
+            loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
+            error: (_, __) => const Text('Unable to load orders', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

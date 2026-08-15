@@ -29,74 +29,10 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
     super.dispose();
   }
 
-  // Demo fallback orders matching the user's reference screenshot
-  List<Map<String, dynamic>> _getDemoOrders(List<dynamic> products) {
-    return [
-      {
-        'orderId': '#ORD12543',
-        'productName': 'boAt Rockerz 550',
-        'category': 'Wireless Over Ear Headphones',
-        'variant': 'Black',
-        'qty': 1,
-        'price': 1799.0,
-        'date': 'May 28, 2025 • 10:30 AM',
-        'status': 'Delivered',
-        'statusDetail': 'Delivered on May 30, 2025 02:30 PM',
-        'image': products.isNotEmpty && products[0].imageUrls.isNotEmpty
-            ? products[0].imageUrls.first
-            : '',
-      },
-      {
-        'orderId': '#ORD12542',
-        'productName': 'Noise ColorFit Pro 4',
-        'category': 'Smart Watch',
-        'variant': 'Jet Black',
-        'qty': 1,
-        'price': 2499.0,
-        'date': 'May 26, 2025 • 06:15 PM',
-        'status': 'Shipped',
-        'statusDetail':
-            'Shipped on May 27, 2025 • Expected Delivery: May 30, 2025',
-        'image': products.length > 1 && products[1].imageUrls.isNotEmpty
-            ? products[1].imageUrls.first
-            : '',
-      },
-      {
-        'orderId': '#ORD12541',
-        'productName': 'Nike Air Max 270',
-        'category': "Men's Running Shoes",
-        'variant': 'Black',
-        'qty': 1,
-        'price': 7499.0,
-        'date': 'May 24, 2025 • 09:20 AM',
-        'status': 'Processing',
-        'statusDetail': 'Processing',
-        'image': products.length > 2 && products[2].imageUrls.isNotEmpty
-            ? products[2].imageUrls.first
-            : '',
-      },
-      {
-        'orderId': '#ORD12540',
-        'productName': 'Zebronics ZEB-JUKE BAR',
-        'category': 'Soundbar with Subwoofer',
-        'variant': 'Black',
-        'qty': 1,
-        'price': 3999.0,
-        'date': 'May 20, 2025 • 04:45 PM',
-        'status': 'Cancelled',
-        'statusDetail': 'Cancelled on May 21, 2025',
-        'image': products.length > 3 && products[3].imageUrls.isNotEmpty
-            ? products[3].imageUrls.first
-            : '',
-      },
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
-    final products = ref.watch(adminProductsProvider);
     final ordersAsync = ref.watch(userOrdersFutureProvider);
     final itemCount = cartState.totalItemCount;
 
@@ -128,9 +64,7 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
       }
     });
 
-    if (allOrders.isEmpty) {
-      allOrders.addAll(_getDemoOrders(products));
-    }
+
 
     // Filter by tab + search query
     final String query = _orderSearchController.text.trim().toLowerCase();
@@ -839,20 +773,32 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
             ),
             child: Column(
               children: [
-                const Icon(Icons.inventory_2_outlined,
-                    size: 48, color: Color(0xFF9CA3AF)),
-                const SizedBox(height: 12),
+                const Icon(Icons.shopping_bag_outlined, size: 54, color: Color(0xFF9CA3AF)),
+                const SizedBox(height: 14),
                 const Text(
-                  'No orders found matching your search',
+                  'No Orders Placed Yet',
                   style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF374151)),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF111827),
+                  ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 const Text(
-                  'Try clearing search filters or check another category.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                  'You have not placed any orders yet. Explore our Ayurvedic formulations to start shopping.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: () => context.go('/explore'),
+                  icon: const Icon(Icons.local_mall_outlined, size: 16),
+                  label: const Text('Explore Vaidyam Formulations', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4338CA),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                 ),
               ],
             ),
