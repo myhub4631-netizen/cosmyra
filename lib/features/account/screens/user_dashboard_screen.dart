@@ -131,6 +131,147 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     _selectedTab = _normalizeTabName(widget.initialTab) ?? 'Dashboard';
     _loadSavedAddresses();
     _loadSavedPaymentMethods();
+    _loadSavedNotifications();
+  }
+
+  IconData _getNotificationIcon(String? iconType) {
+    switch (iconType) {
+      case 'shipping':
+        return Icons.local_shipping_outlined;
+      case 'offer':
+        return Icons.favorite_outline;
+      case 'ayurveda':
+        return Icons.spa_outlined;
+      default:
+        return Icons.notifications_none_outlined;
+    }
+  }
+
+  String _getNotificationIconType(IconData icon) {
+    if (icon == Icons.local_shipping_outlined) return 'shipping';
+    if (icon == Icons.favorite_outline) return 'offer';
+    if (icon == Icons.spa_outlined) return 'ayurveda';
+    return 'default';
+  }
+
+  Future<void> _loadSavedNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_user_notifications_v1');
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        setState(() {
+          _notifications.clear();
+          for (var item in decoded) {
+            final map = Map<String, dynamic>.from(item as Map);
+            final String iconType = map['icon_type'] as String? ?? 'default';
+            final int colorVal = map['color_val'] as int? ?? 0xFF4F46E5;
+            _notifications.add({
+              'id': map['id'],
+              'title': map['title'],
+              'message': map['message'],
+              'time': map['time'],
+              'isRead': map['isRead'] == true,
+              'icon': _getNotificationIcon(iconType),
+              'icon_type': iconType,
+              'color': Color(colorVal),
+              'color_val': colorVal,
+            });
+          }
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveNotificationsToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final listToSave = _notifications.map((n) {
+        final IconData icon = n['icon'] is IconData ? n['icon'] as IconData : Icons.notifications_none_outlined;
+        final Color color = n['color'] is Color ? n['color'] as Color : const Color(0xFF4F46E5);
+        return {
+          'id': n['id'],
+          'title': n['title'],
+          'message': n['message'],
+          'time': n['time'],
+          'isRead': n['isRead'] == true,
+          'icon_type': _getNotificationIconType(icon),
+          'color_val': color.value,
+        };
+      }).toList();
+      await prefs.setString('cosmyra_user_notifications_v1', jsonEncode(listToSave));
+    } catch (_) {}
+  }
+
+  Future<void> _confirmDeleteNotification(BuildContext context, int idx) async {
+    setState(() {
+      _notifications.removeAt(idx);
+    });
+    await _saveNotificationsToStorage();
+    if (context.mounted) {
+      showCenterActionToast(
+        context,
+        title: 'Notification Deleted 🗑️',
+        message: 'Notification removed from inbox.',
+        icon: Icons.delete_outline,
+        iconColor: const Color(0xFFDC2626),
+        primaryActionLabel: null,
+      );
+    }
+  }
+
+  Future<void> _clearAllNotifications(BuildContext context) async {
+    if (_notifications.isEmpty) return;
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.cleaning_services_outlined, color: Color(0xFFDC2626)),
+            SizedBox(width: 8),
+            Text('Clear All Notifications?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to clear all notifications from your inbox?\n\nThis action cannot be undone.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Clear All', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _notifications.clear();
+      });
+      await _saveNotificationsToStorage();
+      if (context.mounted) {
+        showCenterActionToast(
+          context,
+          title: 'Notifications Cleared! 🔔',
+          message: 'All notifications have been removed.',
+          icon: Icons.notifications_off_outlined,
+          iconColor: const Color(0xFFDC2626),
+          primaryActionLabel: null,
+        );
+      }
+    }
   }
 
   Future<void> _loadSavedAddresses() async {
@@ -1268,24 +1409,58 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                   Text('Stay updated on order status, price drops, and announcements.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
                 ],
               ),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    for (var n in _notifications) {
-                      n['isRead'] = true;
-                    }
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All notifications marked as read.')));
-                },
-                icon: const Icon(Icons.done_all, size: 16, color: Color(0xFF4F46E5)),
-                label: const Text('Mark All Read', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
+              Row(
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        for (var n in _notifications) {
+                          n['isRead'] = true;
+                        }
+                      });
+                      _saveNotificationsToStorage();
+                      showCenterActionToast(
+                        context,
+                        title: 'All Read! 🔔',
+                        message: 'All notifications marked as read.',
+                        icon: Icons.done_all,
+                        iconColor: const Color(0xFF4F46E5),
+                        primaryActionLabel: null,
+                      );
+                    },
+                    icon: const Icon(Icons.done_all, size: 16, color: Color(0xFF4F46E5)),
+                    label: const Text('Mark All Read', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () => _clearAllNotifications(context),
+                    icon: const Icon(Icons.cleaning_services_outlined, size: 16, color: Color(0xFFDC2626)),
+                    label: const Text('Clear All', style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 24),
 
           if (_notifications.isEmpty)
-            const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No notifications')))
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: const [
+                  Icon(Icons.notifications_off_outlined, size: 48, color: Color(0xFF9CA3AF)),
+                  SizedBox(height: 12),
+                  Text('No New Notifications', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF111827))),
+                  SizedBox(height: 4),
+                  Text("You're all caught up! Order updates, offers, and herbal tips will appear here.", style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                ],
+              ),
+            )
           else
             ListView.separated(
               shrinkWrap: true,
@@ -1300,6 +1475,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                 return InkWell(
                   onTap: () {
                     setState(() => n['isRead'] = true);
+                    _saveNotificationsToStorage();
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1334,6 +1510,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               Text(n['time'] as String, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 16, color: Color(0xFF9CA3AF)),
+                          onPressed: () => _confirmDeleteNotification(context, idx),
                         ),
                       ],
                     ),
