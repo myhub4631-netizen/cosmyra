@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../orders/models/order_model.dart';
 import '../../orders/repositories/order_repository.dart';
 import '../widgets/order_status_donut_chart.dart';
@@ -521,6 +521,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
 
   // ── 4. RECENT ORDERS DATA TABLE ──
   Widget _buildRecentOrdersTable(AsyncValue<List<OrderModel>> ordersAsync) {
+    final List<OrderModel> orders = ordersAsync.value ?? [];
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -536,7 +538,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Recent Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                Row(
+                  children: [
+                    const Text('Recent Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${orders.length} Active',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
+                      ),
+                    ),
+                  ],
+                ),
                 InkWell(
                   onTap: () {},
                   child: const Text(
@@ -565,7 +583,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                 DataColumn(label: Text('Expected Delivery', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
                 DataColumn(label: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
               ],
-              rows: _sampleOrderRows(),
+              rows: _buildDynamicOrderRows(orders),
             ),
           ),
 
@@ -575,20 +593,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Showing 1 to 5 of 1,248 orders', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                Text('Showing 1 to ${orders.length.clamp(0, 10)} of ${orders.length} orders', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
                 Row(
                   children: [
                     _pageButton('‹', false),
                     const SizedBox(width: 4),
                     _pageButton('1', true),
-                    const SizedBox(width: 4),
-                    _pageButton('2', false),
-                    const SizedBox(width: 4),
-                    _pageButton('3', false),
-                    const SizedBox(width: 4),
-                    const Text('...', style: TextStyle(color: Color(0xFF64748B))),
-                    const SizedBox(width: 4),
-                    _pageButton('250', false),
                     const SizedBox(width: 4),
                     _pageButton('›', false),
                     const SizedBox(width: 16),
@@ -618,89 +628,54 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-  List<DataRow> _sampleOrderRows() {
-    final List<Map<String, String>> data = [
-      {
-        'id': 'CSM-2026-928412',
-        'name': 'Aarav Sharma',
-        'email': 'aarav.sharma@example.com',
-        'courier': 'Shiprocket',
-        'awb': 'AWB: 1234567890',
-        'status': 'DELIVERED',
-        'statusBg': '0xFFECFDF5',
-        'statusColor': '0xFF059669',
-        'amount': '₹538',
-        'date': '15 Aug 2026\n10:24 AM',
-        'expected': '16 Aug 2026\nBy 8:00 PM',
-      },
-      {
-        'id': 'CSM-2026-928411',
-        'name': 'Priya Verma',
-        'email': 'priya.verma@example.com',
-        'courier': 'Delhivery',
-        'awb': 'AWB: 9876543210',
-        'status': 'SHIPPED',
-        'statusBg': '0xFFEFF6FF',
-        'statusColor': '0xFF2563EB',
-        'amount': '₹339',
-        'date': '15 Aug 2026\n09:15 AM',
-        'expected': '17 Aug 2026\nBy 8:00 PM',
-      },
-      {
-        'id': 'CSM-2026-928410',
-        'name': 'Ananya Roy',
-        'email': 'ananya.roy@gmail.com',
-        'courier': 'India Post',
-        'awb': 'RRN: 123456789IN',
-        'status': 'PROCESSING',
-        'statusBg': '0xFFFFFBEB',
-        'statusColor': '0xFFD97706',
-        'amount': '₹296',
-        'date': '15 Aug 2026\n08:05 AM',
-        'expected': '18 Aug 2026\nBy 8:00 PM',
-      },
-      {
-        'id': 'CSM-2026-928409',
-        'name': 'Rahul Sharma',
-        'email': 'rahul.s@outlook.com',
-        'courier': 'Shiprocket',
-        'awb': 'AWB: 1122234455',
-        'status': 'PLACED',
-        'statusBg': '0xFFEEF2FF',
-        'statusColor': '0xFF4F46E5',
-        'amount': '₹169',
-        'date': '15 Aug 2026\n07:50 AM',
-        'expected': '20 Aug 2026\nBy 8:00 PM',
-      },
-      {
-        'id': 'CSM-2026-928408',
-        'name': 'Neha Kapoor',
-        'email': 'neha.kapoor@example.com',
-        'courier': 'Blue Dart',
-        'awb': 'AWB: 5566778899',
-        'status': 'CANCELLED',
-        'statusBg': '0xFFFEF2F2',
-        'statusColor': '0xFFDC2626',
-        'amount': '₹599',
-        'date': '14 Aug 2026\n11:35 PM',
-        'expected': '-',
-      },
-    ];
+  List<DataRow> _buildDynamicOrderRows(List<OrderModel> orders) {
+    if (orders.isEmpty) {
+      return [
+        const DataRow(cells: [
+          DataCell(Text('-')),
+          DataCell(Text('No orders placed yet')),
+          DataCell(Text('-')),
+          DataCell(Text('-')),
+          DataCell(Text('-')),
+          DataCell(Text('-')),
+          DataCell(Text('-')),
+          DataCell(Text('-')),
+        ]),
+      ];
+    }
 
-    return data.map((row) {
-      final sBg = Color(int.parse(row['statusBg']!));
-      final sColor = Color(int.parse(row['statusColor']!));
+    return orders.take(10).map((o) {
+      final statusUpper = o.fulfillmentStatus.toUpperCase();
+      Color statusBg = const Color(0xFFEEF2FF);
+      Color statusColor = const Color(0xFF4F46E5);
+
+      if (statusUpper == 'DELIVERED') {
+        statusBg = const Color(0xFFECFDF5);
+        statusColor = const Color(0xFF059669);
+      } else if (statusUpper == 'SHIPPED') {
+        statusBg = const Color(0xFFEFF6FF);
+        statusColor = const Color(0xFF2563EB);
+      } else if (statusUpper == 'PROCESSING' || statusUpper == 'CONFIRMED') {
+        statusBg = const Color(0xFFFFFBEB);
+        statusColor = const Color(0xFFD97706);
+      } else if (statusUpper == 'CANCELLED') {
+        statusBg = const Color(0xFFFEF2F2);
+        statusColor = const Color(0xFFDC2626);
+      }
+
+      final dateStr = DateFormat('dd MMM yyyy\nhh:mm a').format(o.createdAt);
+      final expStr = DateFormat('dd MMM yyyy\nBy 8:00 PM').format(o.createdAt.add(const Duration(days: 2)));
 
       return DataRow(
         cells: [
-          DataCell(Text(row['id']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A)))),
+          DataCell(Text(o.orderNumber.isNotEmpty ? o.orderNumber : o.id, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A)))),
           DataCell(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(row['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
-                Text(row['email']!, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                Text(o.customerName.isNotEmpty ? o.customerName : 'Customer', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
+                Text(o.customerEmail.isNotEmpty ? o.customerEmail : o.customerPhone, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
               ],
             ),
           ),
@@ -709,8 +684,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(row['courier']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
-                Text(row['awb']!, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                Text(o.courierPartner ?? 'Shiprocket', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
+                Text(o.trackingNumber ?? 'AWB: Pending', style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
               ],
             ),
           ),
@@ -718,23 +693,35 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: sBg,
+                color: statusBg,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                row['status']!,
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: sColor),
+                statusUpper,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: statusColor),
               ),
             ),
           ),
-          DataCell(Text(row['amount']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A)))),
-          DataCell(Text(row['date']!, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
-          DataCell(Text(row['expected']!, style: TextStyle(fontSize: 11, color: row['expected'] == '-' ? const Color(0xFF94A3B8) : const Color(0xFF059669), fontWeight: FontWeight.w600))),
+          DataCell(Text('₹${o.totalAmount.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A)))),
+          DataCell(Text(dateStr, style: const TextStyle(fontSize: 11, color: Color(0xFF475569)))),
+          DataCell(Text(expStr, style: const TextStyle(fontSize: 11, color: Color(0xFF475569)))),
           DataCell(
-            Row(
-              children: [
-                IconButton(icon: const Icon(Icons.remove_red_eye_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
-                IconButton(icon: const Icon(Icons.more_vert, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, size: 16, color: Color(0xFF64748B)),
+              onSelected: (val) async {
+                await ref.read(orderRepositoryProvider).updateOrderFulfillment(
+                  orderId: o.id,
+                  status: val,
+                );
+                ref.invalidate(allAdminOrdersFutureProvider);
+                ref.invalidate(userOrdersFutureProvider);
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(value: 'confirmed', child: Text('Mark as Confirmed')),
+                const PopupMenuItem(value: 'processing', child: Text('Mark as Processing')),
+                const PopupMenuItem(value: 'shipped', child: Text('Mark as Shipped')),
+                const PopupMenuItem(value: 'delivered', child: Text('Mark as Delivered')),
+                const PopupMenuItem(value: 'cancelled', child: Text('Mark as Cancelled')),
               ],
             ),
           ),

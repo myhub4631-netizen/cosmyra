@@ -188,7 +188,8 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
       }
     });
 
-    if (_selectedOrder == null && ordersList.isNotEmpty) {
+    final bool currentSelectedExists = _selectedOrder != null && ordersList.any((o) => o['id'] == _selectedOrder!['id']);
+    if (!currentSelectedExists && ordersList.isNotEmpty) {
       _selectedOrder = ordersList.first;
     } else if (ordersList.isEmpty) {
       _selectedOrder = null;

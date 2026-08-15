@@ -24,7 +24,7 @@ class OrderRepository {
   static bool _isLoaded = false;
 
   Future<void> _ensureLoaded() async {
-    if (_isLoaded) return;
+    if (_isLoaded && _localOrders.isNotEmpty) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString(_storageKey);
@@ -36,7 +36,127 @@ class OrderRepository {
         );
       }
     } catch (_) {}
+
+    if (_localOrders.isEmpty) {
+      _seedDefaultDemoOrders();
+    }
     _isLoaded = true;
+  }
+
+  void _seedDefaultDemoOrders() {
+    _localOrders.addAll([
+      OrderModel(
+        id: 'ord-demo-1',
+        orderNumber: 'CSM-2026-928412',
+        userId: 'usr-1',
+        isGuest: false,
+        customerName: 'Aarav Sharma',
+        customerEmail: 'aarav.sharma@example.com',
+        customerPhone: '+91 98765 43210',
+        shippingAddress: {
+          'address': '12 Sector 4, Salt Lake',
+          'city': 'Kolkata',
+          'state': 'West Bengal',
+          'pincode': '700091'
+        },
+        subtotal: 538.0,
+        discount: 0.0,
+        shippingFee: 0.0,
+        totalAmount: 538.0,
+        paymentMethod: 'UPI / QR',
+        paymentStatus: 'captured',
+        fulfillmentStatus: 'delivered',
+        courierPartner: 'Shiprocket',
+        trackingNumber: 'AWB1234567890',
+        createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        items: [
+          OrderItemModel(
+            id: 'itm-1',
+            orderId: 'ord-demo-1',
+            productVariantId: 'v-1',
+            productName: 'Kumkumadi Radiance Elixir',
+            variantName: '30ml Serum Bottle',
+            unitPrice: 538.0,
+            quantity: 1,
+            totalPrice: 538.0,
+          )
+        ],
+      ),
+      OrderModel(
+        id: 'ord-demo-2',
+        orderNumber: 'CSM-2026-928411',
+        userId: 'usr-2',
+        isGuest: false,
+        customerName: 'Priya Verma',
+        customerEmail: 'priya.verma@example.com',
+        customerPhone: '+91 91234 56789',
+        shippingAddress: {
+          'address': '45 Park Street, Indiranagar',
+          'city': 'Bengaluru',
+          'state': 'Karnataka',
+          'pincode': '560038'
+        },
+        subtotal: 339.0,
+        discount: 0.0,
+        shippingFee: 0.0,
+        totalAmount: 339.0,
+        paymentMethod: 'Credit / Debit Card',
+        paymentStatus: 'captured',
+        fulfillmentStatus: 'shipped',
+        courierPartner: 'Delhivery',
+        trackingNumber: 'AWB9876543210',
+        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+        items: [
+          OrderItemModel(
+            id: 'itm-2',
+            orderId: 'ord-demo-2',
+            productVariantId: 'v-2',
+            productName: 'Bhringraj Hair Defense Oil',
+            variantName: '200ml Bottle',
+            unitPrice: 339.0,
+            quantity: 1,
+            totalPrice: 339.0,
+          )
+        ],
+      ),
+      OrderModel(
+        id: 'ord-demo-3',
+        orderNumber: 'CSM-2026-928410',
+        userId: 'usr-3',
+        isGuest: false,
+        customerName: 'Rohan Gupta',
+        customerEmail: 'rohan.g@example.com',
+        customerPhone: '+91 99887 76655',
+        shippingAddress: {
+          'address': '78 Civil Lines',
+          'city': 'Jaipur',
+          'state': 'Rajasthan',
+          'pincode': '302006'
+        },
+        subtotal: 1299.0,
+        discount: 100.0,
+        shippingFee: 0.0,
+        totalAmount: 1199.0,
+        paymentMethod: 'Cash on Delivery',
+        paymentStatus: 'pending',
+        fulfillmentStatus: 'confirmed',
+        courierPartner: 'Blue Dart',
+        trackingNumber: 'AWB5544332211',
+        createdAt: DateTime.now().subtract(const Duration(hours: 12)),
+        items: [
+          OrderItemModel(
+            id: 'itm-3',
+            orderId: 'ord-demo-3',
+            productVariantId: 'v-3',
+            productName: 'Nalpamaradi Body Thailam',
+            variantName: '100ml Oil Bottle',
+            unitPrice: 1299.0,
+            quantity: 1,
+            totalPrice: 1299.0,
+          )
+        ],
+      ),
+    ]);
   }
 
   Future<void> _saveOrdersToStorage() async {
@@ -78,7 +198,7 @@ class OrderRepository {
       'shipping_fee_inr': shippingFee,
       'total_amount_inr': totalAmount,
       'payment_method': paymentMethod,
-      'payment_status': paymentMethod == 'cod' ? 'pending' : 'captured',
+      'payment_status': paymentMethod.toLowerCase().contains('cod') || paymentMethod == 'Cash on Delivery' ? 'pending' : 'captured',
       'fulfillment_status': 'placed',
     };
 
@@ -136,7 +256,7 @@ class OrderRepository {
       shippingFee: shippingFee,
       totalAmount: totalAmount,
       paymentMethod: paymentMethod,
-      paymentStatus: paymentMethod == 'cod' ? 'pending' : 'captured',
+      paymentStatus: paymentMethod.toLowerCase().contains('cod') || paymentMethod == 'Cash on Delivery' ? 'pending' : 'captured',
       fulfillmentStatus: 'placed',
       createdAt: DateTime.now(),
       items: cartItems
@@ -161,6 +281,8 @@ class OrderRepository {
   /// Get orders for current logged-in user
   Future<List<OrderModel>> getUserOrders({String? email}) async {
     await _ensureLoaded();
+    final List<OrderModel> remoteOrders = [];
+
     if (SupabaseConfig.isConfigured && supabase.auth.currentUser != null) {
       try {
         final response = await supabase
@@ -170,23 +292,31 @@ class OrderRepository {
             .order('created_at', ascending: false);
 
         if (response.isNotEmpty) {
-          return (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+          remoteOrders.addAll(
+            (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))),
+          );
         }
       } catch (_) {}
     }
 
-    if (email != null && email.isNotEmpty) {
-      final userLower = email.toLowerCase().trim();
-      final filtered = _localOrders.where((o) => o.customerEmail.toLowerCase().trim() == userLower).toList();
-      if (filtered.isNotEmpty) return filtered;
+    final Map<String, OrderModel> mergedMap = {};
+    for (var o in _localOrders) {
+      mergedMap[o.orderNumber] = o;
+    }
+    for (var o in remoteOrders) {
+      mergedMap[o.orderNumber] = o;
     }
 
-    return List.from(_localOrders);
+    final mergedList = mergedMap.values.toList();
+    mergedList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return mergedList;
   }
 
   /// Get all orders for Admin Web Dashboard
   Future<List<OrderModel>> getAllOrdersForAdmin() async {
     await _ensureLoaded();
+    final List<OrderModel> remoteOrders = [];
+
     if (SupabaseConfig.isConfigured) {
       try {
         final response = await supabase
@@ -195,12 +325,24 @@ class OrderRepository {
             .order('created_at', ascending: false);
 
         if (response.isNotEmpty) {
-          return (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
+          remoteOrders.addAll(
+            (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))),
+          );
         }
       } catch (_) {}
     }
 
-    return List.from(_localOrders);
+    final Map<String, OrderModel> mergedMap = {};
+    for (var o in _localOrders) {
+      mergedMap[o.orderNumber] = o;
+    }
+    for (var o in remoteOrders) {
+      mergedMap[o.orderNumber] = o;
+    }
+
+    final mergedList = mergedMap.values.toList();
+    mergedList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return mergedList;
   }
 
   /// Update order courier and status (Admin feature)
