@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 
@@ -14,14 +15,31 @@ class VaidyamCheckoutScreen extends ConsumerStatefulWidget {
 
 class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'Rohit Sharma');
-  final _phoneController = TextEditingController(text: '+91 98765 43210');
-  final _pincodeController = TextEditingController(text: '400001');
-  final _addressController = TextEditingController(text: 'Flat 402, Green Park Heights, M.G. Road');
-  final _cityController = TextEditingController(text: 'Mumbai');
-  String _selectedState = 'Maharashtra';
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _pincodeController = TextEditingController(text: '800001');
+  final _addressController = TextEditingController();
+  final _cityController = TextEditingController(text: 'Patna');
+  String _selectedState = 'Bihar';
   bool _isDefaultAddress = true;
   String _selectedPaymentMethod = 'UPI / QR';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(currentUserProvider);
+      final auth = ref.read(authControllerProvider);
+      final name = auth.userName ?? user?.userMetadata?['full_name'] ?? (auth.isGuest ? auth.guestName : null);
+      final phone = auth.userPhone ?? user?.phone ?? (auth.isGuest ? auth.guestPhone : null);
+      if (name != null && name.isNotEmpty) {
+        _nameController.text = name;
+      }
+      if (phone != null && phone.isNotEmpty) {
+        _phoneController.text = phone;
+      }
+    });
+  }
 
   final List<String> _indianStates = [
     'Maharashtra',
