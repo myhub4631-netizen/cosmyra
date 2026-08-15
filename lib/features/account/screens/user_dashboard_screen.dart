@@ -45,8 +45,8 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
   final List<Map<String, dynamic>> _sidebarNavItems = [
     {'title': 'Dashboard', 'icon': Icons.home_outlined, 'route': null},
-    {'title': 'My Orders', 'icon': Icons.inventory_2_outlined, 'route': '/orders'},
-    {'title': 'My Wishlist', 'icon': Icons.favorite_border, 'route': '/wishlist'},
+    {'title': 'My Orders', 'icon': Icons.inventory_2_outlined, 'route': null},
+    {'title': 'My Wishlist', 'icon': Icons.favorite_border, 'route': null},
     {'title': 'My Addresses', 'icon': Icons.location_on_outlined, 'route': null},
     {'title': 'Account Details', 'icon': Icons.person_outline, 'route': null},
     {'title': 'Change Password', 'icon': Icons.lock_outline, 'route': null},
@@ -883,6 +883,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     int wishlistCount,
   ) {
     switch (_selectedTab) {
+      case 'My Orders':
+        return _buildMyOrdersView(context);
+      case 'My Wishlist':
+        return _buildMyWishlistView(context);
       case 'My Addresses':
         return _buildAddressesView(context);
       case 'Payment Methods':
@@ -905,6 +909,197 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       default:
         return _buildDashboardOverview(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, isWide, realOrdersCount, wishlistCount);
     }
+  }
+
+  // ═════════════════════════════════════════════════════════════
+  // MY ORDERS TAB VIEW
+  // ═════════════════════════════════════════════════════════════
+  Widget _buildMyOrdersView(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('My Orders', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+        const SizedBox(height: 4),
+        const Text('Track, manage, and re-order your botanical purchases.', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+        const SizedBox(height: 24),
+        _buildRecentOrdersCard(context),
+      ],
+    );
+  }
+
+  // ═════════════════════════════════════════════════════════════
+  // MY WISHLIST TAB VIEW
+  // ═════════════════════════════════════════════════════════════
+  Widget _buildMyWishlistView(BuildContext context) {
+    final wishlist = ref.watch(wishlistProvider);
+    final allProducts = ref.watch(adminProductsProvider);
+    final wishlistedProducts = allProducts.where((p) => wishlist.contains(p.id)).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('My Wishlist', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text('${wishlistedProducts.length} Items', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text('Products saved for future purchases.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+          const SizedBox(height: 24),
+
+          if (wishlistedProducts.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(40),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: const BoxDecoration(color: Color(0xFFFEE2E2), shape: BoxShape.circle),
+                      child: const Icon(Icons.favorite_border, size: 40, color: Color(0xFFEF4444)),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Your Wishlist is Empty', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                    const SizedBox(height: 6),
+                    const Text('Explore our botanical collection and save your favorite items.', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => context.go('/shop'),
+                      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                      label: const Text('Explore Shop', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: wishlistedProducts.map((p) {
+                final variant = p.variants.isNotEmpty ? p.variants.first : null;
+                final price = variant?.price ?? 0;
+                final mrp = variant?.mrp ?? 0;
+
+                return Container(
+                  width: 220,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6)],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
+                            height: 140,
+                            width: double.infinity,
+                            decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+                            child: Center(
+                              child: p.imageUrls.isNotEmpty
+                                  ? Image.asset(p.imageUrls.first, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 40, color: Color(0xFF10B981)))
+                                  : const Icon(Icons.spa, size: 40, color: Color(0xFF10B981)),
+                            ),
+                          ),
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: InkWell(
+                              onTap: () {
+                                ref.read(wishlistProvider.notifier).toggleWishlist(p.id);
+                                showCenterActionToast(
+                                  context,
+                                  title: 'Item Removed 💖',
+                                  message: '${p.name} removed from wishlist.',
+                                  icon: Icons.favorite_border,
+                                  iconColor: const Color(0xFFEF4444),
+                                  primaryActionLabel: null,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const Icon(Icons.close, size: 14, color: Color(0xFF6B7280)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text(p.categoryId, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text('₹$price', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF111827))),
+                          if (mrp > price) ...[
+                            const SizedBox(width: 6),
+                            Text('₹$mrp', style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough)),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (variant != null) {
+                              ref.read(cartProvider.notifier).addItem(product: p, variant: variant);
+                              showCenterActionToast(
+                                context,
+                                title: 'Added to Cart 🛒',
+                                message: '${p.name} added to your cart.',
+                                icon: Icons.shopping_bag_outlined,
+                                iconColor: const Color(0xFF059669),
+                                primaryActionLabel: 'View Cart',
+                                onPrimaryAction: () => context.go('/cart'),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F46E5),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('Add to Cart', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
   }
 
   // ═════════════════════════════════════════════════════════════
@@ -945,9 +1140,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         isWide
             ? Row(
                 children: [
-                  Expanded(child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
+                  Expanded(child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => setState(() => _selectedTab = 'My Orders'))),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
+                  Expanded(child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => setState(() => _selectedTab = 'My Wishlist'))),
                   const SizedBox(width: 16),
                   Expanded(child: _buildStatCard('Addresses', '${_userAddresses.length}', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () => setState(() => _selectedTab = 'My Addresses'))),
                   const SizedBox(width: 16),
@@ -958,8 +1153,8 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => context.go('/orders'))),
-                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => context.go('/wishlist'))),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Total Orders', '$totalOrdersCount', 'View all orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => setState(() => _selectedTab = 'My Orders'))),
+                  SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Wishlist Items', '$wishlistCount', 'View wishlist', Icons.favorite_border, const Color(0xFFFEE2E2), const Color(0xFFEF4444), () => setState(() => _selectedTab = 'My Wishlist'))),
                   SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Addresses', '${_userAddresses.length}', 'Manage addresses', Icons.location_on_outlined, const Color(0xFFE0E7FF), const Color(0xFF6366F1), () => setState(() => _selectedTab = 'My Addresses'))),
                   SizedBox(width: (MediaQuery.of(context).size.width - 60) / 2, child: _buildStatCard('Account Balance', '₹0', 'View balance', Icons.account_balance_wallet_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), () {})),
                 ],
