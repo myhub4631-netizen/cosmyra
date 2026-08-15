@@ -21,7 +21,8 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _selectedIndex = 0;
+  int _activeViewIndex = 0;
+  final Set<String> _expandedParentMenus = {'Website'};
 
   final List<Map<String, dynamic>> _navigationItems = [
     {'title': 'Dashboard', 'icon': Icons.grid_view_rounded, 'hasChild': false, 'viewIndex': 0},
@@ -64,140 +65,114 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(bottom: BorderSide(color: Color(0xFFF3F4F6))),
+            border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SafeArea(
-            child: Row(
-              children: [
-                if (!isWide)
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu, color: Color(0xFF111827)),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-                  ),
-
-                const Text(
-                  'Master Admin',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
-                ),
-
-                const Spacer(),
-
-                // Search Bar Input
-                Container(
-                  width: 320,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search anything...',
-                      hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                      prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              if (!isWide)
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu, color: Color(0xFF374151)),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                 ),
+              const Text(
+                'Master Admin',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+              ),
+              const SizedBox(width: 32),
 
-                const SizedBox(width: 16),
-
-                // Language Selector
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: const [
-                      Text('English ', style: TextStyle(fontSize: 12, color: Color(0xFF374151), fontWeight: FontWeight.w500)),
-                      Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF6B7280)),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // Notifications Bell with Badge
-                Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_none_outlined, color: Color(0xFF374151), size: 22),
-                      onPressed: () {},
+              // Search Bar
+              if (isWide)
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    constraints: const BoxConstraints(maxWidth: 450),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFEF4444),
-                          shape: BoxShape.circle,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search orders, customers, products, SKU...',
+                              hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
+                              border: InputBorder.none,
+                              isDense: true,
+                            ),
+                          ),
                         ),
-                        child: const Text('5', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-
-                const SizedBox(width: 12),
-
-                // Admin Profile Chip
-                InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const AdminAuthDialog(),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 16,
-                        backgroundColor: Color(0xFF6366F1),
-                        child: Icon(Icons.person, size: 16, color: Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      Builder(
-                        builder: (context) {
-                          final currentUser = ref.watch(currentUserProvider);
-                          final email = currentUser?.email ?? '1mdollar2027@gmail.com';
-                          final name = currentUser?.userMetadata?['full_name'] ??
-                              (email == '1mdollar2027@gmail.com' ? 'Mahboob Hasan' : email.split('@').first);
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                              Text(email, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
                   ),
                 ),
 
-                const SizedBox(width: 12),
-                TextButton.icon(
-                  onPressed: () => context.go('/'),
-                  icon: const Icon(Icons.store, size: 16, color: Color(0xFF4F46E5)),
-                  label: const Text('Storefront', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                ),
-              ],
-            ),
+              const Spacer(),
+
+              // Right User Actions
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text('English ▾', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                  ),
+                  const SizedBox(width: 16),
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_outlined, color: Color(0xFF4B5563)),
+                        onPressed: () {},
+                      ),
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
+                          child: const Text('5', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  const CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Color(0xFFEEF2FF),
+                    child: Text('M', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 8),
+                  if (isWide)
+                    const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Mahboob Hasan', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                        Text('Master Admin', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  const SizedBox(width: 16),
+                  TextButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.storefront_outlined, size: 16, color: Color(0xFF4F46E5)),
+                    label: const Text('Storefront', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-
       drawer: !isWide ? Drawer(child: _buildSidebar(isDrawer: true)) : null,
-
       body: Row(
         children: [
           if (isWide)
@@ -209,8 +184,8 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
               child: KeyedSubtree(
-                key: ValueKey<int>(_selectedIndex),
-                child: _views[_navigationItems[_selectedIndex]['viewIndex'] as int],
+                key: ValueKey<int>(_activeViewIndex),
+                child: _views[_activeViewIndex],
               ),
             ),
           ),
@@ -255,7 +230,12 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
               itemCount: _navigationItems.length,
               itemBuilder: (context, index) {
                 final item = _navigationItems[index];
-                final isSelected = _selectedIndex == index;
+                final String title = item['title'] as String;
+                final int defaultViewIndex = item['viewIndex'] as int;
+
+                final bool isExpanded = _expandedParentMenus.contains(title);
+                final bool isParentActive = _activeViewIndex == defaultViewIndex ||
+                    (title == 'Website' && (_activeViewIndex == 7 || _activeViewIndex == 8));
 
                 return Column(
                   children: [
@@ -263,7 +243,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                          color: isParentActive ? const Color(0xFF4F46E5) : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: ListTile(
@@ -272,25 +252,34 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           leading: Icon(
                             item['icon'] as IconData,
                             size: 18,
-                            color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
+                            color: isParentActive ? Colors.white : const Color(0xFF9CA3AF),
                           ),
                           title: Text(
-                            item['title'] as String,
+                            title,
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                              color: isSelected ? Colors.white : const Color(0xFFD1D5DB),
+                              fontWeight: isParentActive ? FontWeight.bold : FontWeight.w500,
+                              color: isParentActive ? Colors.white : const Color(0xFFD1D5DB),
                             ),
                           ),
                           trailing: item['hasChild'] == true
                               ? Icon(
-                                  isSelected ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                   size: 16,
-                                  color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
+                                  color: isParentActive ? Colors.white : const Color(0xFF9CA3AF),
                                 )
                               : null,
                           onTap: () {
-                            setState(() => _selectedIndex = index);
+                            setState(() {
+                              if (item['hasChild'] == true) {
+                                if (isExpanded) {
+                                  _expandedParentMenus.remove(title);
+                                } else {
+                                  _expandedParentMenus.add(title);
+                                }
+                              }
+                              _activeViewIndex = defaultViewIndex;
+                            });
                             if (isDrawer) Navigator.of(context).pop();
                           },
                         ),
@@ -298,16 +287,16 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                     ),
 
                     // Expanded Sub-menu for Users
-                    if (item['title'] == 'Users' && isSelected) ...[
-                      _buildSubMenuItem('All Users', true),
+                    if (title == 'Users' && isExpanded) ...[
+                      _buildSubMenuItem('All Users', _activeViewIndex == 4, onTap: () => setState(() => _activeViewIndex = 4)),
                       _buildSubMenuItem('User Roles', false),
                       _buildSubMenuItem('Permissions', false),
                       const SizedBox(height: 4),
                     ],
 
                     // Expanded Sub-menu for Products
-                    if (item['title'] == 'Products' && isSelected) ...[
-                      _buildSubMenuItem('All Products', true),
+                    if (title == 'Products' && isExpanded) ...[
+                      _buildSubMenuItem('All Products', _activeViewIndex == 1, onTap: () => setState(() => _activeViewIndex = 1)),
                       _buildSubMenuItem('Add New Product', false),
                       _buildSubMenuItem('Categories', false),
                       _buildSubMenuItem('Brands', false),
@@ -319,8 +308,8 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                     ],
 
                     // Expanded Sub-menu for Orders
-                    if (item['title'] == 'Orders' && isSelected) ...[
-                      _buildSubMenuItem('All Orders', true),
+                    if (title == 'Orders' && isExpanded) ...[
+                      _buildSubMenuItem('All Orders', _activeViewIndex == 2, onTap: () => setState(() => _activeViewIndex = 2)),
                       _buildSubMenuItem('Unfulfilled', false),
                       _buildSubMenuItem('Processing', false),
                       _buildSubMenuItem('Shipped', false),
@@ -331,13 +320,13 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                     ],
 
                     // Expanded Sub-menu for Website
-                    if (item['title'] == 'Website' && isSelected) ...[
-                      _buildSubMenuItem('Homepage', _selectedIndex == 7, onTap: () => setState(() => _selectedIndex = 7)),
+                    if (title == 'Website' && isExpanded) ...[
+                      _buildSubMenuItem('Homepage', _activeViewIndex == 7, onTap: () => setState(() => _activeViewIndex = 7)),
                       _buildSubMenuItem('Pages', false),
                       _buildSubMenuItem('Navigation', false),
                       _buildSubMenuItem('Blog', false),
                       _buildSubMenuItem('Popup Manager', false),
-                      _buildSubMenuItem('Footer Manager', _selectedIndex == 8, onTap: () => setState(() => _selectedIndex = 8)),
+                      _buildSubMenuItem('Footer Manager', _activeViewIndex == 8, onTap: () => setState(() => _activeViewIndex = 8)),
                       const SizedBox(height: 4),
                     ],
                   ],
@@ -393,7 +382,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 title,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                   color: isActive ? Colors.white : const Color(0xFF9CA3AF),
                 ),
               ),
