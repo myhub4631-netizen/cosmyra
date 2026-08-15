@@ -70,36 +70,8 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     },
   ];
 
-  // Mock State for Notifications
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'id': 'notif-1',
-      'title': 'Order Dispatched 📦',
-      'message': 'Your order #ORD12543 has been packed and handed to BlueDart Express.',
-      'time': '2 hours ago',
-      'isRead': false,
-      'icon': Icons.local_shipping_outlined,
-      'color': Color(0xFF4F46E5),
-    },
-    {
-      'id': 'notif-2',
-      'title': 'Price Drop Alert ❤️',
-      'message': 'Kumkumadi Radiance Night Elixir in your wishlist is now on 20% OFF sale!',
-      'time': 'Yesterday',
-      'isRead': false,
-      'icon': Icons.favorite_outline,
-      'color': Color(0xFFEF4444),
-    },
-    {
-      'id': 'notif-3',
-      'title': 'Ayurvedic Ritual Guide 🌿',
-      'message': 'Discover 5 daily herbal skincare steps for healthy winter glow.',
-      'time': '3 days ago',
-      'isRead': true,
-      'icon': Icons.spa_outlined,
-      'color': Color(0xFF059669),
-    },
-  ];
+  // Notifications State
+  final List<Map<String, dynamic>> _notifications = [];
 
   // FAQ Accordion Expanded State
   final Map<int, bool> _faqExpanded = {0: true, 1: false, 2: false, 3: false};

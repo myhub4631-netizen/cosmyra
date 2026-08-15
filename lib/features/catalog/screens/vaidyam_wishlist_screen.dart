@@ -579,7 +579,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
           _sidebarItem(Icons.location_on_outlined, 'Addresses', onTap: () => context.go('/dashboard?tab=Addresses')),
           _sidebarItem(Icons.payment_outlined, 'Payment Methods', onTap: () => context.go('/dashboard?tab=Payment Methods')),
           _sidebarItem(Icons.confirmation_number_outlined, 'Coupons', onTap: () => context.go('/dashboard?tab=Coupons')),
-          _sidebarItem(Icons.notifications_none_outlined, 'Notifications', badge: '3', onTap: () => context.go('/dashboard?tab=Notifications')),
+          _sidebarItem(Icons.notifications_none_outlined, 'Notifications', onTap: () => context.go('/dashboard?tab=Notifications')),
           _sidebarItem(Icons.assignment_return_outlined, 'Returns & Refunds', onTap: () => context.go('/dashboard?tab=Returns & Refunds')),
           _sidebarItem(Icons.help_outline, 'Help & Support', onTap: () => context.go('/dashboard?tab=Help & Support')),
           _sidebarItem(Icons.settings_outlined, 'Account Settings', onTap: () => context.go('/dashboard?tab=Account Settings')),
