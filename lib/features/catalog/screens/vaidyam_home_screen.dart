@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../admin/controllers/homepage_cms_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
@@ -765,15 +766,25 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   // --- 5. SHOP BY CATEGORIES ---
   Widget _buildShopByCategoriesSection(bool isDesktop) {
+    final cmsState = ref.watch(homepageCmsProvider);
+    final categorySec = cmsState.sections.firstWhere(
+      (s) => s['type'] == 'categories',
+      orElse: () => {'isActive': true, 'items': _categories},
+    );
+
+    if (categorySec['isActive'] == false) return const SizedBox.shrink();
+
+    final dynamicItems = (categorySec['items'] as List);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Shop by Categories',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: _textDark),
+            Text(
+              categorySec['title']?.toString() ?? 'Shop by Categories',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: _textDark),
             ),
             InkWell(
               onTap: () => context.push('/explore'),
@@ -794,10 +805,14 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           height: 125,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
+            itemCount: dynamicItems.length,
             separatorBuilder: (_, __) => const SizedBox(width: 16),
             itemBuilder: (context, index) {
-              final cat = _categories[index];
+              final cat = dynamicItems[index] as Map<String, dynamic>;
+              final title = cat['title']?.toString() ?? cat['name']?.toString() ?? 'Category';
+              final emoji = cat['emoji']?.toString() ?? '🌿';
+              final iconData = cat['icon'] is IconData ? (cat['icon'] as IconData) : null;
+
               return InkWell(
                 onTap: () => context.push('/explore'),
                 child: Column(
@@ -811,17 +826,19 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                         border: Border.all(color: _borderGray),
                       ),
                       child: Center(
-                        child: Text(
-                          cat['icon']!,
-                          style: const TextStyle(fontSize: 32),
-                        ),
+                        child: iconData != null
+                            ? Icon(iconData, size: 28, color: _primaryPurple)
+                            : Text(
+                                emoji,
+                                style: const TextStyle(fontSize: 32),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
                       width: 90,
                       child: Text(
-                        cat['title']!,
+                        title,
                         textAlign: TextAlign.center,
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textDark),
                         maxLines: 2,

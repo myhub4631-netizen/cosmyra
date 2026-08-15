@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../controllers/homepage_cms_controller.dart';
 
 class AdminHomepageCmsView extends ConsumerStatefulWidget {
   const AdminHomepageCmsView({super.key});
@@ -12,6 +13,21 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
   int _selectedTab = 0; // 0: Sections, 1: SEO, 2: Theme, 3: Custom CSS/JS
   bool _isSaving = false;
   bool _allChangesSaved = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cmsState = ref.read(homepageCmsProvider);
+      setState(() {
+        _sectionsList = List<Map<String, dynamic>>.from(cmsState.sections.map((s) => Map<String, dynamic>.from(s)));
+      });
+    });
+  }
+
+  void _syncProvider() {
+    ref.read(homepageCmsProvider.notifier).updateSections(_sectionsList);
+  }
 
   // Track collapsed section IDs
   final Set<String> _collapsedSectionIds = {};
@@ -895,6 +911,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                                   (sec['items'] as List).removeAt(itemIdx);
                                   _allChangesSaved = false;
                                 });
+                                _syncProvider();
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(2),
