@@ -6,6 +6,7 @@ import '../widgets/admin_analytics_view.dart';
 import '../widgets/admin_auth_dialog.dart';
 import '../widgets/admin_catalog_view.dart';
 import '../widgets/admin_customers_view.dart';
+import '../widgets/admin_footer_cms_view.dart';
 import '../widgets/admin_homepage_cms_view.dart';
 import '../widgets/admin_orders_view.dart';
 import '../widgets/admin_promotions_view.dart';
@@ -48,6 +49,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     AdminPromotionsView(),
     AdminSettingsView(),
     AdminHomepageCmsView(),
+    AdminFooterCmsView(),
   ];
 
   @override
@@ -330,11 +332,12 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
 
                     // Expanded Sub-menu for Website
                     if (item['title'] == 'Website' && isSelected) ...[
-                      _buildSubMenuItem('Homepage', true),
+                      _buildSubMenuItem('Homepage', _selectedIndex == 7, onTap: () => setState(() => _selectedIndex = 7)),
                       _buildSubMenuItem('Pages', false),
                       _buildSubMenuItem('Navigation', false),
                       _buildSubMenuItem('Blog', false),
                       _buildSubMenuItem('Popup Manager', false),
+                      _buildSubMenuItem('Footer Manager', _selectedIndex == 8, onTap: () => setState(() => _selectedIndex = 8)),
                       const SizedBox(height: 4),
                     ],
                   ],
@@ -373,26 +376,29 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     );
   }
 
-  Widget _buildSubMenuItem(String title, bool isActive) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 36, bottom: 2, right: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? Colors.white : const Color(0xFF9CA3AF),
+  Widget _buildSubMenuItem(String title, bool isActive, {VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 36, bottom: 2, right: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  color: isActive ? Colors.white : const Color(0xFF9CA3AF),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
