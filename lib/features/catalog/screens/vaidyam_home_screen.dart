@@ -912,9 +912,9 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               children: [
@@ -925,7 +925,9 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Color(0xFFF3E8FF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.local_offer_outlined, color: Color(0xFF4F46E5), size: 20),
+                  child: const Center(
+                    child: Icon(Icons.local_offer_outlined, color: Color(0xFF4F46E5), size: 20),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -946,23 +948,20 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             ),
             InkWell(
               onTap: () => context.push('/explore'),
-              child: Row(
-                children: const [
-                  Text('View All Deals', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios, color: Color(0xFF4F46E5), size: 12),
-                ],
+              child: const Text(
+                'View All Deals →',
+                style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
 
-        // Deals Grid Cards Row with right floating scroll arrow
+        // Deals Cards Row with right floating scroll arrow
         Stack(
           children: [
             SizedBox(
-              height: 345,
+              height: 365,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: _dealProducts.length,
@@ -976,7 +975,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             if (isDesktop)
               Positioned(
                 right: 0,
-                top: 135,
+                top: 150,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -999,7 +998,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   Widget _buildDealProductCard(Map<String, dynamic> deal) {
     return Container(
-      width: 235,
+      width: 220,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1016,7 +1015,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           Stack(
             children: [
               Container(
-                height: 130,
+                height: 135,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
@@ -1107,26 +1106,25 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               const SizedBox(width: 6),
               Text(
                 '₹${deal['originalPrice']}',
-                style: const TextStyle(fontSize: 12, decoration: TextDecoration.lineThrough, color: Color(0xFF9CA3AF)),
+                style: const TextStyle(fontSize: 11, decoration: TextDecoration.lineThrough, color: Color(0xFF9CA3AF)),
               ),
             ],
           ),
           const Spacer(),
 
-          // Add to Cart & Buy Now Buttons Row
+          // Larger Add to Cart & Buy Now Action Buttons Row
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _addDealToCart(deal, isBuyNow: false),
-                  icon: const Icon(Icons.shopping_cart_outlined, size: 12, color: Color(0xFF4F46E5)),
-                  label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 10, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
+                  label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     side: const BorderSide(color: Color(0xFF4F46E5)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(0, 38),
                   ),
                 ),
               ),
@@ -1134,16 +1132,15 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _addDealToCart(deal, isBuyNow: true),
-                  icon: const Icon(Icons.bolt, size: 13, color: Colors.white),
-                  label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
+                  label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     elevation: 0,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: const Size(0, 38),
                   ),
                 ),
               ),
@@ -1356,7 +1353,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                   itemCount: trendingProducts.length.clamp(0, 4),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: count,
-                    childAspectRatio: isDesktop ? 0.84 : 0.76,
+                    childAspectRatio: isDesktop ? 0.88 : 0.80,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),
@@ -1413,10 +1410,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.asset(
                   prod['image'] as String,
-                  height: 135,
+                  height: 140,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 135, child: const Icon(Icons.spa, color: _primaryPurple)),
+                  errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
                 ),
               ),
               // Discount Tag Badge (Top-Left)
@@ -1464,7 +1461,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               children: [
                 Text(
                   prod['name'] as String,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1483,56 +1480,54 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     Text('${prod['rating']} (${prod['reviews'] ?? "12345"})', style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
 
-                // Price Row Left & Right
+                // Price Row Left & Right (Right-aligned price tag)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Text('₹${prod['price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                        Text('₹${prod['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                         const SizedBox(width: 6),
                         Text('₹${prod['originalPrice'] ?? "2549"}', style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough)),
                       ],
                     ),
-                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                   ],
                 ),
 
                 const SizedBox(height: 10),
 
-                // Add to Cart & Buy Now Buttons Row
+                // Larger Add to Cart & Buy Now Action Buttons Row
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _addDealToCart(prod, isBuyNow: false),
-                        icon: const Icon(Icons.shopping_cart_outlined, size: 12, color: Color(0xFF4F46E5)),
-                        label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 10, fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
+                        label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           side: const BorderSide(color: Color(0xFF4F46E5)),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 38),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => _addDealToCart(prod, isBuyNow: true),
-                        icon: const Icon(Icons.bolt, size: 13, color: Colors.white),
-                        label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
+                        label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4F46E5),
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 38),
                         ),
                       ),
                     ),
