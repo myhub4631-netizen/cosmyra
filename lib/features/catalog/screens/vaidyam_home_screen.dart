@@ -1666,16 +1666,17 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     );
   }
 
-  // --- 10. 👑 CUSTOMER CLASSICS & BEST SELLERS ---
+  // --- 10. 👑 HALL OF FAME BEST SELLERS ---
   Widget _buildBestSellersSection(bool isDesktop) {
     final bestSellers = [
       {
         'rank': '#1 BEST SELLER',
         'title': 'Bhringraj Hair Defense Oil',
         'badgeColor': const Color(0xFFD97706),
-        'ingredients': '🌿 Neem • Bhringraj • Amla',
+        'ingredients': 'Neem • Bhringraj • Amla',
         'price': '₹1,299',
         'originalPrice': '₹1,699',
+        'discount': '23% OFF',
         'rating': 4.9,
         'reviewCount': '14,230 Reviews',
         'quote': '"Restored my hair volume within 3 weeks of daily ritual!"',
@@ -1685,9 +1686,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'rank': '#2 TOP RATED',
         'title': 'Kumkumadi Radiance Elixir',
         'badgeColor': const Color(0xFF4338CA),
-        'ingredients': '🌸 Kashmiri Kesar • Chandan',
+        'ingredients': 'Kashmiri Kesar • Chandan',
         'price': '₹1,799',
         'originalPrice': '₹2,549',
+        'discount': '29% OFF',
         'rating': 4.9,
         'reviewCount': '12,980 Reviews',
         'quote': '"My skin has never felt this hydrated and glowing naturally."',
@@ -1697,9 +1699,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'rank': '#3 FAVORITE RITUAL',
         'title': 'Nalpamaradi Body Thailam',
         'badgeColor': const Color(0xFF059669),
-        'ingredients': '🍃 Turmeric • Vetiver • Banyan Bark',
+        'ingredients': 'Turmeric • Vetiver • Banyan Bark',
         'price': '₹999',
         'originalPrice': '₹1,399',
+        'discount': '28% OFF',
         'rating': 4.8,
         'reviewCount': '9,840 Reviews',
         'quote': '"The herbal scent and skin brightening effect are unreal."',
@@ -1710,158 +1713,345 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
               children: [
-                Text(
-                  '👑 Hall of Fame Best Sellers',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _textDark),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF3C7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(child: Text('👑', style: TextStyle(fontSize: 18))),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Tried, tested, and loved by hundreds of thousands across India',
-                  style: TextStyle(fontSize: 13, color: _textMuted),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Hall of Fame Best Sellers',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Tried, tested, and loved by hundreds of thousands across India',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
                 ),
               ],
+            ),
+            InkWell(
+              onTap: () => context.push('/explore'),
+              child: const Text(
+                'View All Best Sellers →',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 20),
 
-        Row(
-          children: bestSellers.map((item) {
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: _borderGray),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2)),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: item['badgeColor'] as Color,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        item['rank'] as String,
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Container(
-                        height: 120,
-                        width: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(
-                            image: AssetImage(item['image'] as String),
-                            fit: BoxFit.cover,
+        // Horizontal Cards Stack with Navigation Chevrons
+        Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (isDesktop) {
+                  return Row(
+                    children: bestSellers.map((item) {
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Rank Badge Top-Left & Wishlist Heart Top-Right
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: item['badgeColor'] as Color,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      item['rank'] as String,
+                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: const Color(0xFFF9FAFB),
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
+                                      onPressed: () {
+                                        ref.read(wishlistProvider.notifier).toggleWishlist('bestseller-${item['title']}');
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Product Image + Details Side-by-Side Row
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.asset(
+                                      item['image'] as String,
+                                      width: 110,
+                                      height: 110,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(width: 110, height: 110, color: _cardBg, child: const Icon(Icons.spa, color: _primaryPurple)),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item['title'] as String,
+                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          item['ingredients'] as String,
+                                          style: const TextStyle(fontSize: 11, color: Color(0xFF059669), fontWeight: FontWeight.w500),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.star, color: Colors.amber, size: 12),
+                                            const SizedBox(width: 2),
+                                            Text('${item['rating']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                '(${item['reviewCount']})',
+                                                style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          item['quote'] as String,
+                                          style: const TextStyle(fontSize: 10, fontStyle: FontStyle.italic, color: Color(0xFF6B7280)),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            Text(item['price'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                                            const SizedBox(width: 6),
+                                            Text(item['originalPrice'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough)),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFDCFCE7),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                item['discount'] as String,
+                                                style: const TextStyle(color: Color(0xFF166534), fontSize: 9, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              // Bottom Side-by-Side Action Buttons with improved sizing
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () => _addDealToCart({
+                                        'id': 'bestseller-${item['title']}',
+                                        'name': item['title'],
+                                        'price': (item['price'] as String).replaceAll('₹', '').replaceAll(',', ''),
+                                        'category': 'Best Seller',
+                                        'image': item['image'],
+                                      }, isBuyNow: false),
+                                      icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
+                                      label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        side: const BorderSide(color: Color(0xFF4F46E5)),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        minimumSize: const Size(0, 38),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _addDealToCart({
+                                        'id': 'bestseller-${item['title']}',
+                                        'name': item['title'],
+                                        'price': (item['price'] as String).replaceAll('₹', '').replaceAll(',', ''),
+                                        'category': 'Best Seller',
+                                        'image': item['image'],
+                                      }, isBuyNow: true),
+                                      icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
+                                      label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(0xFF4F46E5),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 10),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                        elevation: 0,
+                                        minimumSize: const Size(0, 38),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      item['title'] as String,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: _textDark),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item['ingredients'] as String,
-                      style: const TextStyle(fontSize: 11, color: _primaryPurple, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 14),
-                        const SizedBox(width: 4),
-                        Text('${item['rating']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 6),
-                        Text('(${item['reviewCount']})', style: const TextStyle(fontSize: 11, color: _textMuted)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item['quote'] as String,
-                      style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: _textMuted),
-                      maxLines: 2,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
+                      );
+                    }).toList(),
+                  );
+                } else {
+                  return Column(
+                    children: bestSellers.map((item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item['price'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textDark)),
-                            Text(item['originalPrice'] as String, style: const TextStyle(fontSize: 11, color: _textMuted, decoration: TextDecoration.lineThrough)),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: item['badgeColor'] as Color,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    item['rank'] as String,
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: const Color(0xFFF9FAFB),
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
+                                    onPressed: () {},
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.asset(item['image'] as String, width: 90, height: 90, fit: BoxFit.cover),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(item['title'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                                      Text(item['ingredients'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF059669))),
+                                      const SizedBox(height: 4),
+                                      Text(item['price'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                        Row(
-                          children: [
-                            OutlinedButton(
-                              onPressed: () => _addDealToCart({
-                                'id': 'bestseller-${item['title']}',
-                                'name': item['title'],
-                                'price': item['price'],
-                                'originalPrice': item['originalPrice'],
-                                'category': 'Best Seller',
-                                'image': item['image'],
-                              }, isBuyNow: false),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: _primaryPurple),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text('Add to Cart', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _primaryPurple)),
-                            ),
-                            const SizedBox(width: 6),
-                            ElevatedButton(
-                              onPressed: () => _addDealToCart({
-                                'id': 'bestseller-${item['title']}',
-                                'name': item['title'],
-                                'price': item['price'],
-                                'originalPrice': item['originalPrice'],
-                                'category': 'Best Seller',
-                                'image': item['image'],
-                              }, isBuyNow: true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _primaryPurple,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                elevation: 0,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text('Buy Now', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    )).toList(),
+                  );
+                }
+              },
+            ),
+            if (isDesktop) ...[
+              Positioned(
+                left: -6,
+                top: 100,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                    ],
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: const Icon(Icons.chevron_left, size: 20, color: Color(0xFF374151)),
                 ),
               ),
-            );
-          }).toList(),
+              Positioned(
+                right: -6,
+                top: 100,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                    ],
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: const Icon(Icons.chevron_right, size: 20, color: Color(0xFF374151)),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -1876,14 +2066,28 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'price': '₹2,499',
         'originalPrice': '₹3,697',
         'save': 'Save ₹1,198 (32% OFF)',
+        'bgColor': const Color(0xFFFFFBEB),
+        'borderColor': const Color(0xFFFEF3C7),
+        'tagColor': const Color(0xFFB45309),
+        'textColor': const Color(0xFF78350F),
+        'subtextColor': const Color(0xFF92400E),
+        'btnColor': const Color(0xFFB45309),
+        'features': ['Strengthens roots', 'Reduces hair fall', 'Boosts growth'],
         'image': 'assets/images/shampoo.jpg',
       },
       {
         'title': 'Royal Radiance Glow Kit',
-        'items': 'Kumkumadi Oil + Chandan Cleanser + Face Mask',
+        'items': 'Kumkumadi Oil + Cleanser + Face Mask',
         'price': '₹2,899',
         'originalPrice': '₹4,297',
         'save': 'Save ₹1,398 (35% OFF)',
+        'bgColor': const Color(0xFFEEF2FF),
+        'borderColor': const Color(0xFFE0E7FF),
+        'tagColor': const Color(0xFF4338CA),
+        'textColor': const Color(0xFF1E1B4B),
+        'subtextColor': const Color(0xFF3730A3),
+        'btnColor': const Color(0xFF4338CA),
+        'features': ['Brightens skin', 'Evens skin tone', 'Deep nourishment'],
         'image': 'assets/images/facewash.jpg',
       },
       {
@@ -1892,6 +2096,13 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'price': '₹1,899',
         'originalPrice': '₹2,797',
         'save': 'Save ₹898 (32% OFF)',
+        'bgColor': const Color(0xFFF0FDF4),
+        'borderColor': const Color(0xFFDCFCE7),
+        'tagColor': const Color(0xFF059669),
+        'textColor': const Color(0xFF064E3B),
+        'subtextColor': const Color(0xFF065F46),
+        'btnColor': const Color(0xFF059669),
+        'features': ['Relaxes body', 'Improves sleep', 'Nourishes skin'],
         'image': 'assets/images/soap.jpg',
       },
     ];
@@ -1899,90 +2110,232 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
               children: [
-                Text(
-                  '🎁 Curated Routine Combos & Bundles',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _textDark),
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFEDD5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(child: Text('🎁', style: TextStyle(fontSize: 18))),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Complete botanical wellness kits for maximum daily synergy • Save up to 35%',
-                  style: TextStyle(fontSize: 13, color: _textMuted),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'Curated Routine Combos & Bundles',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Complete botanical wellness kits for maximum daily synergy • Save up to 35%',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    ),
+                  ],
                 ),
               ],
+            ),
+            InkWell(
+              onTap: () => context.push('/explore'),
+              child: const Text(
+                'View All Bundles →',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 20),
 
-        Row(
-          children: bundles.map((b) {
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7), // Soft Warm Gold
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFFDE68A)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB45309),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        b['save'] as String,
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      b['title'] as String,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF78350F)),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      b['items'] as String,
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
+        // Cards Row with Right Chevron
+        Stack(
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (isDesktop) {
+                  return Row(
+                    children: bundles.map((b) {
+                      final features = b['features'] as List<String>;
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: b['bgColor'] as Color,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: b['borderColor'] as Color),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Save Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: b['tagColor'] as Color,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  b['save'] as String,
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          b['title'] as String,
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: b['textColor'] as Color),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          b['items'] as String,
+                                          style: TextStyle(fontSize: 10, color: b['subtextColor'] as Color),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 10),
+                                        ...features.map((feat) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 4.0),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.check_circle_outline, size: 12, color: b['btnColor'] as Color),
+                                              const SizedBox(width: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  feat,
+                                                  style: TextStyle(fontSize: 11, color: b['textColor'] as Color, fontWeight: FontWeight.w500),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: Image.asset(
+                                      b['image'] as String,
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(width: 90, height: 90, color: Colors.white24, child: const Icon(Icons.inventory_2_outlined)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              // Bottom Row: Price Left & Add Bundle Button Right
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(b['price'] as String, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: b['textColor'] as Color)),
+                                      const SizedBox(width: 6),
+                                      Text(b['originalPrice'] as String, style: TextStyle(fontSize: 11, color: (b['subtextColor'] as Color).withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
+                                    ],
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: () => context.push('/cart'),
+                                    icon: const Icon(Icons.shopping_bag_outlined, size: 13, color: Colors.white),
+                                    label: const Text('Add Bundle', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: b['btnColor'] as Color,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      elevation: 0,
+                                      minimumSize: const Size(0, 36),
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                } else {
+                  return Column(
+                    children: bundles.map((b) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: b['bgColor'] as Color,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: b['borderColor'] as Color),
+                        ),
+                        child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(b['price'] as String, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF78350F))),
-                            Text(b['originalPrice'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF92400E), decoration: TextDecoration.lineThrough)),
+                            Text(b['title'] as String, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: b['textColor'] as Color)),
+                            const SizedBox(height: 4),
+                            Text(b['items'] as String, style: TextStyle(fontSize: 11, color: b['subtextColor'] as Color)),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(b['price'] as String, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: b['textColor'] as Color)),
+                                ElevatedButton(
+                                  onPressed: () => context.push('/cart'),
+                                  style: ElevatedButton.styleFrom(backgroundColor: b['btnColor'] as Color),
+                                  child: const Text('Add Bundle', style: TextStyle(fontSize: 11, color: Colors.white)),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                        ElevatedButton(
-                          onPressed: () => context.push('/cart'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFB45309),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          ),
-                          child: const Text('Add Bundle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    )).toList(),
+                  );
+                }
+              },
+            ),
+            if (isDesktop)
+              Positioned(
+                right: -6,
+                top: 100,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                    ],
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: const Icon(Icons.chevron_right, size: 20, color: Color(0xFF374151)),
                 ),
               ),
-            );
-          }).toList(),
+          ],
         ),
       ],
     );
