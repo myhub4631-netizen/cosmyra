@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../admin/controllers/homepage_cms_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
@@ -151,17 +152,14 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
     ref.read(cartProvider.notifier).addItem(product: product, variant: product.defaultVariant);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${deal['name']} added to cart!'),
-        backgroundColor: _primaryPurple,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'VIEW CART',
-          textColor: Colors.white,
-          onPressed: () => context.push('/cart'),
-        ),
-      ),
+    showCenterActionToast(
+      context,
+      title: 'Added to Shopping Bag! 🛍️',
+      message: deal['name'] as String,
+      icon: Icons.check_circle_rounded,
+      iconColor: const Color(0xFF059669),
+      primaryActionLabel: 'VIEW CART',
+      onPrimaryAction: () => context.push('/cart'),
     );
   }
 

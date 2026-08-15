@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
@@ -665,8 +666,14 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
                     for (int i = 0; i < _quantity; i++) {
                       ref.read(cartProvider.notifier).addItem(product: p, variant: v);
                     }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added $_quantity x ${p.name} to cart!')),
+                    showCenterActionToast(
+                      context,
+                      title: 'Added to Shopping Bag! 🛍️',
+                      message: '$_quantity x ${p.name}',
+                      icon: Icons.shopping_bag_outlined,
+                      iconColor: const Color(0xFF4F46E5),
+                      primaryActionLabel: 'VIEW CART',
+                      onPrimaryAction: () => context.push('/cart'),
                     );
                   },
                   style: OutlinedButton.styleFrom(

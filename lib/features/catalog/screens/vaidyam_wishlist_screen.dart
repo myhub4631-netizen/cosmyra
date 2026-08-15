@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
@@ -189,17 +190,14 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
   void _addToCartSingle(ProductModel product) {
     final variant = product.defaultVariant;
     ref.read(cartProvider.notifier).addItem(product: product, variant: variant);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to cart!'),
-        backgroundColor: _primaryPurple,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'VIEW CART',
-          textColor: Colors.white,
-          onPressed: () => context.push('/cart'),
-        ),
-      ),
+    showCenterActionToast(
+      context,
+      title: 'Added to Shopping Bag! 🛍️',
+      message: product.name,
+      icon: Icons.shopping_bag_outlined,
+      iconColor: const Color(0xFF4F46E5),
+      primaryActionLabel: 'VIEW CART',
+      onPrimaryAction: () => context.push('/cart'),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
@@ -724,8 +725,14 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
                 InkWell(
                   onTap: () {
                     ref.read(cartProvider.notifier).addItem(product: p, variant: v);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${p.name} to cart!')),
+                    showCenterActionToast(
+                      context,
+                      title: 'Added to Shopping Bag! 🛍️',
+                      message: p.name,
+                      icon: Icons.shopping_bag_outlined,
+                      iconColor: const Color(0xFF4F46E5),
+                      primaryActionLabel: 'VIEW CART',
+                      onPrimaryAction: () => context.push('/cart'),
                     );
                   },
                   child: Container(
@@ -783,7 +790,15 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
             ElevatedButton.icon(
               onPressed: () {
                 ref.read(cartProvider.notifier).addItem(product: p, variant: v);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added ${p.name} to cart!')));
+                showCenterActionToast(
+                  context,
+                  title: 'Added to Shopping Bag! 🛍️',
+                  message: p.name,
+                  icon: Icons.shopping_bag_outlined,
+                  iconColor: const Color(0xFF4F46E5),
+                  primaryActionLabel: 'VIEW CART',
+                  onPrimaryAction: () => context.push('/cart'),
+                );
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1), foregroundColor: Colors.white),
               icon: const Icon(Icons.add_shopping_cart, size: 16),

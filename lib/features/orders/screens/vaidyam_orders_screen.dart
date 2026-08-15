@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
@@ -1047,10 +1048,15 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
                   const SizedBox(height: 10),
                   OutlinedButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added $productName to cart!')),
+                      showCenterActionToast(
+                        context,
+                        title: 'Re-ordered Item Added! 🛍️',
+                        message: productName,
+                        icon: Icons.shopping_bag_outlined,
+                        iconColor: const Color(0xFF4F46E5),
+                        primaryActionLabel: 'VIEW CART',
+                        onPrimaryAction: () => context.go('/cart'),
                       );
-                      context.go('/cart');
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
