@@ -43,6 +43,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   bool _smsUpdates = true;
   bool _whatsappAlerts = true;
 
+  // Coupons State
+  final List<Map<String, dynamic>> _userCoupons = [];
+
   final List<Map<String, dynamic>> _sidebarNavItems = [
     {'title': 'Dashboard', 'icon': Icons.home_outlined, 'route': null},
     {'title': 'My Orders', 'icon': Icons.inventory_2_outlined, 'route': null},
@@ -66,6 +69,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     _loadSavedAddresses();
     _loadSavedPaymentMethods();
     _loadSavedNotifications();
+    _loadSavedCoupons();
   }
 
   IconData _getNotificationIcon(String? iconType) {
@@ -268,6 +272,207 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_getAccountStorageKey('payment_methods_v3'), jsonEncode(_paymentMethods));
     } catch (_) {}
+  }
+
+  Future<void> _loadSavedCoupons() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString(_getAccountStorageKey('coupons_v3'));
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        setState(() {
+          _userCoupons.clear();
+          _userCoupons.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+        });
+      } else {
+        setState(() {
+          _userCoupons.clear();
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveCouponsToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_getAccountStorageKey('coupons_v3'), jsonEncode(_userCoupons));
+    } catch (_) {}
+  }
+
+  Future<void> _confirmDeleteCoupon(BuildContext context, int idx) async {
+    final c = _userCoupons[idx];
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+            SizedBox(width: 8),
+            Text('Remove Coupon?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to remove coupon ${c['code']}?\n\nThis action cannot be undone.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _userCoupons.removeAt(idx);
+      });
+      await _saveCouponsToStorage();
+      if (context.mounted) {
+        showCenterActionToast(
+          context,
+          title: 'Coupon Removed 🗑️',
+          message: 'Coupon code ${c['code']} removed from your account.',
+          icon: Icons.confirmation_number_outlined,
+          iconColor: const Color(0xFFDC2626),
+          primaryActionLabel: null,
+        );
+      }
+    }
+  }
+
+  void _showClaimCouponDialog(BuildContext context) {
+    final codeCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.confirmation_number_outlined, color: Color(0xFF4F46E5)),
+            SizedBox(width: 8),
+            Text('Claim Promo Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: 360,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Enter promo code or select a quick offer below:', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+              const SizedBox(height: 12),
+              TextField(
+                controller: codeCtrl,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                decoration: InputDecoration(
+                  hintText: 'e.g. VAIDYAM20',
+                  hintStyle: const TextStyle(fontWeight: FontWeight.normal, color: Color(0xFF9CA3AF), letterSpacing: 0),
+                  filled: true,
+                  fillColor: const Color(0xFFF9FAFB),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Quick Promo Codes:', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  {'code': 'VAIDYAM20', 'discount': '20% OFF'},
+                  {'code': 'WELCOME100', 'discount': 'FLAT ₹100'},
+                  {'code': 'FREESHIP', 'discount': 'FREE SHIP'},
+                  {'code': 'AYURVEDA50', 'discount': '50% OFF'},
+                ].map((item) {
+                  return ActionChip(
+                    label: Text('${item['code']} (${item['discount']})', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                    backgroundColor: const Color(0xFFEEF2FF),
+                    side: BorderSide.none,
+                    onPressed: () {
+                      codeCtrl.text = item['code']!;
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () async {
+              final rawCode = codeCtrl.text.trim().toUpperCase();
+              if (rawCode.isEmpty) return;
+
+              final exists = _userCoupons.any((c) => (c['code'] as String).toUpperCase() == rawCode);
+              if (exists) {
+                Navigator.pop(ctx);
+                showCenterActionToast(
+                  context,
+                  title: 'Already Claimed! 🎟️',
+                  message: 'Coupon code $rawCode is already saved in your account.',
+                  icon: Icons.info_outline,
+                  iconColor: const Color(0xFFD97706),
+                  primaryActionLabel: null,
+                );
+                return;
+              }
+
+              final Map<String, dynamic> newCoupon = {
+                'id': 'cpn_${DateTime.now().millisecondsSinceEpoch}',
+                'code': rawCode,
+                'discount': rawCode == 'WELCOME100' ? 'FLAT ₹100 OFF' : (rawCode == 'FREESHIP' ? 'FREE SHIPPING' : '20% OFF'),
+                'desc': 'Claimed promo voucher applied for instant checkout savings',
+                'min': 'Valid on eligible botanical orders',
+                'exp': 'Valid for 30 days',
+              };
+
+              setState(() {
+                _userCoupons.insert(0, newCoupon);
+              });
+              await _saveCouponsToStorage();
+              if (context.mounted) {
+                Navigator.pop(ctx);
+                showCenterActionToast(
+                  context,
+                  title: 'Coupon Claimed! 🎟️',
+                  message: 'Coupon code $rawCode successfully saved to your account.',
+                  icon: Icons.confirmation_number_outlined,
+                  iconColor: const Color(0xFF059669),
+                  primaryActionLabel: null,
+                );
+              }
+            },
+            child: const Text('Claim Coupon', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmDeletePaymentMethod(BuildContext context, int idx) async {
@@ -1469,13 +1674,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   // 4. COUPONS VIEW
   // ═════════════════════════════════════════════════════════════
   Widget _buildCouponsView(BuildContext context) {
-    final coupons = [
-      {'code': 'VAIDYAM20', 'discount': '20% OFF', 'desc': 'Get 20% instant discount on all Organic Skincare & Herbal Hair oils', 'min': 'Min. order ₹799', 'exp': 'Valid till Dec 31, 2026', 'color': const Color(0xFF4F46E5)},
-      {'code': 'WELCOME100', 'discount': 'FLAT ₹100 OFF', 'desc': 'Flat ₹100 discount on your first Vaidyam Botanicals purchase', 'min': 'No min order required', 'exp': 'Valid for new accounts', 'color': const Color(0xFF059669)},
-      {'code': 'FREESHIP', 'discount': 'FREE SHIPPING', 'desc': 'Free Express Courier shipping directly to your doorstep', 'min': 'Min. order ₹499', 'exp': 'Always active', 'color': const Color(0xFFD97706)},
-      {'code': 'HERBAL15', 'discount': '15% CASHBACK', 'desc': '15% cashback credited to your account balance on herbal serums', 'min': 'Min. order ₹999', 'exp': 'Valid this month', 'color': const Color(0xFF6366F1)},
-    ];
-
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1486,68 +1684,143 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('My Coupons & Exclusive Offers', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-          const SizedBox(height: 4),
-          const Text('Apply available discount promo codes during checkout for instant savings.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('My Saved Coupons & Vouchers', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                  SizedBox(height: 4),
+                  Text('Claim promo codes and manage your active discount vouchers.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showClaimCouponDialog(context),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Claim Promo Code', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
 
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 380,
-              mainAxisExtent: 160,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: coupons.length,
-            itemBuilder: (context, idx) {
-              final c = coupons[idx];
-              final color = c['color'] as Color;
+          if (_userCoupons.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.confirmation_number_outlined, size: 48, color: Color(0xFF9CA3AF)),
+                  const SizedBox(height: 12),
+                  const Text('No Saved Coupons Yet', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF111827))),
+                  const SizedBox(height: 4),
+                  const Text('Claim promo codes or enter a coupon code to receive instant discounts during checkout.', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _showClaimCouponDialog(context),
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Claim Promo Code', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F46E5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 380,
+                mainAxisExtent: 170,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: _userCoupons.length,
+              itemBuilder: (context, idx) {
+                final c = _userCoupons[idx];
+                final String code = c['code'] as String? ?? 'DISCOUNT';
+                final String discount = c['discount'] as String? ?? '20% OFF';
+                final String desc = c['desc'] as String? ?? 'Special discount voucher';
+                final String min = c['min'] as String? ?? 'Min. order ₹499';
+                final String exp = c['exp'] as String? ?? 'Valid till Dec 2026';
+                const Color color = Color(0xFF4F46E5);
 
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
-                          child: Text(c['code'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1)),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Coupon code ${c['code']} copied!')));
-                          },
-                          child: Text('COPY CODE', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(c['discount'] as String, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: color)),
-                    const SizedBox(height: 4),
-                    Text(c['desc'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF374151)), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(c['min'] as String, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
-                        Text(c['exp'] as String, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.04),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+                            child: Text(code, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1)),
+                          ),
+                          Row(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  showCenterActionToast(
+                                    context,
+                                    title: 'Code Copied! 📋',
+                                    message: 'Coupon code $code copied to clipboard.',
+                                    icon: Icons.copy,
+                                    iconColor: const Color(0xFF4F46E5),
+                                    primaryActionLabel: null,
+                                  );
+                                },
+                                child: const Text('COPY CODE', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFDC2626)),
+                                onPressed: () => _confirmDeleteCoupon(context, idx),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(discount, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: color)),
+                      const SizedBox(height: 4),
+                      Text(desc, style: const TextStyle(fontSize: 11, color: Color(0xFF374151)), maxLines: 2, overflow: TextOverflow.ellipsis),
+                      const Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(min, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                          Text(exp, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
