@@ -312,6 +312,18 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                       _buildSubMenuItem('Export Products', false),
                       const SizedBox(height: 4),
                     ],
+
+                    // Expanded Sub-menu for Orders
+                    if (item['title'] == 'Orders' && isSelected) ...[
+                      _buildSubMenuItem('All Orders', true),
+                      _buildSubMenuItem('Unfulfilled', false),
+                      _buildSubMenuItem('Processing', false),
+                      _buildSubMenuItem('Shipped', false),
+                      _buildSubMenuItem('Delivered', false),
+                      _buildSubMenuItem('Cancelled', false),
+                      _buildSubMenuItem('Returned / Refunds', false),
+                      const SizedBox(height: 4),
+                    ],
                   ],
                 );
               },
