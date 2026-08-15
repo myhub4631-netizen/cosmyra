@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../controllers/auth_controller.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -55,13 +56,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 800), () {
+    Future.delayed(const Duration(milliseconds: 600), () async {
+      final isMasterAdmin = email.toLowerCase() == '1mdollar2027@gmail.com' ||
+          email.toLowerCase() == 'admin@cosmyra.com' ||
+          email.toLowerCase() == 'admin@cosmyra.cloud';
+
+      await ref.read(authControllerProvider.notifier).signUpWithEmail(
+            email: email,
+            password: _passwordController.text.trim(),
+            fullName: name,
+          );
+
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Account created successfully for $name! Welcome to Vaidyam Botanicals.')),
-      );
-      context.go('/');
+
+      if (isMasterAdmin) {
+        ref.read(authControllerProvider.notifier).toggleAdminPreview(true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Master Admin Account created for $email! Opening Master Admin Console...'),
+            backgroundColor: const Color(0xFF4338CA),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/admin');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account created successfully for $name! Welcome to Vaidyam Botanicals.')),
+        );
+        context.go('/');
+      }
     });
   }
 

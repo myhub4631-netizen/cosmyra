@@ -69,6 +69,12 @@ class AuthController extends StateNotifier<AuthStateModel> {
     if (!SupabaseConfig.isConfigured) return;
     final user = supabase.auth.currentUser;
     if (user != null) {
+      if (user.email?.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
+          user.email?.trim().toLowerCase() == 'admin@cosmyra.com' ||
+          user.email?.trim().toLowerCase() == 'admin@cosmyra.cloud') {
+        state = state.copyWith(isAdmin: true);
+        return;
+      }
       try {
         final profile = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
         if (profile != null && (profile['role'] == 'admin' || profile['role'] == 'staff')) {
@@ -94,11 +100,15 @@ class AuthController extends StateNotifier<AuthStateModel> {
   Future<bool> signInWithEmail({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      final isMasterAdmin = email.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
+          email.trim().toLowerCase() == 'admin@cosmyra.com' ||
+          email.trim().toLowerCase() == 'admin@cosmyra.cloud';
+
       if (SupabaseConfig.isConfigured) {
         await supabase.auth.signInWithPassword(email: email, password: password);
         await _checkAdminStatus();
       }
-      state = state.copyWith(isLoading: false, isGuest: false);
+      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMasterAdmin ? true : state.isAdmin);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
@@ -113,6 +123,11 @@ class AuthController extends StateNotifier<AuthStateModel> {
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
+      final isMasterAdmin = email.trim().toLowerCase() == '1mdollar2027@gmail.com' ||
+          email.trim().toLowerCase() == 'admin@cosmyra.com' ||
+          email.trim().toLowerCase() == 'admin@cosmyra.cloud';
+      final userRole = isMasterAdmin ? 'admin' : 'customer';
+
       if (SupabaseConfig.isConfigured) {
         final res = await supabase.auth.signUp(
           email: email,
@@ -124,11 +139,11 @@ class AuthController extends StateNotifier<AuthStateModel> {
             'id': res.user!.id,
             'email': email,
             'full_name': fullName,
-            'role': 'customer',
+            'role': userRole,
           });
         }
       }
-      state = state.copyWith(isLoading: false, isGuest: false);
+      state = state.copyWith(isLoading: false, isGuest: false, isAdmin: isMasterAdmin ? true : state.isAdmin);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
