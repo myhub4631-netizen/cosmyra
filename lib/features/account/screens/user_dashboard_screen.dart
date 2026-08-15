@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
@@ -126,6 +129,86 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   void initState() {
     super.initState();
     _selectedTab = _normalizeTabName(widget.initialTab) ?? 'Dashboard';
+    _loadSavedAddresses();
+  }
+
+  Future<void> _loadSavedAddresses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_user_addresses_v1');
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        setState(() {
+          _userAddresses.clear();
+          _userAddresses.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveAddressesToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cosmyra_user_addresses_v1', jsonEncode(_userAddresses));
+    } catch (_) {}
+  }
+
+  Future<void> _confirmDeleteAddress(BuildContext context, int idx) async {
+    final addr = _userAddresses[idx];
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+            SizedBox(width: 8),
+            Text('Delete Address?', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete the ${addr['type']} address for "${addr['name']}"?\n\nThis action cannot be undone.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF4B5563)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6B7280))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete Address', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final bool wasDefault = addr['isDefault'] == true;
+      setState(() {
+        _userAddresses.removeAt(idx);
+        if (wasDefault && _userAddresses.isNotEmpty) {
+          _userAddresses.first['isDefault'] = true;
+        }
+      });
+      await _saveAddressesToStorage();
+      if (context.mounted) {
+        showCenterActionToast(
+          context,
+          title: 'Address Removed! 🗑️',
+          message: 'Selected delivery address has been deleted.',
+          icon: Icons.delete_outline,
+          iconColor: const Color(0xFFDC2626),
+          primaryActionLabel: null,
+        );
+      }
+    }
   }
 
   @override
@@ -248,9 +331,15 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                     });
                   }
                 });
+                _saveAddressesToStorage();
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(editAddress == null ? 'Address added successfully!' : 'Address updated successfully!')),
+                showCenterActionToast(
+                  context,
+                  title: editAddress == null ? 'Address Saved! 📍' : 'Address Updated! ✏️',
+                  message: '${type} address has been saved to your account.',
+                  icon: Icons.location_on_outlined,
+                  iconColor: const Color(0xFF4F46E5),
+                  primaryActionLabel: null,
                 );
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
@@ -819,10 +908,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                            onPressed: () {
-                              setState(() => _userAddresses.removeAt(idx));
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address removed.')));
-                            },
+                            onPressed: () => _confirmDeleteAddress(context, idx),
                           ),
                         ],
                       ),
@@ -842,7 +928,15 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               }
                               addr['isDefault'] = true;
                             });
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Set as default delivery address.')));
+                            _saveAddressesToStorage();
+                            showCenterActionToast(
+                              context,
+                              title: 'Default Address Updated! 📍',
+                              message: '${addr['type']} address set as default delivery location.',
+                              icon: Icons.check_circle_rounded,
+                              iconColor: const Color(0xFF059669),
+                              primaryActionLabel: null,
+                            );
                           },
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
                           child: const Text('Set as Default', style: TextStyle(fontSize: 11)),
