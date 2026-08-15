@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
+
 class VaidyamCartScreen extends ConsumerStatefulWidget {
   const VaidyamCartScreen({super.key});
 
@@ -461,6 +463,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
             ),
 
             const SizedBox(height: 60),
+            const VaidyamFooterWidget(),
           ],
         ),
       ),

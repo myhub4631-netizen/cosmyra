@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../repositories/order_repository.dart';
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
 
 class VaidyamOrdersScreen extends ConsumerStatefulWidget {
   const VaidyamOrdersScreen({super.key});
@@ -437,6 +438,7 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
             ),
 
             const SizedBox(height: 60),
+            const VaidyamFooterWidget(),
           ],
         ),
       ),

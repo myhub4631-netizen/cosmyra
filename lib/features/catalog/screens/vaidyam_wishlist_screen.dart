@@ -6,6 +6,8 @@ import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
+
 class VaidyamWishlistScreen extends ConsumerStatefulWidget {
   const VaidyamWishlistScreen({super.key});
 
@@ -308,6 +310,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
               ),
             ),
             const SizedBox(height: 48),
+            const VaidyamFooterWidget(),
           ],
         ),
       ),

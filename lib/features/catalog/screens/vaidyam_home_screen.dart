@@ -6,6 +6,8 @@ import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
+
 class VaidyamHomeScreen extends ConsumerStatefulWidget {
   const VaidyamHomeScreen({super.key});
 
@@ -237,7 +239,8 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             // 10. Bottom Metrics & Impact Bar
             _buildBottomMetricsBar(isDesktop),
 
-            const SizedBox(height: 40),
+            // 11. Full Website Footer
+            const VaidyamFooterWidget(),
           ],
         ),
       ),
