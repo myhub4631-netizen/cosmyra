@@ -19,6 +19,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   String _selectedSearchCategory = 'All Categories';
   final TextEditingController _searchController = TextEditingController();
   int _activeHeroIndex = 0;
+  String _activeTrendingFilter = 'All';
 
   static const Color _primaryPurple = Color(0xFF4338CA);
   static const Color _lightBg = Color(0xFFF9FAFB);
@@ -219,15 +220,52 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               child: _buildTodayDealsSection(isDesktop),
             ),
 
-            // 8. Promo Banners Grid (3 Cards)
+            // 8. 🔥 Trending & Popular Formulations Showcase
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: isDesktop ? 48.0 : 16.0,
+                vertical: 24.0,
+              ),
+              child: _buildTrendingSection(isDesktop),
+            ),
+
+            // 9. 🌱 Fresh Botanical New Arrivals
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 48.0 : 16.0,
+                vertical: 24.0,
+              ),
+              child: _buildNewArrivalsSection(isDesktop),
+            ),
+
+            // 10. 👑 Customer Classics & Best Sellers
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 48.0 : 16.0,
+                vertical: 24.0,
+              ),
+              child: _buildBestSellersSection(isDesktop),
+            ),
+
+            // 11. 🎁 Curated Routine Combos & Bundles
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 48.0 : 16.0,
+                vertical: 24.0,
+              ),
+              child: _buildComboBundlesSection(isDesktop),
+            ),
+
+            // 12. Promo Banners Grid (3 Cards)
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 48.0 : 16.0,
+                vertical: 24.0,
               ),
               child: _buildPromoBannersGrid(isDesktop),
             ),
 
-            // 9. Top Brands You Love
+            // 13. Top Brands You Love
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: isDesktop ? 48.0 : 16.0,
@@ -236,10 +274,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               child: _buildTopBrandsSection(isDesktop),
             ),
 
-            // 10. Bottom Metrics & Impact Bar
+            // 14. Bottom Metrics & Impact Bar
             _buildBottomMetricsBar(isDesktop),
 
-            // 11. Full Website Footer
+            // 15. Full Website Footer
             const VaidyamFooterWidget(),
           ],
         ),
@@ -1093,6 +1131,636 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // --- 8. 🔥 TRENDING & POPULAR FORMULATIONS SHOWCASE ---
+  Widget _buildTrendingSection(bool isDesktop) {
+    final trendingFilters = ['All', 'Skincare', 'Haircare', 'Wellness', 'Elixirs'];
+
+    final trendingProducts = _dealProducts.where((p) {
+      if (_activeTrendingFilter == 'All') return true;
+      return p['category'].toString().toLowerCase().contains(_activeTrendingFilter.toLowerCase());
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Text('🔥', style: TextStyle(fontSize: 20)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Trending & Popular Formulations',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _textDark),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Most loved organic Ayurvedic remedies by over 50,000+ customers',
+                  style: TextStyle(fontSize: 13, color: _textMuted),
+                ),
+              ],
+            ),
+
+            // Filter Tabs
+            if (isDesktop)
+              Row(
+                children: trendingFilters.map((filter) {
+                  final isSelected = _activeTrendingFilter == filter;
+                  return Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    child: ChoiceChip(
+                      label: Text(filter),
+                      selected: isSelected,
+                      selectedColor: _primaryPurple,
+                      backgroundColor: Colors.white,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : _textDark,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 13,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(color: isSelected ? _primaryPurple : _borderGray),
+                      ),
+                      onSelected: (val) {
+                        if (val) setState(() => _activeTrendingFilter = filter);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // Product Cards Grid
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final count = isDesktop ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: trendingProducts.length.clamp(0, 4),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: count,
+                childAspectRatio: 0.72,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemBuilder: (context, index) {
+                final prod = trendingProducts[index];
+                return _buildShowcaseProductCard(prod);
+              },
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // --- 9. 🌱 FRESH BOTANICAL NEW ARRIVALS ---
+  Widget _buildNewArrivalsSection(bool isDesktop) {
+    final newProducts = _dealProducts.sublist(2, 5);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4), // Soft Mint Green BG
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFDCFCE7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    '🌱 Fresh Botanical New Arrivals',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF166534)),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Recently crafted small-batch Ayurvedic formulations with 100% organic herbs',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF15803D)),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () => context.push('/explore'),
+                child: Row(
+                  children: const [
+                    Text('View All New', style: TextStyle(color: Color(0xFF166534), fontWeight: FontWeight.bold, fontSize: 13)),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF166534)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Layout: Left Spotlight Banner + Right Product Cards
+          isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Spotlight Left Card
+                    Expanded(
+                      flex: 4,
+                      child: Container(
+                        height: 380,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/facewash.jpg'),
+                            fit: BoxFit.cover,
+                            opacity: 0.15,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF166534),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text('NEW LAUNCH', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Pure Saffron & Honey Hydro Glow Serum',
+                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF14532D)),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Infused with 24K Kumkumadi oil extracts for instant 24-hour hydration & dermal radiance.',
+                                  style: TextStyle(fontSize: 13, color: Color(0xFF166534)),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => context.push('/explore'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF166534),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  ),
+                                  child: const Text('EXPLORE FORMULATION', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+
+                    // Right 3 Products Grid
+                    Expanded(
+                      flex: 6,
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: newProducts.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemBuilder: (context, idx) => _buildShowcaseProductCard(newProducts[idx]),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: newProducts.map((p) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _buildShowcaseProductCard(p),
+                  )).toList(),
+                ),
+        ],
+      ),
+    );
+  }
+
+  // --- 10. 👑 CUSTOMER CLASSICS & BEST SELLERS ---
+  Widget _buildBestSellersSection(bool isDesktop) {
+    final bestSellers = [
+      {
+        'rank': '#1 BEST SELLER',
+        'title': 'Bhringraj Hair Defense Oil',
+        'badgeColor': const Color(0xFFD97706),
+        'ingredients': '🌿 Neem • Bhringraj • Amla',
+        'price': '₹1,299',
+        'originalPrice': '₹1,699',
+        'rating': 4.9,
+        'reviewCount': '14,230 Reviews',
+        'quote': '"Restored my hair volume within 3 weeks of daily ritual!"',
+        'image': 'assets/images/shampoo.jpg',
+      },
+      {
+        'rank': '#2 TOP RATED',
+        'title': 'Kumkumadi Radiance Elixir',
+        'badgeColor': const Color(0xFF4338CA),
+        'ingredients': '🌸 Kashmiri Kesar • Chandan',
+        'price': '₹1,799',
+        'originalPrice': '₹2,549',
+        'rating': 4.9,
+        'reviewCount': '12,980 Reviews',
+        'quote': '"My skin has never felt this hydrated and glowing naturally."',
+        'image': 'assets/images/facewash.jpg',
+      },
+      {
+        'rank': '#3 FAVORITE RITUAL',
+        'title': 'Nalpamaradi Body Thailam',
+        'badgeColor': const Color(0xFF059669),
+        'ingredients': '🍃 Turmeric • Vetiver • Banyan Bark',
+        'price': '₹999',
+        'originalPrice': '₹1,399',
+        'rating': 4.8,
+        'reviewCount': '9,840 Reviews',
+        'quote': '"The herbal scent and skin brightening effect are unreal."',
+        'image': 'assets/images/soap.jpg',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '👑 Hall of Fame Best Sellers',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _textDark),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Tried, tested, and loved by hundreds of thousands across India',
+                  style: TextStyle(fontSize: 13, color: _textMuted),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        Row(
+          children: bestSellers.map((item) {
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _borderGray),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: item['badgeColor'] as Color,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        item['rank'] as String,
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Container(
+                        height: 120,
+                        width: 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          image: DecorationImage(
+                            image: AssetImage(item['image'] as String),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      item['title'] as String,
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: _textDark),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item['ingredients'] as String,
+                      style: const TextStyle(fontSize: 11, color: _primaryPurple, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 14),
+                        const SizedBox(width: 4),
+                        Text('${item['rating']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 6),
+                        Text('(${item['reviewCount']})', style: const TextStyle(fontSize: 11, color: _textMuted)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item['quote'] as String,
+                      style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: _textMuted),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item['price'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textDark)),
+                            Text(item['originalPrice'] as String, style: const TextStyle(fontSize: 11, color: _textMuted, decoration: TextDecoration.lineThrough)),
+                          ],
+                        ),
+                        ElevatedButton(
+                          onPressed: () => context.push('/cart'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          child: const Text('Add to Cart', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // --- 11. 🎁 CURATED ROUTINE COMBOS & BUNDLES ---
+  Widget _buildComboBundlesSection(bool isDesktop) {
+    final bundles = [
+      {
+        'title': 'Scalp & Hair Repair Ritual',
+        'items': 'Includes Hair Oil + Shampoo + Herbal Tonic',
+        'price': '₹2,499',
+        'originalPrice': '₹3,697',
+        'save': 'Save ₹1,198 (32% OFF)',
+        'image': 'assets/images/shampoo.jpg',
+      },
+      {
+        'title': 'Royal Radiance Glow Kit',
+        'items': 'Kumkumadi Oil + Chandan Cleanser + Face Mask',
+        'price': '₹2,899',
+        'originalPrice': '₹4,297',
+        'save': 'Save ₹1,398 (35% OFF)',
+        'image': 'assets/images/facewash.jpg',
+      },
+      {
+        'title': 'Daily Stress & Body Glow Trio',
+        'items': 'Body Thailam + Ashwagandha Oil + Soap Bar',
+        'price': '₹1,899',
+        'originalPrice': '₹2,797',
+        'save': 'Save ₹898 (32% OFF)',
+        'image': 'assets/images/soap.jpg',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '🎁 Curated Routine Combos & Bundles',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: _textDark),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Complete botanical wellness kits for maximum daily synergy • Save up to 35%',
+                  style: TextStyle(fontSize: 13, color: _textMuted),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        Row(
+          children: bundles.map((b) {
+            return Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7), // Soft Warm Gold
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB45309),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        b['save'] as String,
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      b['title'] as String,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF78350F)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      b['items'] as String,
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF92400E)),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(b['price'] as String, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF78350F))),
+                            Text(b['originalPrice'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF92400E), decoration: TextDecoration.lineThrough)),
+                          ],
+                        ),
+                        ElevatedButton(
+                          onPressed: () => context.push('/cart'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFB45309),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          child: const Text('Add Bundle', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // --- REUSABLE SHOWCASE PRODUCT CARD ---
+  Widget _buildShowcaseProductCard(Map<String, dynamic> prod) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _borderGray),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                child: Image.asset(
+                  prod['image'] as String,
+                  height: 130,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 130, child: const Icon(Icons.spa, color: _primaryPurple)),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade600,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    prod['discount'] as String,
+                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.white,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.favorite_border, size: 14, color: Colors.grey),
+                    onPressed: () {
+                      ref.read(wishlistProvider.notifier).toggleWishlist(prod['id'] as String);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  prod['name'] as String,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  prod['category'] as String,
+                  style: const TextStyle(fontSize: 10, color: _textMuted),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.amber, size: 12),
+                    const SizedBox(width: 2),
+                    Text('${prod['rating']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textDark)),
+                    InkWell(
+                      onTap: () => _addDealToCart(prod),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _primaryPurple,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text('Add', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
