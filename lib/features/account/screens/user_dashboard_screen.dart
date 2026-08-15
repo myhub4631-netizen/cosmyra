@@ -26,49 +26,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   String _selectedSearchCategory = 'All Categories';
   final TextEditingController _searchController = TextEditingController();
 
-  // Mock State for Addresses
-  final List<Map<String, dynamic>> _userAddresses = [
-    {
-      'id': 'addr-1',
-      'name': 'Mahboob Hasan',
-      'phone': '+91 94730 40903',
-      'street': 'Flat 402, Green Valley Apartments, MG Road',
-      'city': 'Bangalore',
-      'state': 'Karnataka',
-      'pincode': '560001',
-      'type': 'HOME',
-      'isDefault': true,
-    },
-    {
-      'id': 'addr-2',
-      'name': 'Mahboob Hasan',
-      'phone': '+91 94730 40903',
-      'street': 'Tech Park B, 5th Floor, Outer Ring Road',
-      'city': 'Bangalore',
-      'state': 'Karnataka',
-      'pincode': '560103',
-      'type': 'WORK',
-      'isDefault': false,
-    },
-  ];
+  // Addresses State
+  final List<Map<String, dynamic>> _userAddresses = [];
 
-  // Mock State for Saved Payment Methods
-  final List<Map<String, dynamic>> _paymentMethods = [
-    {
-      'id': 'pay-1',
-      'type': 'UPI',
-      'name': 'Google Pay / PhonePe',
-      'detail': 'mahboob@okicici',
-      'isDefault': true,
-    },
-    {
-      'id': 'pay-2',
-      'type': 'CARD',
-      'name': 'HDFC Bank Visa Debit Card',
-      'detail': '•••• •••• •••• 4092 (Exp 08/28)',
-      'isDefault': false,
-    },
-  ];
+  // Saved Payment Methods State
+  final List<Map<String, dynamic>> _paymentMethods = [];
 
   // Notifications State
   final List<Map<String, dynamic>> _notifications = [];
@@ -126,10 +88,18 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     return 'default';
   }
 
+  String _getAccountStorageKey(String prefix) {
+    final auth = ref.read(authControllerProvider);
+    final user = ref.read(currentUserProvider);
+    final String email = (auth.userEmail ?? user?.email ?? 'guest').toLowerCase().trim();
+    final String sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return 'cosmyra_${sanitized}_$prefix';
+  }
+
   Future<void> _loadSavedNotifications() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_user_notifications_v1');
+      final String? jsonStr = prefs.getString(_getAccountStorageKey('notifications_v3'));
       if (jsonStr != null) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         setState(() {
@@ -151,6 +121,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
             });
           }
         });
+      } else {
+        setState(() {
+          _notifications.clear();
+        });
       }
     } catch (_) {}
   }
@@ -171,7 +145,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
           'color_val': color.value,
         };
       }).toList();
-      await prefs.setString('cosmyra_user_notifications_v1', jsonEncode(listToSave));
+      await prefs.setString(_getAccountStorageKey('notifications_v3'), jsonEncode(listToSave));
     } catch (_) {}
   }
 
@@ -249,12 +223,16 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   Future<void> _loadSavedAddresses() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_user_addresses_v1');
+      final String? jsonStr = prefs.getString(_getAccountStorageKey('addresses_v3'));
       if (jsonStr != null) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         setState(() {
           _userAddresses.clear();
           _userAddresses.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+        });
+      } else {
+        setState(() {
+          _userAddresses.clear();
         });
       }
     } catch (_) {}
@@ -263,19 +241,23 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   Future<void> _saveAddressesToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cosmyra_user_addresses_v1', jsonEncode(_userAddresses));
+      await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_userAddresses));
     } catch (_) {}
   }
 
   Future<void> _loadSavedPaymentMethods() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_user_payment_methods_v1');
+      final String? jsonStr = prefs.getString(_getAccountStorageKey('payment_methods_v3'));
       if (jsonStr != null) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         setState(() {
           _paymentMethods.clear();
           _paymentMethods.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+        });
+      } else {
+        setState(() {
+          _paymentMethods.clear();
         });
       }
     } catch (_) {}
@@ -284,7 +266,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
   Future<void> _savePaymentMethodsToStorage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('cosmyra_user_payment_methods_v1', jsonEncode(_paymentMethods));
+      await prefs.setString(_getAccountStorageKey('payment_methods_v3'), jsonEncode(_paymentMethods));
     } catch (_) {}
   }
 
@@ -741,7 +723,27 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
                   // Right Dynamic Content Panel
                   Expanded(
-                    child: _buildSelectedTabPanel(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, isWide, realOrdersCount, wishlistCount),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (Widget child, Animation<double> animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.02, 0.0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey<String>(_selectedTab),
+                        child: _buildSelectedTabPanel(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, isWide, realOrdersCount, wishlistCount),
+                      ),
+                    ),
                   ),
                 ],
               ),
