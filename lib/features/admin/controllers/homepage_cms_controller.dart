@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomepageCmsState {
   final List<Map<String, dynamic>> sections;
@@ -34,7 +36,11 @@ class HomepageCmsState {
 }
 
 class HomepageCmsNotifier extends StateNotifier<HomepageCmsState> {
-  HomepageCmsNotifier() : super(HomepageCmsState(sections: _defaultSections));
+  static const _prefsKey = 'cosmyra_homepage_cms_sections_v2';
+
+  HomepageCmsNotifier() : super(HomepageCmsState(sections: _defaultSections)) {
+    _loadFromPrefs();
+  }
 
   static final List<Map<String, dynamic>> _defaultSections = [
     {
@@ -46,11 +52,11 @@ class HomepageCmsNotifier extends StateNotifier<HomepageCmsState> {
       'meta': '5 Slides • Auto Play: 5s • Show Arrows: Yes • Show Dots: Yes',
       'type': 'slider',
       'items': [
-        {'title': 'Monsoon Herbal Sale', 'sub': 'Flat 20% OFF', 'color': const Color(0xFFFEF3C7)},
-        {'title': 'Pure Neem Facewash', 'sub': 'New Launch', 'color': const Color(0xFFD1FAE5)},
-        {'title': 'Kumkumadi Tailam', 'sub': 'Best Seller', 'color': const Color(0xFFEEF2FF)},
-        {'title': 'Ayurvedic Hair Care', 'sub': '100% Natural', 'color': const Color(0xFFE0E7FF)},
-        {'title': 'Botanical Soaps Pack', 'sub': 'Organic', 'color': const Color(0xFFF3E8FF)},
+        {'title': 'Monsoon Herbal Sale', 'sub': 'Flat 20% OFF', 'colorValue': 0xFFFEF3C7},
+        {'title': 'Pure Neem Facewash', 'sub': 'New Launch', 'colorValue': 0xFFD1FAE5},
+        {'title': 'Kumkumadi Tailam', 'sub': 'Best Seller', 'colorValue': 0xFFEEF2FF},
+        {'title': 'Ayurvedic Hair Care', 'sub': '100% Natural', 'colorValue': 0xFFE0E7FF},
+        {'title': 'Botanical Soaps Pack', 'sub': 'Organic', 'colorValue': 0xFFF3E8FF},
       ],
       'addLabel': '+ Add Slide',
     },
@@ -60,17 +66,18 @@ class HomepageCmsNotifier extends StateNotifier<HomepageCmsState> {
       'title': 'Shop by Categories',
       'isActive': true,
       'description': 'Category grid section with icons and category links.',
-      'meta': '8 Categories • Columns: 8 • Style: Circle • Show Title: Yes',
+      'meta': '9 Categories • Columns: 9 • Style: Circle • Show Title: Yes',
       'type': 'categories',
       'items': [
-        {'name': 'Haircare', 'title': 'Haircare & Oils', 'icon': Icons.spa, 'emoji': '💇', 'asset': 'assets/images/shampoo.jpg'},
-        {'name': 'Skincare', 'title': 'Skincare & Serums', 'icon': Icons.face, 'emoji': '✨', 'asset': 'assets/images/facewash.jpg'},
-        {'name': 'Soaps', 'title': 'Organic Soaps', 'icon': Icons.clean_hands, 'emoji': '🧴', 'asset': 'assets/images/soap.jpg'},
-        {'name': 'Wellness Oils', 'title': 'Wellness Oils', 'icon': Icons.opacity, 'emoji': '🌿', 'asset': 'assets/images/soap.jpg'},
-        {'name': 'Elixirs', 'title': 'Radiance Elixirs', 'icon': Icons.local_pharmacy, 'emoji': '🌸', 'asset': 'assets/images/shampoo.jpg'},
-        {'name': 'Gift Combos', 'title': 'Gift Combos', 'icon': Icons.card_giftcard, 'emoji': '🎁', 'asset': 'assets/images/soap.jpg'},
-        {'name': 'Aloe Vera', 'title': 'Aloe & Hydration', 'icon': Icons.eco, 'emoji': '💧', 'asset': 'assets/images/facewash.jpg'},
-        {'name': 'Body Care', 'title': 'Body Thailams', 'icon': Icons.self_improvement, 'emoji': '🍃', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Haircare', 'title': 'Haircare & Oils', 'emoji': '💇', 'asset': 'assets/images/shampoo.jpg'},
+        {'name': 'Face Serum', 'title': 'Face Serum', 'emoji': '🧪', 'asset': 'assets/images/facewash.jpg'},
+        {'name': 'Skincare', 'title': 'Skincare & Serums', 'emoji': '✨', 'asset': 'assets/images/facewash.jpg'},
+        {'name': 'Soaps', 'title': 'Organic Soaps', 'emoji': '🧴', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Wellness Oils', 'title': 'Wellness Oils', 'emoji': '🌿', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Elixirs', 'title': 'Radiance Elixirs', 'emoji': '🌸', 'asset': 'assets/images/shampoo.jpg'},
+        {'name': 'Gift Combos', 'title': 'Gift Combos', 'emoji': '🎁', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Aloe Vera', 'title': 'Aloe & Hydration', 'emoji': '💧', 'asset': 'assets/images/facewash.jpg'},
+        {'name': 'Body Care', 'title': 'Body Thailams', 'emoji': '🍃', 'asset': 'assets/images/soap.jpg'},
       ],
       'addLabel': '+ Add Category',
     },
@@ -117,10 +124,10 @@ class HomepageCmsNotifier extends StateNotifier<HomepageCmsState> {
       'meta': '4 Items • Style: Icon + Text • Background: Light',
       'type': 'benefits',
       'items': [
-        {'title': 'Free Shipping', 'sub': 'On orders over ₹999', 'icon': Icons.local_shipping_outlined},
-        {'title': 'Easy Returns', 'sub': 'Within 7 days', 'icon': Icons.replay_outlined},
-        {'title': 'Best Quality', 'sub': '100% Original', 'icon': Icons.verified_outlined},
-        {'title': 'Secure Payments', 'sub': 'Multiple options', 'icon': Icons.lock_outline},
+        {'title': 'Free Shipping', 'sub': 'On orders over ₹999'},
+        {'title': 'Easy Returns', 'sub': 'Within 7 days'},
+        {'title': 'Best Quality', 'sub': '100% Original'},
+        {'title': 'Secure Payments', 'sub': 'Multiple options'},
       ],
       'addLabel': '+ Add Item',
     },
@@ -155,34 +162,46 @@ class HomepageCmsNotifier extends StateNotifier<HomepageCmsState> {
     },
   ];
 
-  void updateSections(List<Map<String, dynamic>> updatedSections) {
-    state = state.copyWith(sections: List.from(updatedSections));
-  }
-
-  void removeCategoryItem(int itemIndex) {
-    final newSections = state.sections.map((sec) {
-      if (sec['type'] == 'categories') {
-        final newSec = Map<String, dynamic>.from(sec);
-        final newItems = List<Map<String, dynamic>>.from(sec['items']);
-        if (itemIndex >= 0 && itemIndex < newItems.length) {
-          newItems.removeAt(itemIndex);
-        }
-        newSec['items'] = newItems;
-        newSec['meta'] = '${newItems.length} Categories • Columns: ${newItems.length} • Style: Circle • Show Title: Yes';
-        return newSec;
+  Future<void> _loadFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_prefsKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List decoded = jsonDecode(jsonStr);
+        final List<Map<String, dynamic>> loadedSections = List<Map<String, dynamic>>.from(
+          decoded.map((x) => Map<String, dynamic>.from(x as Map)),
+        );
+        state = state.copyWith(sections: loadedSections);
       }
-      return sec;
-    }).toList();
-
-    state = state.copyWith(sections: newSections);
+    } catch (_) {}
   }
 
-  void updateSeo({required String title, required String description}) {
-    state = state.copyWith(metaTitle: title, metaDescription: description);
+  Future<void> _saveToPrefs(List<Map<String, dynamic>> updatedSections) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanSections = updatedSections.map((sec) {
+        final cleanSec = Map<String, dynamic>.from(sec);
+        if (sec['items'] is List) {
+          cleanSec['items'] = (sec['items'] as List).map((item) {
+            if (item is Map) {
+              final cleanItem = Map<String, dynamic>.from(item);
+              cleanItem.removeWhere((key, value) => value is IconData || value is Color);
+              return cleanItem;
+            }
+            return item;
+          }).toList();
+        }
+        return cleanSec;
+      }).toList();
+
+      final jsonStr = jsonEncode(cleanSections);
+      await prefs.setString(_prefsKey, jsonStr);
+    } catch (_) {}
   }
 
-  void updateCustomCssJs({required String css, required String js}) {
-    state = state.copyWith(customCss: css, customJs: js);
+  void updateSections(List<Map<String, dynamic>> updatedSections) {
+    state = state.copyWith(sections: List.from(updatedSections.map((s) => Map<String, dynamic>.from(s))));
+    _saveToPrefs(updatedSections);
   }
 }
 

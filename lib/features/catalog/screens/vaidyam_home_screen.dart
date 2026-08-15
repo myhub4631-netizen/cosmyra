@@ -810,7 +810,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             itemBuilder: (context, index) {
               final cat = dynamicItems[index] as Map<String, dynamic>;
               final title = cat['title']?.toString() ?? cat['name']?.toString() ?? 'Category';
-              final emoji = cat['emoji']?.toString() ?? '🌿';
+              final emoji = cat['emoji']?.toString() ?? '';
               final iconData = cat['icon'] is IconData ? (cat['icon'] as IconData) : null;
 
               return InkWell(
