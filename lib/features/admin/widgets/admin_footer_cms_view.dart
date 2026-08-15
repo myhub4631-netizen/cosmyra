@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../controllers/footer_cms_controller.dart';
 
 class AdminFooterCmsView extends ConsumerStatefulWidget {
   const AdminFooterCmsView({super.key});
@@ -11,7 +12,6 @@ class AdminFooterCmsView extends ConsumerStatefulWidget {
 class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
   int _selectedTab = 0; // 0: Footer Sections, 1: Footer Settings, 2: SEO & Schema, 3: Custom CSS/JS, 4: Revision History
   bool _isSaving = false;
-  bool _allChangesSaved = true;
 
   // Track collapsed section IDs
   final Set<String> _collapsedSectionIds = {};
@@ -23,96 +23,6 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
   // Custom CSS/JS State
   final _customFooterCssCtrl = TextEditingController(text: '/* Footer Specific Styles */\n.footer-bg { background-color: #0B132B; }\n.footer-link:hover { color: #818CF8; }');
   final _customFooterJsCtrl = TextEditingController(text: '// Footer Scripts & Tracking\nconsole.log("Cosmyra Footer Initialized");');
-
-  // Footer Sections Data
-  final List<Map<String, dynamic>> _footerSectionsList = [
-    {
-      'id': 'fsec-1',
-      'number': 1,
-      'title': 'Store Info & Newsletter',
-      'isActive': true,
-      'description': 'Store logo, description, newsletter subscription & social links.',
-      'meta': '1 Content Block • 5 Social Links',
-      'type': 'newsletter_info',
-    },
-    {
-      'id': 'fsec-2',
-      'number': 2,
-      'title': 'Shop Links',
-      'isActive': true,
-      'description': 'Important shop pages and collections.',
-      'meta': '8 Links',
-      'type': 'links',
-      'items': ['All Categories', "Today's Deals", 'New Arrivals', 'Best Sellers', 'Featured Formulations', 'Clearance Sale'],
-    },
-    {
-      'id': 'fsec-3',
-      'number': 3,
-      'title': 'Customer Service',
-      'isActive': true,
-      'description': 'Help center, policies and support links.',
-      'meta': '6 Links',
-      'type': 'links',
-      'items': ['Track Your Order', 'Returns & Refunds', 'Shipping Information', 'Payment Methods', 'FAQ', 'Contact Us'],
-    },
-    {
-      'id': 'fsec-4',
-      'number': 4,
-      'title': 'My Account',
-      'isActive': true,
-      'description': 'User account related pages.',
-      'meta': '5 Links',
-      'type': 'links',
-      'items': ['My Orders', 'Wishlist', 'Addresses', 'Account Settings', 'Notifications', 'Logout'],
-    },
-    {
-      'id': 'fsec-5',
-      'number': 5,
-      'title': 'About Us',
-      'isActive': true,
-      'description': 'Company information and useful links.',
-      'meta': '6 Links • 1 Content Block',
-      'type': 'links',
-      'items': ['About Vaidyam', 'Our Story', 'Careers', 'Botanical Blog', 'Privacy Policy', 'Terms & Conditions'],
-    },
-    {
-      'id': 'fsec-6',
-      'number': 6,
-      'title': 'Popular Categories',
-      'isActive': true,
-      'description': 'Top product categories with icons.',
-      'meta': '6 Categories',
-      'type': 'categories',
-      'items': ['Haircare & Oils', 'Skincare & Serums', 'Organic Soaps', 'Wellness Oils', 'Body Thailams'],
-    },
-    {
-      'id': 'fsec-7',
-      'number': 7,
-      'title': 'Bottom Bar',
-      'isActive': true,
-      'description': 'Bottom bar with extra info and payment methods.',
-      'meta': '2 Content Blocks • 6 Payment Methods',
-      'type': 'bottom_bar',
-    },
-  ];
-
-  void _reindexSections() {
-    for (int i = 0; i < _footerSectionsList.length; i++) {
-      _footerSectionsList[i]['number'] = i + 1;
-    }
-  }
-
-  void _moveSection(int currentIndex, int direction) {
-    final newIndex = currentIndex + direction;
-    if (newIndex < 0 || newIndex >= _footerSectionsList.length) return;
-
-    setState(() {
-      final item = _footerSectionsList.removeAt(currentIndex);
-      _footerSectionsList.insert(newIndex, item);
-      _reindexSections();
-      _allChangesSaved = false;
-    });
-  }
 
   void _showAddSectionModal() {
     showDialog(
@@ -155,18 +65,19 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
       subtitle: Text(desc, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
       trailing: const Icon(Icons.add_circle_outline, color: Color(0xFF4F46E5)),
       onTap: () {
-        setState(() {
-          _footerSectionsList.add({
-            'id': 'fsec-${_footerSectionsList.length + 1}',
-            'number': _footerSectionsList.length + 1,
-            'title': title,
-            'isActive': true,
-            'description': desc,
-            'meta': 'Active • Custom Section',
-            'type': 'custom',
-          });
-          _reindexSections();
-          _allChangesSaved = false;
+        final currentSections = ref.read(footerCmsProvider).sections;
+        ref.read(footerCmsProvider.notifier).addSection({
+          'id': 'fsec-${currentSections.length + 1}',
+          'number': currentSections.length + 1,
+          'title': title,
+          'isActive': true,
+          'description': desc,
+          'meta': 'Active • Custom Section',
+          'type': 'custom',
+          'items': [
+            {'text': 'Sample Link 1', 'url': '/sample-1'},
+            {'text': 'Sample Link 2', 'url': '/sample-2'},
+          ],
         });
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Footer section "$title" added!')));
@@ -174,37 +85,54 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
     );
   }
 
-  void _showEditSectionDialog(Map<String, dynamic> section) {
-    final titleCtrl = TextEditingController(text: section['title']);
-    final descCtrl = TextEditingController(text: section['description']);
+  // Edit Link Item Dialog (Single Link Edit)
+  void _showEditSingleLinkDialog(int sectionIndex, int linkIndex, Map<String, dynamic> linkData) {
+    final textCtrl = TextEditingController(text: linkData['text']?.toString() ?? '');
+    final urlCtrl = TextEditingController(text: linkData['url']?.toString() ?? '');
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Edit Footer Section: ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Section Title')),
-              const SizedBox(height: 12),
-              TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description / Subtitle')),
-            ],
+          title: const Text('Edit Footer Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          content: SizedBox(
+            width: 380,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: textCtrl,
+                  decoration: const InputDecoration(labelText: 'Link Title / Text', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: urlCtrl,
+                  decoration: const InputDecoration(labelText: 'Link Target URL (e.g. /category/skincare)', border: OutlineInputBorder()),
+                ),
+              ],
+            ),
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                ref.read(footerCmsProvider.notifier).deleteLinkFromSection(sectionIndex, linkIndex);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link deleted!')));
+              },
+              child: const Text('Delete Link', style: TextStyle(color: Colors.red)),
+            ),
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
               onPressed: () {
-                setState(() {
-                  section['title'] = titleCtrl.text;
-                  section['description'] = descCtrl.text;
-                  _allChangesSaved = false;
-                });
-                Navigator.pop(context);
+                if (textCtrl.text.trim().isNotEmpty) {
+                  ref.read(footerCmsProvider.notifier).editLinkInSection(sectionIndex, linkIndex, textCtrl.text.trim(), urlCtrl.text.trim());
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Link updated!')));
+                }
               },
-              child: const Text('Save Changes'),
+              child: const Text('Save Link'),
             ),
           ],
         );
@@ -212,7 +140,201 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
     );
   }
 
-  void _confirmDeleteSection(Map<String, dynamic> section) {
+  // Add Single Link Dialog
+  void _showAddSingleLinkDialog(int sectionIndex) {
+    final textCtrl = TextEditingController();
+    final urlCtrl = TextEditingController(text: '/');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Add New Footer Link', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          content: SizedBox(
+            width: 380,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: textCtrl,
+                  autofocus: true,
+                  decoration: const InputDecoration(labelText: 'Link Label (e.g. Special Offers)', border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: urlCtrl,
+                  decoration: const InputDecoration(labelText: 'Target URL (e.g. /offers)', border: OutlineInputBorder()),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () {
+                if (textCtrl.text.trim().isNotEmpty) {
+                  ref.read(footerCmsProvider.notifier).addLinkToSection(sectionIndex, textCtrl.text.trim(), urlCtrl.text.trim());
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Link "${textCtrl.text}" added!')));
+                }
+              },
+              child: const Text('Add Link'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Comprehensive Section & Links Editor Modal
+  void _showEditSectionDialog(int sectionIndex, Map<String, dynamic> section) {
+    final titleCtrl = TextEditingController(text: section['title']);
+    final descCtrl = TextEditingController(text: section['description']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Consumer(
+          builder: (context, ref, child) {
+            final latestSections = ref.watch(footerCmsProvider).sections;
+            final latestSec = sectionIndex < latestSections.length ? latestSections[sectionIndex] : section;
+            final rawItems = latestSec['items'] as List? ?? [];
+            final itemsList = rawItems.map((e) {
+              if (e is Map) return Map<String, dynamic>.from(e);
+              return {'text': e.toString(), 'url': ''};
+            }).toList();
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Edit Footer Section: ${latestSec['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                ],
+              ),
+              content: SizedBox(
+                width: 600,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Section Title', border: OutlineInputBorder())),
+                      const SizedBox(height: 12),
+                      TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description / Subtitle', border: OutlineInputBorder())),
+                      const SizedBox(height: 20),
+
+                      // Links Items Section Editor
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Manage Links (${itemsList.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF111827))),
+                          ElevatedButton.icon(
+                            onPressed: () => _showAddSingleLinkDialog(sectionIndex),
+                            icon: const Icon(Icons.add, size: 14),
+                            label: const Text('Add Link', style: TextStyle(fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEEF2FF),
+                              foregroundColor: const Color(0xFF4F46E5),
+                              elevation: 0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      if (itemsList.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
+                          child: const Center(child: Text('No links in this section yet. Click "Add Link" to create one.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: itemsList.length,
+                          itemBuilder: (context, lIdx) {
+                            final link = itemsList[lIdx];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF9FAFB),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                              ),
+                              child: Row(
+                                children: [
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      InkWell(
+                                        onTap: lIdx > 0 ? () => ref.read(footerCmsProvider.notifier).moveLinkInSection(sectionIndex, lIdx, -1) : null,
+                                        child: Icon(Icons.arrow_drop_up, color: lIdx > 0 ? const Color(0xFF4F46E5) : Colors.grey, size: 18),
+                                      ),
+                                      InkWell(
+                                        onTap: lIdx < itemsList.length - 1 ? () => ref.read(footerCmsProvider.notifier).moveLinkInSection(sectionIndex, lIdx, 1) : null,
+                                        child: Icon(Icons.arrow_drop_down, color: lIdx < itemsList.length - 1 ? const Color(0xFF4F46E5) : Colors.grey, size: 18),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(link['text']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+                                        if ((link['url']?.toString() ?? '').isNotEmpty)
+                                          Text(link['url'].toString(), style: const TextStyle(fontSize: 10, color: Color(0xFF4F46E5))),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF4F46E5)),
+                                    onPressed: () => _showEditSingleLinkDialog(sectionIndex, lIdx, link),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                                    onPressed: () => ref.read(footerCmsProvider.notifier).deleteLinkFromSection(sectionIndex, lIdx),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                  onPressed: () {
+                    final updatedSections = List<Map<String, dynamic>>.from(ref.read(footerCmsProvider).sections.map((s) => Map<String, dynamic>.from(s)));
+                    if (sectionIndex < updatedSections.length) {
+                      updatedSections[sectionIndex]['title'] = titleCtrl.text;
+                      updatedSections[sectionIndex]['description'] = descCtrl.text;
+                      ref.read(footerCmsProvider.notifier).updateSections(updatedSections);
+                    }
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Footer section updated!')));
+                  },
+                  child: const Text('Save All Section Changes'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteSection(int sectionIndex, Map<String, dynamic> section) {
     showDialog(
       context: context,
       builder: (context) {
@@ -224,11 +346,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
               onPressed: () {
-                setState(() {
-                  _footerSectionsList.removeWhere((s) => s['id'] == section['id']);
-                  _reindexSections();
-                  _allChangesSaved = false;
-                });
+                ref.read(footerCmsProvider.notifier).deleteSection(sectionIndex);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted "${section['title']}"')));
               },
@@ -242,14 +360,11 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   void _saveAllChanges() {
     setState(() => _isSaving = true);
-    Future.delayed(const Duration(milliseconds: 600), () {
+    Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) {
-        setState(() {
-          _isSaving = false;
-          _allChangesSaved = true;
-        });
+        setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All footer changes published to live storefront!')),
+          const SnackBar(content: Text('All footer changes saved & published to live storefront!')),
         );
       }
     });
@@ -266,6 +381,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
             onPressed: () {
+              ref.read(footerCmsProvider.notifier).resetToDefault();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Footer settings reset to default.')));
             },
@@ -278,8 +394,18 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
   @override
   Widget build(BuildContext context) {
+    final footerState = ref.watch(footerCmsProvider);
+    final footerSectionsList = footerState.sections;
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1100;
+
+    int totalActiveSections = footerSectionsList.where((s) => s['isActive'] == true).length;
+    int totalLinks = 0;
+    for (var sec in footerSectionsList) {
+      final items = sec['items'] as List? ?? [];
+      totalLinks += items.length;
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -322,7 +448,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                   OutlinedButton.icon(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Opening live footer preview...')),
+                        const SnackBar(content: Text('Footer preview synced with live storefront!')),
                       );
                     },
                     icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF374151)),
@@ -383,20 +509,16 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           const SizedBox(height: 20),
 
           // 3. Stat Summary Metrics Bar (5 Cards)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: [
-                  _buildStatCard('Footer Status', 'Published •', Icons.shield_outlined, const Color(0xFF059669), const Color(0xFFD1FAE5)),
-                  _buildStatCard('Last Updated', '15 Aug 2026, 08:12 PM\nby Mahboob Hasan', Icons.lock_clock_outlined, const Color(0xFF4F46E5), const Color(0xFFEEF2FF)),
-                  _buildStatCard('Total Sections', '7 Active Sections', Icons.grid_view_outlined, const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
-                  _buildStatCard('Total Links', '48 Links', Icons.link_outlined, const Color(0xFF7C3AED), const Color(0xFFF3E8FF)),
-                  _buildStatCard('Custom Content Blocks', '6 Blocks', Icons.integration_instructions_outlined, const Color(0xFFD97706), const Color(0xFFFEF3C7)),
-                ],
-              );
-            },
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              _buildStatCard('Footer Status', 'Published •', Icons.shield_outlined, const Color(0xFF059669), const Color(0xFFD1FAE5)),
+              _buildStatCard('Last Updated', 'Real-time Sync\nby Mahboob Hasan', Icons.lock_clock_outlined, const Color(0xFF4F46E5), const Color(0xFFEEF2FF)),
+              _buildStatCard('Total Sections', '$totalActiveSections Active Sections', Icons.grid_view_outlined, const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
+              _buildStatCard('Total Links', '$totalLinks Links', Icons.link_outlined, const Color(0xFF7C3AED), const Color(0xFFF3E8FF)),
+              _buildStatCard('Custom Content Blocks', '6 Blocks', Icons.integration_instructions_outlined, const Color(0xFFD97706), const Color(0xFFFEF3C7)),
+            ],
           ),
 
           const SizedBox(height: 24),
@@ -408,17 +530,17 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: Manage Footer Sections List (Flex 7)
-                      Expanded(flex: 7, child: _buildManageFooterSectionsColumn()),
+                      Expanded(flex: 7, child: _buildManageFooterSectionsColumn(footerSectionsList)),
                       const SizedBox(width: 24),
                       // Right Column: Live Preview & Quick Tips (Flex 5)
-                      Expanded(flex: 5, child: _buildRightPreviewAndTipsColumn()),
+                      Expanded(flex: 5, child: _buildRightPreviewAndTipsColumn(footerSectionsList)),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildManageFooterSectionsColumn(),
+                      _buildManageFooterSectionsColumn(footerSectionsList),
                       const SizedBox(height: 24),
-                      _buildRightPreviewAndTipsColumn(),
+                      _buildRightPreviewAndTipsColumn(footerSectionsList),
                     ],
                   ),
 
@@ -499,7 +621,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
   }
 
   // ---------------- LEFT COLUMN: MANAGE FOOTER SECTIONS ----------------
-  Widget _buildManageFooterSectionsColumn() {
+  Widget _buildManageFooterSectionsColumn(List<Map<String, dynamic>> footerSectionsList) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -511,14 +633,14 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
               children: const [
                 Text('Manage Footer Sections', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                 SizedBox(height: 2),
-                Text('Enable, disable and customize each footer section.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                Text('Enable, disable and customize each footer section and its links.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
               ],
             ),
             Row(
               children: const [
                 Icon(Icons.drag_indicator, size: 14, color: Color(0xFF9CA3AF)),
                 SizedBox(width: 4),
-                Text('Drag & drop to reorder sections', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                Text('Use arrows to reorder sections', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
               ],
             ),
           ],
@@ -530,11 +652,11 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: _footerSectionsList.length,
+          itemCount: footerSectionsList.length,
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
-            final sec = _footerSectionsList[index];
-            return _buildFooterSectionCard(sec, index);
+            final sec = footerSectionsList[index];
+            return _buildFooterSectionCard(sec, index, footerSectionsList.length);
           },
         ),
 
@@ -565,9 +687,14 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
     );
   }
 
-  Widget _buildFooterSectionCard(Map<String, dynamic> sec, int index) {
+  Widget _buildFooterSectionCard(Map<String, dynamic> sec, int index, int totalSections) {
     final isActive = sec['isActive'] == true;
     final isCollapsed = _collapsedSectionIds.contains(sec['id']);
+    final rawItems = sec['items'] as List? ?? [];
+    final itemsList = rawItems.map((e) {
+      if (e is Map) return Map<String, dynamic>.from(e);
+      return {'text': e.toString(), 'url': ''};
+    }).toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -578,6 +705,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -586,12 +714,12 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   InkWell(
-                    onTap: index > 0 ? () => _moveSection(index, -1) : null,
+                    onTap: index > 0 ? () => ref.read(footerCmsProvider.notifier).moveSection(index, -1) : null,
                     child: Icon(Icons.arrow_drop_up, color: index > 0 ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB), size: 18),
                   ),
                   InkWell(
-                    onTap: index < _footerSectionsList.length - 1 ? () => _moveSection(index, 1) : null,
-                    child: Icon(Icons.arrow_drop_down, color: index < _footerSectionsList.length - 1 ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB), size: 18),
+                    onTap: index < totalSections - 1 ? () => ref.read(footerCmsProvider.notifier).moveSection(index, 1) : null,
+                    child: Icon(Icons.arrow_drop_down, color: index < totalSections - 1 ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB), size: 18),
                   ),
                 ],
               ),
@@ -615,7 +743,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                   children: [
                     Row(
                       children: [
-                        Text(sec['title'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                        Text(sec['title']?.toString() ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
@@ -631,9 +759,9 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(sec['description'], style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                    Text(sec['description']?.toString() ?? '', style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
                     const SizedBox(height: 2),
-                    Text(sec['meta'], style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+                    Text('${itemsList.length} Links / Items', style: const TextStyle(fontSize: 9, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
@@ -645,17 +773,14 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                     value: isActive,
                     activeThumbColor: const Color(0xFF4F46E5),
                     onChanged: (val) {
-                      setState(() {
-                        sec['isActive'] = val;
-                        _allChangesSaved = false;
-                      });
+                      ref.read(footerCmsProvider.notifier).toggleSection(index, val);
                     },
                   ),
                   const SizedBox(width: 4),
                   OutlinedButton.icon(
-                    onPressed: () => _showEditSectionDialog(sec),
+                    onPressed: () => _showEditSectionDialog(index, sec),
                     icon: const Icon(Icons.edit_outlined, size: 14),
-                    label: const Text('Edit', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                    label: const Text('Edit Section & Links', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       minimumSize: const Size(0, 30),
@@ -664,7 +789,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFDC2626)),
-                    onPressed: () => _confirmDeleteSection(sec),
+                    onPressed: () => _confirmDeleteSection(index, sec),
                   ),
                   IconButton(
                     icon: Icon(isCollapsed ? Icons.keyboard_arrow_right : Icons.keyboard_arrow_down, size: 16, color: const Color(0xFF9CA3AF)),
@@ -683,23 +808,61 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
             ],
           ),
 
-          if (!isCollapsed && sec['items'] != null) ...[
-            const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: (sec['items'] as List).map((item) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(6),
+          // Interactive Link Pill Tags
+          if (!isCollapsed) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ...itemsList.asMap().entries.map((entry) {
+                  final lIdx = entry.key;
+                  final itemData = entry.value;
+                  final text = itemData['text']?.toString() ?? '';
+
+                  return InkWell(
+                    onTap: () => _showEditSingleLinkDialog(index, lIdx, itemData),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(text, style: const TextStyle(fontSize: 11, color: Color(0xFF374151), fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit_outlined, size: 12, color: Color(0xFF4F46E5)),
+                        ],
+                      ),
                     ),
-                    child: Text(item.toString(), style: const TextStyle(fontSize: 10, color: Color(0xFF374151), fontWeight: FontWeight.w500)),
                   );
-                }).toList(),
-              ),
+                }),
+                // Add Link Quick Button Pill Tag
+                InkWell(
+                  onTap: () => _showAddSingleLinkDialog(index),
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFF4F46E5), style: BorderStyle.solid),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.add, size: 12, color: Color(0xFF4F46E5)),
+                        SizedBox(width: 4),
+                        Text('Add Link', style: TextStyle(fontSize: 11, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -708,7 +871,10 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
   }
 
   // ---------------- RIGHT COLUMN: LIVE PREVIEW & QUICK TIPS ----------------
-  Widget _buildRightPreviewAndTipsColumn() {
+  Widget _buildRightPreviewAndTipsColumn(List<Map<String, dynamic>> footerSectionsList) {
+    // Extract active link sections dynamically
+    final activeSections = footerSectionsList.where((s) => s['isActive'] == true).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -737,7 +903,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                 const SizedBox(width: 6),
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 16, color: Color(0xFF6B7280)),
-                  onPressed: () {},
+                  onPressed: () => setState(() {}),
                 ),
               ],
             ),
@@ -757,7 +923,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Row 1: Brand & Newsletter + Link Columns
+              // Row 1: Brand & Newsletter + Dynamic Sections
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -783,7 +949,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                         Row(
                           children: [
                             Container(
-                              width: 120,
+                              width: 110,
                               height: 28,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
@@ -821,56 +987,38 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
 
                   const SizedBox(width: 16),
 
-                  // Column: SHOP
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('SHOP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10, letterSpacing: 0.5)),
-                        SizedBox(height: 8),
-                        Text('All Categories', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text("Today's Deals", style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('New Arrivals', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Best Sellers', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Clearance Sale', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                      ],
-                    ),
-                  ),
+                  // Dynamic Link Columns Rendered from State
+                  ...activeSections.where((s) => s['type'] == 'links' || s['type'] == 'categories' || s['type'] == 'custom').take(3).map((sec) {
+                    final rawItems = sec['items'] as List? ?? [];
+                    final links = rawItems.map((e) => e is Map ? e['text'].toString() : e.toString()).toList();
 
-                  // Column: CUSTOMER SERVICE
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('CUSTOMER SERVICE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 0.5)),
-                        SizedBox(height: 8),
-                        Text('Track Your Order', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Returns & Refunds', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Shipping Info', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Payment Methods', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Contact Us', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                      ],
-                    ),
-                  ),
-
-                  // Column: MY ACCOUNT
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('MY ACCOUNT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 0.5)),
-                        SizedBox(height: 8),
-                        Text('My Orders', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Wishlist', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Addresses', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Account Settings', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                        Text('Logout', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 9, height: 1.6)),
-                      ],
-                    ),
-                  ),
+                    return Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sec['title'].toString().toUpperCase(),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 9, letterSpacing: 0.5),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          ...links.take(6).map((linkText) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                linkText,
+                                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 9),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
 
@@ -882,7 +1030,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Popular Categories
+                  // Popular Categories Column
                   Expanded(
                     flex: 4,
                     child: Column(
@@ -976,10 +1124,10 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                 ],
               ),
               SizedBox(height: 8),
-              Text('| Use drag & drop to reorder footer sections.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
-              Text('| Disable a section to hide it from the website.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
-              Text('| Changes saved here will reflect on the website in real-time.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
-              Text("| Click 'Preview Footer' to see live changes.", style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
+              Text('| Click any link tag to edit label and target URL.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
+              Text('| Use "Edit Section & Links" for reordering and bulk managing links.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
+              Text('| Changes automatically persist in SharedPreferences & update storefront.', style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
+              Text("| Click 'Preview Footer' to view real-time changes.", style: TextStyle(fontSize: 11, color: Color(0xFF4B5563), height: 1.5)),
             ],
           ),
         ),

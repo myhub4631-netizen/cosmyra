@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../admin/controllers/footer_cms_controller.dart';
 
-class VaidyamFooterWidget extends StatefulWidget {
+class VaidyamFooterWidget extends ConsumerStatefulWidget {
   const VaidyamFooterWidget({super.key});
 
   @override
-  State<VaidyamFooterWidget> createState() => _VaidyamFooterWidgetState();
+  ConsumerState<VaidyamFooterWidget> createState() => _VaidyamFooterWidgetState();
 }
 
-class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
+class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
   final TextEditingController _emailController = TextEditingController();
   String _selectedCountry = 'India';
   String _selectedLanguage = 'English';
@@ -48,6 +50,9 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final footerState = ref.watch(footerCmsProvider);
+    final activeSections = footerState.sections.where((s) => s['isActive'] == true).toList();
+
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
 
@@ -60,7 +65,7 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Top Footer Grid (6 Columns)
+          // 1. Dynamic Footer Columns Grid
           isDesktop
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,64 +74,24 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
                     Expanded(flex: 3, child: _buildBrandNewsletterCol()),
                     const SizedBox(width: 32),
 
-                    // Column 2: Shop
-                    Expanded(
-                      flex: 2,
-                      child: _buildFooterLinkCol('SHOP', [
-                        {'label': 'All Categories', 'path': '/explore'},
-                        {'label': 'Today\'s Deals', 'path': '/explore'},
-                        {'label': 'New Arrivals', 'path': '/explore'},
-                        {'label': 'Best Sellers', 'path': '/explore'},
-                        {'label': 'Featured Formulations', 'path': '/explore'},
-                        {'label': 'Clearance Sale', 'path': '/explore'},
-                      ]),
-                    ),
-                    const SizedBox(width: 24),
+                    // Dynamic Section Columns from Footer Manager State
+                    ...activeSections.where((s) => s['type'] != 'newsletter_info' && s['type'] != 'bottom_bar').map((sec) {
+                      final rawItems = sec['items'] as List? ?? [];
+                      final links = rawItems.map((e) {
+                        if (e is Map) {
+                          return {'label': e['text']?.toString() ?? '', 'path': e['url']?.toString() ?? '/explore'};
+                        }
+                        return {'label': e.toString(), 'path': '/explore'};
+                      }).toList();
 
-                    // Column 3: Customer Service
-                    Expanded(
-                      flex: 2,
-                      child: _buildFooterLinkCol('CUSTOMER SERVICE', [
-                        {'label': 'Track Your Order', 'path': '/orders'},
-                        {'label': 'Returns & Refunds', 'path': '/orders'},
-                        {'label': 'Shipping Information', 'path': '/orders'},
-                        {'label': 'Payment Methods', 'path': '/cart'},
-                        {'label': 'FAQ', 'path': '/dashboard'},
-                        {'label': 'Contact Us', 'path': '/dashboard'},
-                      ]),
-                    ),
-                    const SizedBox(width: 24),
-
-                    // Column 4: My Account
-                    Expanded(
-                      flex: 2,
-                      child: _buildFooterLinkCol('MY ACCOUNT', [
-                        {'label': 'My Orders', 'path': '/orders'},
-                        {'label': 'Wishlist', 'path': '/wishlist'},
-                        {'label': 'Addresses', 'path': '/dashboard'},
-                        {'label': 'Account Settings', 'path': '/dashboard'},
-                        {'label': 'Notifications', 'path': '/dashboard'},
-                        {'label': 'Logout', 'path': '/'},
-                      ]),
-                    ),
-                    const SizedBox(width: 24),
-
-                    // Column 5: About Us
-                    Expanded(
-                      flex: 2,
-                      child: _buildFooterLinkCol('ABOUT US', [
-                        {'label': 'About Vaidyam', 'path': '/'},
-                        {'label': 'Our Story', 'path': '/'},
-                        {'label': 'Careers', 'path': '/'},
-                        {'label': 'Botanical Blog', 'path': '/'},
-                        {'label': 'Privacy Policy', 'path': '/'},
-                        {'label': 'Terms & Conditions', 'path': '/'},
-                      ]),
-                    ),
-                    const SizedBox(width: 24),
-
-                    // Column 6: Popular Categories
-                    Expanded(flex: 3, child: _buildPopularCategoriesCol()),
+                      return Expanded(
+                        flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 20),
+                          child: _buildFooterLinkCol(sec['title']?.toString().toUpperCase() ?? 'SECTION', links),
+                        ),
+                      );
+                    }),
                   ],
                 )
               : Column(
@@ -137,24 +102,20 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
                     Wrap(
                       spacing: 32,
                       runSpacing: 24,
-                      children: [
-                        SizedBox(
+                      children: activeSections.where((s) => s['type'] != 'newsletter_info' && s['type'] != 'bottom_bar').map((sec) {
+                        final rawItems = sec['items'] as List? ?? [];
+                        final links = rawItems.map((e) {
+                          if (e is Map) {
+                            return {'label': e['text']?.toString() ?? '', 'path': e['url']?.toString() ?? '/explore'};
+                          }
+                          return {'label': e.toString(), 'path': '/explore'};
+                        }).toList();
+
+                        return SizedBox(
                           width: 150,
-                          child: _buildFooterLinkCol('SHOP', [
-                            {'label': 'All Categories', 'path': '/explore'},
-                            {'label': 'Today\'s Deals', 'path': '/explore'},
-                            {'label': 'Best Sellers', 'path': '/explore'},
-                          ]),
-                        ),
-                        SizedBox(
-                          width: 150,
-                          child: _buildFooterLinkCol('MY ACCOUNT', [
-                            {'label': 'My Orders', 'path': '/orders'},
-                            {'label': 'Wishlist', 'path': '/wishlist'},
-                            {'label': 'Settings', 'path': '/dashboard'},
-                          ]),
-                        ),
-                      ],
+                          child: _buildFooterLinkCol(sec['title']?.toString().toUpperCase() ?? 'SECTION', links),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),
@@ -303,25 +264,26 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
                   controller: _emailController,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   decoration: const InputDecoration(
-                    hintText: 'Enter your email',
+                    hintText: 'Enter your email address',
                     hintStyle: TextStyle(color: _textMuted, fontSize: 13),
                     border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            InkWell(
-              onTap: _handleSubscribe,
-              child: Container(
-                height: 40,
-                width: 44,
-                decoration: BoxDecoration(
-                  color: _primaryPurple,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+            ElevatedButton(
+              onPressed: _handleSubscribe,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                elevation: 0,
               ),
+              child: const Text('Subscribe', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ],
         ),
@@ -330,33 +292,32 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
         // Social Icons Row
         Row(
           children: [
-            _socialIconButton(Icons.facebook),
-            const SizedBox(width: 10),
-            _socialIconButton(Icons.camera_alt_outlined),
-            const SizedBox(width: 10),
-            _socialIconButton(Icons.alternate_email),
-            const SizedBox(width: 10),
-            _socialIconButton(Icons.play_arrow),
+            _socialIcon(Icons.facebook),
+            const SizedBox(width: 12),
+            _socialIcon(Icons.camera_alt_outlined),
+            const SizedBox(width: 12),
+            _socialIcon(Icons.close),
+            const SizedBox(width: 12),
+            _socialIcon(Icons.play_arrow_outlined),
           ],
         ),
       ],
     );
   }
 
-  Widget _socialIconButton(IconData icon) {
+  Widget _socialIcon(IconData icon) {
     return Container(
-      width: 34,
-      height: 34,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         shape: BoxShape.circle,
         border: Border.all(color: _borderDark),
       ),
-      child: Icon(icon, color: _textLight, size: 16),
+      child: Icon(icon, color: _textMuted, size: 16),
     );
   }
 
-  // --- FOOTER LINK COLUMN ---
+  // --- REUSABLE FOOTER LINK COLUMN ---
   Widget _buildFooterLinkCol(String title, List<Map<String, String>> links) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,161 +326,33 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
           title,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
+            letterSpacing: 0.8,
           ),
         ),
         const SizedBox(height: 16),
-        ...links.map((item) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: InkWell(
-              onTap: () => context.push(item['path']!),
-              child: Text(
-                item['label']!,
-                style: const TextStyle(color: _textMuted, fontSize: 13),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // --- POPULAR CATEGORIES COLUMN ---
-  Widget _buildPopularCategoriesCol() {
-    final popularList = [
-      {'title': 'Haircare & Oils', 'asset': 'assets/images/shampoo.jpg'},
-      {'title': 'Skincare & Serums', 'asset': 'assets/images/facewash.jpg'},
-      {'title': 'Organic Soaps', 'asset': 'assets/images/soap.jpg'},
-      {'title': 'Wellness Oils', 'asset': 'assets/images/soap.jpg'},
-      {'title': 'Body Thailams', 'asset': 'assets/images/facewash.jpg'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'POPULAR CATEGORIES',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...popularList.map((cat) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10.0),
-            child: InkWell(
-              onTap: () => context.push('/explore'),
-              child: Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: _borderDark),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: Image.asset(
-                        cat['asset']!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 16, color: _primaryPurple),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    cat['title']!,
-                    style: const TextStyle(color: _textMuted, fontSize: 13),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // --- MIDDLE TRUST FEATURE STRIP ---
-  Widget _buildMiddleTrustStrip(bool isDesktop) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _middleTrustItem(Icons.local_shipping_outlined, 'FREE SHIPPING', 'On orders over ₹999'),
-        _middleTrustItem(Icons.replay_outlined, 'EASY RETURNS', 'Within 7 days'),
-        _middleTrustItem(Icons.verified_outlined, '100% SECURE', 'Payments'),
-        _middleTrustItem(Icons.workspace_premium_outlined, 'BEST QUALITY', '100% Original Products'),
-        _middleTrustItem(Icons.headset_mic_outlined, '24/7 SUPPORT', 'We\'re here to help'),
-      ],
-    );
-  }
-
-  Widget _middleTrustItem(IconData icon, String title, String subtitle) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            shape: BoxShape.circle,
-            border: Border.all(color: _borderDark),
-          ),
-          child: Icon(icon, color: _primaryPurple, size: 18),
-        ),
-        const SizedBox(width: 10),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              subtitle,
-              style: const TextStyle(color: _textMuted, fontSize: 11),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+          children: links.map((link) {
+            final label = link['label'] ?? '';
+            final path = link['path'] ?? '/explore';
 
-  // --- PAYMENT METHODS SECTION ---
-  Widget _buildPaymentMethodsSection() {
-    final paymentGateways = ['VISA', 'Mastercard', 'RuPay', 'UPI', 'Paytm', 'PhonePe'];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'WE ACCEPT',
-          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: paymentGateways.map((name) {
-            return Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  fontStyle: FontStyle.italic,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: InkWell(
+                onTap: () {
+                  if (path.isNotEmpty) {
+                    context.push(path);
+                  }
+                },
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: _textMuted,
+                    fontSize: 13,
+                    height: 1.3,
+                  ),
                 ),
               ),
             );
@@ -529,51 +362,110 @@ class _VaidyamFooterWidgetState extends State<VaidyamFooterWidget> {
     );
   }
 
-  // --- APP DOWNLOAD SECTION ---
-  Widget _buildAppDownloadSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  // --- MIDDLE TRUST FEATURE STRIP ---
+  Widget _buildMiddleTrustStrip(bool isDesktop) {
+    final features = [
+      {'icon': Icons.local_shipping_outlined, 'title': 'FREE SHIPPING', 'sub': 'On orders over ₹999'},
+      {'icon': Icons.replay_outlined, 'title': 'EASY RETURNS', 'sub': 'Within 7 days return policy'},
+      {'icon': Icons.lock_outline, 'title': '100% SECURE', 'sub': 'Encrypted payment gateway'},
+      {'icon': Icons.verified_outlined, 'title': 'BEST QUALITY', 'sub': '100% Original Products'},
+      {'icon': Icons.support_agent_outlined, 'title': '24/7 SUPPORT', 'sub': 'We are here to help'},
+    ];
+
+    return isDesktop
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: features.map((f) => _trustItem(f['icon'] as IconData, f['title'] as String, f['sub'] as String)).toList(),
+          )
+        : Wrap(
+            spacing: 24,
+            runSpacing: 16,
+            children: features.map((f) => SizedBox(width: 160, child: _trustItem(f['icon'] as IconData, f['title'] as String, f['sub'] as String))).toList(),
+          );
+  }
+
+  Widget _trustItem(IconData icon, String title, String sub) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'DOWNLOAD OUR APP',
-          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            shape: BoxShape.circle,
+            border: Border.all(color: _borderDark),
+          ),
+          child: Icon(icon, color: _primaryPurple, size: 20),
         ),
-        const SizedBox(height: 4),
-        const Text(
-          'Get extra 10% off on your first app order.',
-          style: TextStyle(color: _textMuted, fontSize: 12),
-        ),
-        const SizedBox(height: 12),
-        Row(
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _appStoreBadge('GET IT ON', 'Google Play', Icons.android),
-            const SizedBox(width: 12),
-            _appStoreBadge('Download on the', 'App Store', Icons.apple),
+            Text(title, style: const TextStyle(color: _textLight, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+            const SizedBox(height: 2),
+            Text(sub, style: const TextStyle(color: _textMuted, fontSize: 10)),
           ],
         ),
       ],
     );
   }
 
-  Widget _appStoreBadge(String line1, String line2, IconData icon) {
+  // --- PAYMENT METHODS ---
+  Widget _buildPaymentMethodsSection() {
+    final methods = ['VISA', 'Mastercard', 'PayPal', 'UPI', 'Paytm', 'PhonePe'];
+
+    return Row(
+      children: [
+        const Text('WE ACCEPT:', style: TextStyle(color: _textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        const SizedBox(width: 12),
+        Wrap(
+          spacing: 8,
+          children: methods.map((m) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: _borderDark),
+              ),
+              child: Text(
+                m,
+                style: const TextStyle(color: _textLight, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // --- APP DOWNLOAD ---
+  Widget _buildAppDownloadSection() {
+    return Row(
+      children: [
+        const Text('DOWNLOAD OUR APP:', style: TextStyle(color: _textMuted, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+        const SizedBox(width: 12),
+        _appBadge('Google Play', Icons.shop_outlined),
+        const SizedBox(width: 8),
+        _appBadge('App Store', Icons.apple),
+      ],
+    );
+  }
+
+  Widget _appBadge(String store, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: _borderDark),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(line1, style: const TextStyle(color: _textMuted, fontSize: 9)),
-              Text(line2, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-            ],
-          ),
+          Icon(icon, color: Colors.white, size: 14),
+          const SizedBox(width: 6),
+          Text(store, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
         ],
       ),
     );
