@@ -2,16 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/controllers/auth_controller.dart';
-import '../widgets/admin_analytics_view.dart';
-import '../widgets/admin_auth_dialog.dart';
 import '../widgets/admin_catalog_view.dart';
 import '../widgets/admin_customers_view.dart';
 import '../widgets/admin_footer_cms_view.dart';
 import '../widgets/admin_homepage_cms_view.dart';
 import '../widgets/admin_orders_view.dart';
-import '../widgets/admin_promotions_view.dart';
-import '../widgets/admin_settings_view.dart';
-import '../widgets/admin_subscriptions_view.dart';
+import 'admin_dashboard_screen.dart';
 
 class AdminMasterScreen extends ConsumerStatefulWidget {
   const AdminMasterScreen({super.key});
@@ -21,53 +17,83 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _activeViewIndex = 0;
-  final Set<String> _expandedParentMenus = {'Website'};
+  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Analytics, 5: Marketing, 6: Settings, 7: Homepage CMS, 8: Footer CMS
+
+  // Expanded parent menus
+  final Set<String> _expandedParentMenus = {'Catalog', 'Orders', 'Website'};
 
   final List<Map<String, dynamic>> _navigationItems = [
-    {'title': 'Dashboard', 'icon': Icons.grid_view_rounded, 'hasChild': false, 'viewIndex': 0},
-    {'title': 'Users', 'icon': Icons.people_outline, 'hasChild': true, 'viewIndex': 4},
-    {'title': 'Products', 'icon': Icons.inventory_2_outlined, 'hasChild': true, 'viewIndex': 1},
-    {'title': 'Orders', 'icon': Icons.shopping_bag_outlined, 'hasChild': true, 'viewIndex': 2},
-    {'title': 'Categories', 'icon': Icons.category_outlined, 'hasChild': false, 'viewIndex': 1},
-    {'title': 'Brands', 'icon': Icons.storefront_outlined, 'hasChild': false, 'viewIndex': 1},
-    {'title': 'Coupons', 'icon': Icons.local_offer_outlined, 'hasChild': true, 'viewIndex': 5},
-    {'title': 'Banners', 'icon': Icons.image_outlined, 'hasChild': true, 'viewIndex': 5},
-    {'title': 'Reviews', 'icon': Icons.star_outline, 'hasChild': true, 'viewIndex': 4},
-    {'title': 'Withdrawals', 'icon': Icons.account_balance_wallet_outlined, 'hasChild': false, 'viewIndex': 3},
-    {'title': 'Reports', 'icon': Icons.bar_chart_outlined, 'hasChild': false, 'viewIndex': 0},
-    {'title': 'Website', 'icon': Icons.language_outlined, 'hasChild': true, 'viewIndex': 7},
-    {'title': 'Settings', 'icon': Icons.settings_outlined, 'hasChild': false, 'viewIndex': 6},
-    {'title': 'System Logs', 'icon': Icons.list_alt_outlined, 'hasChild': false, 'viewIndex': 6},
+    {'title': 'Dashboard', 'icon': Icons.grid_view_outlined, 'viewIndex': 0, 'hasChild': false},
+    {'title': 'Catalog', 'icon': Icons.inventory_2_outlined, 'viewIndex': 1, 'hasChild': true},
+    {'title': 'Orders', 'icon': Icons.shopping_bag_outlined, 'viewIndex': 2, 'hasChild': true},
+    {'title': 'Customers', 'icon': Icons.people_outline, 'viewIndex': 3, 'hasChild': false},
+    {'title': 'Website', 'icon': Icons.web_outlined, 'viewIndex': 7, 'hasChild': true},
+    {'title': 'Analytics', 'icon': Icons.bar_chart_outlined, 'viewIndex': 4, 'hasChild': false},
+    {'title': 'Marketing', 'icon': Icons.campaign_outlined, 'viewIndex': 5, 'hasChild': false},
+    {'title': 'Settings', 'icon': Icons.settings_outlined, 'viewIndex': 6, 'hasChild': false},
   ];
 
   final List<Widget> _views = const [
-    AdminAnalyticsView(),
+    AdminDashboardScreen(),
     AdminCatalogView(),
     AdminOrdersView(),
-    AdminSubscriptionsView(),
     AdminCustomersView(),
-    AdminPromotionsView(),
-    AdminSettingsView(),
+    Center(child: Text('Analytics View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
+    Center(child: Text('Marketing & Discounts View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
+    Center(child: Text('Store Settings View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
     AdminHomepageCmsView(),
     AdminFooterCmsView(),
   ];
 
+  Future<void> _handleAdminLogout(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirm Admin Logout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: const Text('Are you sure you want to log out from the Master Admin Console?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(authControllerProvider.notifier).signOut();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Admin logged out successfully.')),
+                );
+                context.go('/login');
+              }
+            },
+            child: const Text('Logout Admin'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+    final auth = ref.watch(authControllerProvider);
+
+    final String adminName = auth.userName ?? user?.userMetadata?['full_name'] ?? 'Mahboob Hasan';
+    final String adminEmail = auth.userEmail ?? user?.email ?? '1mdollar2027@gmail.com';
+
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > 950;
+    final isWide = screenWidth > 900;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(65),
+        preferredSize: const Size.fromHeight(60),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
             border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
               if (!isWide)
@@ -77,56 +103,32 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                     onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                 ),
-              const Text(
-                'Master Admin',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
-              ),
-              const SizedBox(width: 32),
 
-              // Search Bar
+              // Search Bar in Top Bar
               if (isWide)
-                Expanded(
-                  child: Container(
-                    height: 40,
-                    constraints: const BoxConstraints(maxWidth: 450),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Search orders, customers, products, SKU...',
-                              hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-                              border: InputBorder.none,
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                      ],
+                Container(
+                  width: 320,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search products, orders, settings...',
+                      hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                      prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
                   ),
                 ),
 
               const Spacer(),
 
-              // Right User Actions
+              // Right Top Controls: Notifications, User Profile Menu, Storefront & Dedicated Logout Button
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Text('English ▾', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                  ),
-                  const SizedBox(width: 16),
                   Stack(
                     children: [
                       IconButton(
@@ -144,27 +146,105 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(width: 12),
-                  const CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Color(0xFFEEF2FF),
-                    child: Text('M', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
-                  ),
                   const SizedBox(width: 8),
-                  if (isWide)
-                    const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+
+                  // Admin Profile Dropdown Popup Menu
+                  PopupMenuButton<String>(
+                    tooltip: 'Admin Account Options',
+                    onSelected: (value) async {
+                      if (value == 'logout') {
+                        await _handleAdminLogout(context);
+                      } else if (value == 'storefront') {
+                        context.go('/');
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        enabled: false,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(adminName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+                            Text(adminEmail, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(4)),
+                              child: const Text('MASTER ADMIN', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                            ),
+                            const Divider(),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'storefront',
+                        child: Row(
+                          children: [
+                            Icon(Icons.storefront_outlined, size: 16, color: Color(0xFF4F46E5)),
+                            SizedBox(width: 8),
+                            Text('View Live Storefront', style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Logout Admin', style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Row(
                       children: [
-                        Text('Mahboob Hasan', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                        Text('Master Admin', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor: const Color(0xFFEEF2FF),
+                          child: Text(
+                            adminName.isNotEmpty ? adminName[0].toUpperCase() : 'M',
+                            style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (isWide)
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(adminName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                              const Text('Master Admin ▾', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                            ],
+                          ),
                       ],
                     ),
-                  const SizedBox(width: 16),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  // Storefront Link Button
                   TextButton.icon(
                     onPressed: () => context.go('/'),
                     icon: const Icon(Icons.storefront_outlined, size: 16, color: Color(0xFF4F46E5)),
                     label: const Text('Storefront', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // Dedicated Logout Admin Button
+                  ElevatedButton.icon(
+                    onPressed: () => _handleAdminLogout(context),
+                    icon: const Icon(Icons.logout, size: 14),
+                    label: const Text('Logout', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDC2626),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                   ),
                 ],
               ),
@@ -178,25 +258,19 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
           if (isWide)
             SizedBox(
               width: 240,
-              child: _buildSidebar(isDrawer: false),
+              child: _buildSidebar(),
             ),
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              child: KeyedSubtree(
-                key: ValueKey<int>(_activeViewIndex),
-                child: _views[_activeViewIndex],
-              ),
-            ),
+            child: _views[_activeViewIndex >= 0 && _activeViewIndex < _views.length ? _activeViewIndex : 0],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSidebar({required bool isDrawer}) {
+  Widget _buildSidebar({bool isDrawer = false}) {
     return Container(
-      color: const Color(0xFF0B132B), // Dark Navy Blue background matching screenshot
+      color: const Color(0xFF111827), // Sleek Dark Charcoal Sidebar
       child: Column(
         children: [
           // Sidebar Brand Header
@@ -214,7 +288,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Commerce Admin',
+                  'Cosmyra Admin',
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -280,30 +354,19 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                               }
                               _activeViewIndex = defaultViewIndex;
                             });
-                            if (isDrawer) Navigator.of(context).pop();
+                            if (isDrawer) Navigator.pop(context);
                           },
                         ),
                       ),
                     ),
 
-                    // Expanded Sub-menu for Users
-                    if (title == 'Users' && isExpanded) ...[
-                      _buildSubMenuItem('All Users', _activeViewIndex == 4, onTap: () => setState(() => _activeViewIndex = 4)),
-                      _buildSubMenuItem('User Roles', false),
-                      _buildSubMenuItem('Permissions', false),
-                      const SizedBox(height: 4),
-                    ],
-
-                    // Expanded Sub-menu for Products
-                    if (title == 'Products' && isExpanded) ...[
+                    // Expanded Sub-menu for Catalog
+                    if (title == 'Catalog' && isExpanded) ...[
                       _buildSubMenuItem('All Products', _activeViewIndex == 1, onTap: () => setState(() => _activeViewIndex = 1)),
-                      _buildSubMenuItem('Add New Product', false),
                       _buildSubMenuItem('Categories', false),
-                      _buildSubMenuItem('Brands', false),
-                      _buildSubMenuItem('Attributes', false),
-                      _buildSubMenuItem('Units', false),
-                      _buildSubMenuItem('Bulk Import', false),
-                      _buildSubMenuItem('Export Products', false),
+                      _buildSubMenuItem('Collections', false),
+                      _buildSubMenuItem('Inventory', false),
+                      _buildSubMenuItem('Gift Cards', false),
                       const SizedBox(height: 4),
                     ],
 
@@ -335,25 +398,24 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
             ),
           ),
 
-          // Bottom Contact Support Card
+          // Bottom Logout & Support Bar
           Container(
             margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
-            child: Row(
+            child: Column(
               children: [
-                const Icon(Icons.chat_bubble_outline, size: 20, color: Color(0xFF9CA3AF)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                InkWell(
+                  onTap: () => _handleAdminLogout(context),
+                  child: Row(
                     children: const [
-                      Text('Need Help?', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                      Text('Contact Support', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10)),
+                      Icon(Icons.logout, size: 18, color: Color(0xFFEF4444)),
+                      SizedBox(width: 10),
+                      Text('Logout Admin', style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
