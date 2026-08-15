@@ -252,47 +252,110 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 final item = _navigationItems[index];
                 final isSelected = _selectedIndex == index;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                      leading: Icon(
-                        item['icon'] as IconData,
-                        size: 18,
-                        color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
-                      ),
-                      title: Text(
-                        item['title'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? Colors.white : const Color(0xFFD1D5DB),
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                          leading: Icon(
+                            item['icon'] as IconData,
+                            size: 18,
+                            color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
+                          ),
+                          title: Text(
+                            item['title'] as String,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected ? Colors.white : const Color(0xFFD1D5DB),
+                            ),
+                          ),
+                          trailing: item['hasChild'] == true
+                              ? Icon(
+                                  isSelected ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                  size: 16,
+                                  color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
+                                )
+                              : null,
+                          onTap: () {
+                            setState(() => _selectedIndex = index);
+                            if (isDrawer) Navigator.of(context).pop();
+                          },
                         ),
                       ),
-                      trailing: item['hasChild'] == true
-                          ? Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 16,
-                              color: isSelected ? Colors.white : const Color(0xFF9CA3AF),
-                            )
-                          : null,
-                      onTap: () {
-                        setState(() => _selectedIndex = index);
-                        if (isDrawer) Navigator.of(context).pop();
-                      },
                     ),
-                  ),
+
+                    // Expanded Sub-menu for Users
+                    if (item['title'] == 'Users' && isSelected) ...[
+                      _buildSubMenuItem('All Users', true),
+                      _buildSubMenuItem('User Roles', false),
+                      _buildSubMenuItem('Permissions', false),
+                      const SizedBox(height: 4),
+                    ],
+                  ],
                 );
               },
             ),
           ),
+
+          // Bottom Contact Support Card
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.chat_bubble_outline, size: 20, color: Color(0xFF9CA3AF)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Need Help?', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Contact Support', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSubMenuItem(String title, bool isActive) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 36, bottom: 2, right: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? Colors.white : const Color(0xFF9CA3AF),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
