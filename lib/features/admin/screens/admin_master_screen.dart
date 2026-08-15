@@ -17,33 +17,10 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Analytics, 5: Marketing, 6: Settings, 7: Homepage CMS, 8: Footer CMS
+  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website (Homepage), 8: Website (Footer)
 
   // Expanded parent menus
   final Set<String> _expandedParentMenus = {'Catalog', 'Orders', 'Website'};
-
-  final List<Map<String, dynamic>> _navigationItems = [
-    {'title': 'Dashboard', 'icon': Icons.grid_view_outlined, 'viewIndex': 0, 'hasChild': false},
-    {'title': 'Catalog', 'icon': Icons.inventory_2_outlined, 'viewIndex': 1, 'hasChild': true},
-    {'title': 'Orders', 'icon': Icons.shopping_bag_outlined, 'viewIndex': 2, 'hasChild': true},
-    {'title': 'Customers', 'icon': Icons.people_outline, 'viewIndex': 3, 'hasChild': false},
-    {'title': 'Website', 'icon': Icons.web_outlined, 'viewIndex': 7, 'hasChild': true},
-    {'title': 'Analytics', 'icon': Icons.bar_chart_outlined, 'viewIndex': 4, 'hasChild': false},
-    {'title': 'Marketing', 'icon': Icons.campaign_outlined, 'viewIndex': 5, 'hasChild': false},
-    {'title': 'Settings', 'icon': Icons.settings_outlined, 'viewIndex': 6, 'hasChild': false},
-  ];
-
-  final List<Widget> _views = const [
-    AdminDashboardScreen(),
-    AdminCatalogView(),
-    AdminOrdersView(),
-    AdminCustomersView(),
-    Center(child: Text('Analytics View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
-    Center(child: Text('Marketing & Discounts View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
-    Center(child: Text('Store Settings View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)))),
-    AdminHomepageCmsView(),
-    AdminFooterCmsView(),
-  ];
 
   Future<void> _handleAdminLogout(BuildContext context) async {
     showDialog(
@@ -51,7 +28,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Confirm Admin Logout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        content: const Text('Are you sure you want to log out from the Master Admin Console?'),
+        content: const Text('Are you sure you want to log out from the Cosmyra Admin Console?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
@@ -84,14 +61,27 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
 
+    final List<Widget> views = [
+      const AdminDashboardScreen(),
+      const AdminCatalogView(),
+      const AdminOrdersView(),
+      const AdminCustomersView(),
+      const Center(child: Text('Marketing & Discounts (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
+      const Center(child: Text('Analytics View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
+      const Center(child: Text('Reports View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
+      const AdminHomepageCmsView(),
+      const AdminFooterCmsView(),
+    ];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: const Color(0xFFF8FAFC),
+      // ── TOP HEADER BAR ──
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(64),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+            border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -99,40 +89,81 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
               if (!isWide)
                 Builder(
                   builder: (context) => IconButton(
-                    icon: const Icon(Icons.menu, color: Color(0xFF374151)),
+                    icon: const Icon(Icons.menu, color: Color(0xFF334155)),
                     onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                 ),
 
-              // Search Bar in Top Bar
+              // Left Brand Title Header (Console Switcher)
+              Row(
+                children: [
+                  const Icon(Icons.storefront, color: Color(0xFFD97706), size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'COSMYRA ADMIN CONSOLE',
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(width: 24),
+
+              // Search Bar in Center Header
               if (isWide)
                 Container(
-                  width: 320,
+                  width: 380,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
+                    color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: const TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search products, orders, settings...',
-                      hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
-                      prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
-                    ),
+                  child: Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Icon(Icons.search, size: 16, color: Color(0xFF94A3B8)),
+                      ),
+                      const Expanded(
+                        child: TextField(
+                          style: TextStyle(fontSize: 12, color: Color(0xFF0F172A)),
+                          decoration: InputDecoration(
+                            hintText: 'Search orders, customers, products, SKUs...',
+                            hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text('⌘K', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                      ),
+                    ],
                   ),
                 ),
 
               const Spacer(),
 
-              // Right Top Controls: Notifications, User Profile Menu, Storefront & Dedicated Logout Button
+              // Right Actions Group: Notifications, Help, Profile Avatar & Storefront Link
               Row(
                 children: [
+                  // Bell Notification Icon
                   Stack(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.notifications_outlined, color: Color(0xFF4B5563)),
+                        icon: const Icon(Icons.notifications_outlined, color: Color(0xFF475569), size: 22),
                         onPressed: () {},
                       ),
                       Positioned(
@@ -141,20 +172,27 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
-                          child: const Text('5', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                          child: const Text('12', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
                   ),
+
+                  // Help Support Icon
+                  IconButton(
+                    icon: const Icon(Icons.help_outline, color: Color(0xFF475569), size: 22),
+                    onPressed: () {},
+                  ),
+
                   const SizedBox(width: 8),
 
-                  // Admin Profile Dropdown Popup Menu
+                  // User Profile Avatar Menu
                   PopupMenuButton<String>(
-                    tooltip: 'Admin Account Options',
-                    onSelected: (value) async {
-                      if (value == 'logout') {
+                    tooltip: 'Account Options',
+                    onSelected: (val) async {
+                      if (val == 'logout') {
                         await _handleAdminLogout(context);
-                      } else if (value == 'storefront') {
+                      } else if (val == 'storefront') {
                         context.go('/');
                       }
                     },
@@ -165,8 +203,8 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(adminName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
-                            Text(adminEmail, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                            Text(adminName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                            Text(adminEmail, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -183,7 +221,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           children: [
                             Icon(Icons.storefront_outlined, size: 16, color: Color(0xFF4F46E5)),
                             SizedBox(width: 8),
-                            Text('View Live Storefront', style: TextStyle(fontSize: 12)),
+                            Text('Shopper Storefront', style: TextStyle(fontSize: 12)),
                           ],
                         ),
                       ),
@@ -205,7 +243,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           backgroundColor: const Color(0xFFEEF2FF),
                           child: Text(
                             adminName.isNotEmpty ? adminName[0].toUpperCase() : 'M',
-                            style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -214,36 +252,25 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(adminName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                              const Text('Master Admin ▾', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+                              Text(adminName, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                              const Text('Master Admin ▾', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                             ],
                           ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 16),
 
-                  // Storefront Link Button
-                  TextButton.icon(
-                    onPressed: () => context.go('/'),
-                    icon: const Icon(Icons.storefront_outlined, size: 16, color: Color(0xFF4F46E5)),
-                    label: const Text('Storefront', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 12)),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  // Dedicated Logout Admin Button
-                  ElevatedButton.icon(
-                    onPressed: () => _handleAdminLogout(context),
-                    icon: const Icon(Icons.logout, size: 14),
-                    label: const Text('Logout', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDC2626),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  // Shopper Storefront Button Link
+                  InkWell(
+                    onTap: () => context.go('/'),
+                    child: Row(
+                      children: const [
+                        Text('Shopper Storefront', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                        SizedBox(width: 4),
+                        Icon(Icons.open_in_new, size: 14, color: Color(0xFF4F46E5)),
+                      ],
                     ),
                   ),
                 ],
@@ -261,165 +288,110 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
               child: _buildSidebar(),
             ),
           Expanded(
-            child: _views[_activeViewIndex >= 0 && _activeViewIndex < _views.length ? _activeViewIndex : 0],
+            child: views[_activeViewIndex >= 0 && _activeViewIndex < views.length ? _activeViewIndex : 0],
           ),
         ],
       ),
     );
   }
 
+  // ── LEFT SIDEBAR NAVIGATION ──
   Widget _buildSidebar({bool isDrawer = false}) {
     return Container(
-      color: const Color(0xFF111827), // Sleek Dark Charcoal Sidebar
+      color: const Color(0xFF0F172A), // Dark Midnight Blue
       child: Column(
         children: [
-          // Sidebar Brand Header
+          // Brand Title Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4F46E5),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
+                  child: const Icon(Icons.local_florist, color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: 12),
                 const Text(
                   'Cosmyra Admin',
                   style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
+                const Spacer(),
+                const Icon(Icons.menu, color: Color(0xFF64748B), size: 18),
               ],
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
 
-          // Menu Items List
+          // Menu List Groups
           Expanded(
-            child: ListView.builder(
+            child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: _navigationItems.length,
-              itemBuilder: (context, index) {
-                final item = _navigationItems[index];
-                final String title = item['title'] as String;
-                final int defaultViewIndex = item['viewIndex'] as int;
+              children: [
+                _groupHeader('MAIN'),
+                _navItem('Dashboard', Icons.grid_view_outlined, 0, badgeCount: 0),
+                _navItem('Catalog', Icons.inventory_2_outlined, 1, hasChildren: true),
+                if (_expandedParentMenus.contains('Catalog')) ...[
+                  _subNavItem('All Products', 1, () => setState(() => _activeViewIndex = 1)),
+                  _subNavItem('Categories', -1, null),
+                  _subNavItem('Collections', -1, null),
+                ],
+                _navItem('Orders', Icons.shopping_bag_outlined, 2, badgeCount: 24, hasChildren: true),
+                if (_expandedParentMenus.contains('Orders')) ...[
+                  _subNavItem('All Orders', 2, () => setState(() => _activeViewIndex = 2)),
+                  _subNavItem('Unfulfilled', -1, null),
+                  _subNavItem('Shipped', -1, null),
+                  _subNavItem('Delivered', -1, null),
+                ],
+                _navItem('Customers', Icons.people_outline, 3),
+                _navItem('Marketing', Icons.campaign_outlined, 4),
+                _navItem('Analytics', Icons.bar_chart_outlined, 5),
+                _navItem('Reports', Icons.assessment_outlined, 6),
 
-                final bool isExpanded = _expandedParentMenus.contains(title);
-                final bool isParentActive = _activeViewIndex == defaultViewIndex ||
-                    (title == 'Website' && (_activeViewIndex == 7 || _activeViewIndex == 8));
+                const SizedBox(height: 16),
+                _groupHeader('SALES CHANNELS'),
+                _navItem('Website', Icons.web_outlined, 7, hasChildren: true),
+                if (_expandedParentMenus.contains('Website')) ...[
+                  _subNavItem('Homepage', 7, () => setState(() => _activeViewIndex = 7)),
+                  _subNavItem('Footer Manager', 8, () => setState(() => _activeViewIndex = 8)),
+                ],
 
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isParentActive ? const Color(0xFF4F46E5) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-                          leading: Icon(
-                            item['icon'] as IconData,
-                            size: 18,
-                            color: isParentActive ? Colors.white : const Color(0xFF9CA3AF),
-                          ),
-                          title: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isParentActive ? FontWeight.bold : FontWeight.w500,
-                              color: isParentActive ? Colors.white : const Color(0xFFD1D5DB),
-                            ),
-                          ),
-                          trailing: item['hasChild'] == true
-                              ? Icon(
-                                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                                  size: 16,
-                                  color: isParentActive ? Colors.white : const Color(0xFF9CA3AF),
-                                )
-                              : null,
-                          onTap: () {
-                            setState(() {
-                              if (item['hasChild'] == true) {
-                                if (isExpanded) {
-                                  _expandedParentMenus.remove(title);
-                                } else {
-                                  _expandedParentMenus.add(title);
-                                }
-                              }
-                              _activeViewIndex = defaultViewIndex;
-                            });
-                            if (isDrawer) Navigator.pop(context);
-                          },
-                        ),
-                      ),
-                    ),
+                const SizedBox(height: 16),
+                _groupHeader('TOOLS'),
+                _navItem('Inventory', Icons.inventory_outlined, -1),
+                _navItem('Fulfillment', Icons.local_shipping_outlined, -1),
+                _navItem('Shipping', Icons.directions_boat_outlined, -1),
+                _navItem('Payments', Icons.payment_outlined, -1),
+                _navItem('Returns', Icons.published_with_changes, -1),
 
-                    // Expanded Sub-menu for Catalog
-                    if (title == 'Catalog' && isExpanded) ...[
-                      _buildSubMenuItem('All Products', _activeViewIndex == 1, onTap: () => setState(() => _activeViewIndex = 1)),
-                      _buildSubMenuItem('Categories', false),
-                      _buildSubMenuItem('Collections', false),
-                      _buildSubMenuItem('Inventory', false),
-                      _buildSubMenuItem('Gift Cards', false),
-                      const SizedBox(height: 4),
-                    ],
-
-                    // Expanded Sub-menu for Orders
-                    if (title == 'Orders' && isExpanded) ...[
-                      _buildSubMenuItem('All Orders', _activeViewIndex == 2, onTap: () => setState(() => _activeViewIndex = 2)),
-                      _buildSubMenuItem('Unfulfilled', false),
-                      _buildSubMenuItem('Processing', false),
-                      _buildSubMenuItem('Shipped', false),
-                      _buildSubMenuItem('Delivered', false),
-                      _buildSubMenuItem('Cancelled', false),
-                      _buildSubMenuItem('Returned / Refunds', false),
-                      const SizedBox(height: 4),
-                    ],
-
-                    // Expanded Sub-menu for Website
-                    if (title == 'Website' && isExpanded) ...[
-                      _buildSubMenuItem('Homepage', _activeViewIndex == 7, onTap: () => setState(() => _activeViewIndex = 7)),
-                      _buildSubMenuItem('Pages', false),
-                      _buildSubMenuItem('Navigation', false),
-                      _buildSubMenuItem('Blog', false),
-                      _buildSubMenuItem('Popup Manager', false),
-                      _buildSubMenuItem('Footer Manager', _activeViewIndex == 8, onTap: () => setState(() => _activeViewIndex = 8)),
-                      const SizedBox(height: 4),
-                    ],
-                  ],
-                );
-              },
+                const SizedBox(height: 16),
+                _groupHeader('SETTINGS'),
+                _navItem('Settings', Icons.settings_outlined, -1),
+                _navItem('System Logs', Icons.article_outlined, -1),
+              ],
             ),
           ),
 
-          // Bottom Logout & Support Bar
+          // Bottom Logout Button (Red Outline Container)
           Container(
             margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            child: Column(
-              children: [
-                InkWell(
-                  onTap: () => _handleAdminLogout(context),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.logout, size: 18, color: Color(0xFFEF4444)),
-                      SizedBox(width: 10),
-                      Text('Logout Admin', style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
+            child: OutlinedButton.icon(
+              onPressed: () => _handleAdminLogout(context),
+              icon: const Icon(Icons.logout, size: 16, color: Color(0xFFEF4444)),
+              label: const Text(
+                'Logout Admin',
+                style: TextStyle(color: Color(0xFFEF4444), fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                side: const BorderSide(color: Color(0xFFEF4444)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                minimumSize: const Size(double.infinity, 44),
+              ),
             ),
           ),
         ],
@@ -427,28 +399,107 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     );
   }
 
-  Widget _buildSubMenuItem(String title, bool isActive, {VoidCallback? onTap}) {
+  Widget _groupHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12, top: 8, bottom: 6),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF64748B), letterSpacing: 0.8),
+      ),
+    );
+  }
+
+  Widget _navItem(
+    String title,
+    IconData icon,
+    int index, {
+    int badgeCount = 0,
+    bool hasChildren = false,
+  }) {
+    final bool isActive = _activeViewIndex == index;
+    final bool isExpanded = _expandedParentMenus.contains(title);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF4F46E5) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+        leading: Icon(icon, size: 18, color: isActive ? Colors.white : const Color(0xFF94A3B8)),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            color: isActive ? Colors.white : const Color(0xFFCBD5E1),
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (badgeCount > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
+              ),
+            if (hasChildren) ...[
+              const SizedBox(width: 6),
+              Icon(
+                isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                size: 16,
+                color: isActive ? Colors.white : const Color(0xFF64748B),
+              ),
+            ],
+          ],
+        ),
+        onTap: () {
+          setState(() {
+            if (hasChildren) {
+              if (isExpanded) {
+                _expandedParentMenus.remove(title);
+              } else {
+                _expandedParentMenus.add(title);
+              }
+            }
+            if (index >= 0) {
+              _activeViewIndex = index;
+            }
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _subNavItem(String title, int targetIndex, VoidCallback? onTap) {
+    final bool isActive = _activeViewIndex == targetIndex;
+
     return InkWell(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.only(left: 36, bottom: 2, right: 8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: isActive ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Row(
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                  color: isActive ? Colors.white : const Color(0xFF9CA3AF),
-                ),
-              ),
-            ],
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? Colors.white : const Color(0xFF94A3B8),
+            ),
           ),
         ),
       ),

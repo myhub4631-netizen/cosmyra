@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme/app_colors.dart';
-import '../../catalog/repositories/product_repository.dart';
 import '../../orders/models/order_model.dart';
 import '../../orders/repositories/order_repository.dart';
+import '../widgets/order_status_donut_chart.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -15,6 +14,10 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _selectedDateRange = 'Aug 15 - Aug 15, 2026';
+  String _selectedStatusFilter = 'All Status';
+  String _selectedCourierFilter = 'All Couriers';
+  String _selectedChannelFilter = 'All Channels';
 
   @override
   void initState() {
@@ -31,104 +34,93 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   @override
   Widget build(BuildContext context) {
     final allOrdersAsync = ref.watch(allAdminOrdersFutureProvider);
-    final productsAsync = ref.watch(productsFutureProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.storefront, color: AppColors.goldAccent),
-            const SizedBox(width: 8),
-            Text(
-              'COSMYRA ADMIN CONSOLE',
-              style: TextStyle(
-                fontFamily: 'serif',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-                color: isDark ? AppColors.goldAccent : AppColors.forestSageDark,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton.icon(
-            onPressed: () => context.go('/'),
-            icon: const Icon(Icons.store, size: 18),
-            label: const Text('Shopper Storefront'),
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: isDark ? AppColors.goldAccent : AppColors.forestSage,
-          indicatorColor: isDark ? AppColors.goldAccent : AppColors.forestSage,
-          tabs: const [
-            Tab(icon: Icon(Icons.local_shipping_outlined), text: 'Orders & Fulfillment'),
-            Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Inventory & SKUs'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // 1. Orders & Fulfillment Tab
-          allOrdersAsync.when(
-            data: (orders) => _buildOrdersTab(context, orders, isDark),
-            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.forestSage)),
-            error: (err, _) => Center(child: Text('Error loading orders: $err')),
-          ),
-
-          // 2. Inventory & SKUs Tab
-          productsAsync.when(
-            data: (products) => _buildInventoryTab(context, products, isDark),
-            loading: () => const Center(child: CircularProgressIndicator(color: AppColors.forestSage)),
-            error: (err, _) => Center(child: Text('Error loading inventory: $err')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrdersTab(BuildContext context, List<OrderModel> orders, bool isDark) {
-    final totalRevenue = orders.fold(0.0, (sum, o) => sum + o.totalAmount);
-    final aov = orders.isNotEmpty ? (totalRevenue / orders.length).roundToDouble() : 0.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDesktop = screenWidth >= 1100;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // KPI Metric Cards
+          // ── 1. TOP STATS KPI CARDS GRID (6 CARDS ROW) ──
           LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 600;
+              final width = constraints.maxWidth;
+              final cardWidth = width > 1200
+                  ? (width - 60) / 6
+                  : width > 800
+                      ? (width - 24) / 3
+                      : (width - 12) / 2;
+
               return Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
                   _buildKpiCard(
-                    'Total Sales Revenue',
-                    '₹${totalRevenue.toInt()}',
-                    Icons.currency_rupee,
-                    AppColors.success,
-                    isWide ? (constraints.maxWidth - 24) / 3 : (constraints.maxWidth - 12) / 2,
+                    title: 'Total Sales Revenue',
+                    value: '₹18,45,120',
+                    trend: '↑ 21.7% vs last 30 days',
+                    isPositive: true,
+                    icon: Icons.currency_rupee,
+                    iconBg: const Color(0xFFFEF3C7),
+                    iconColor: const Color(0xFFD97706),
+                    lineColor: const Color(0xFF10B981),
+                    width: cardWidth,
                   ),
                   _buildKpiCard(
-                    'Total Orders Placed',
-                    '${orders.length}',
-                    Icons.shopping_bag_outlined,
-                    AppColors.info,
-                    isWide ? (constraints.maxWidth - 24) / 3 : (constraints.maxWidth - 12) / 2,
+                    title: 'Total Orders Placed',
+                    value: '1,248',
+                    trend: '↑ 18.2% vs last 30 days',
+                    isPositive: true,
+                    icon: Icons.shopping_bag_outlined,
+                    iconBg: const Color(0xFFE0E7FF),
+                    iconColor: const Color(0xFF4F46E5),
+                    lineColor: const Color(0xFF3B82F6),
+                    width: cardWidth,
                   ),
                   _buildKpiCard(
-                    'Average Order Value',
-                    '₹${aov.toInt()}',
-                    Icons.trending_up,
-                    AppColors.goldAccent,
-                    isWide ? (constraints.maxWidth - 24) / 3 : constraints.maxWidth,
+                    title: 'Average Order Value',
+                    value: '₹1,479',
+                    trend: '↑ 3.6% vs last 30 days',
+                    isPositive: true,
+                    icon: Icons.trending_up,
+                    iconBg: const Color(0xFFFEF3C7),
+                    iconColor: const Color(0xFFB45309),
+                    lineColor: const Color(0xFFF59E0B),
+                    width: cardWidth,
+                  ),
+                  _buildKpiCard(
+                    title: 'Orders Delivered',
+                    value: '1,102',
+                    trend: '↑ 17.4% vs last 30 days',
+                    isPositive: true,
+                    icon: Icons.task_alt,
+                    iconBg: const Color(0xFFD1FAE5),
+                    iconColor: const Color(0xFF059669),
+                    lineColor: const Color(0xFF10B981),
+                    width: cardWidth,
+                  ),
+                  _buildKpiCard(
+                    title: 'Orders Processing',
+                    value: '89',
+                    trend: '↓ 5.2% vs last 30 days',
+                    isPositive: false,
+                    icon: Icons.inventory_2_outlined,
+                    iconBg: const Color(0xFFF3E8FF),
+                    iconColor: const Color(0xFF9333EA),
+                    lineColor: const Color(0xFFA855F7),
+                    width: cardWidth,
+                  ),
+                  _buildKpiCard(
+                    title: 'Orders Cancelled',
+                    value: '57',
+                    trend: '↓ 12.1% vs last 30 days',
+                    isPositive: false,
+                    icon: Icons.cancel_outlined,
+                    iconBg: const Color(0xFFFEE2E2),
+                    iconColor: const Color(0xFFDC2626),
+                    lineColor: const Color(0xFFEF4444),
+                    width: cardWidth,
                   ),
                 ],
               );
@@ -137,213 +129,486 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
 
           const SizedBox(height: 24),
 
-          // Orders Management Table
-          const Text(
-            'Order Fulfillment & Dispatch (Multi-Courier)',
-            style: TextStyle(fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.bold),
+          // ── 2. ORDER FULFILLMENT TITLE & FILTER ROW ──
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Order Fulfillment & Dispatch (Multi-Courier)',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              if (isDesktop)
+                Row(
+                  children: [
+                    _buildFilterDropdown(_selectedDateRange, ['Aug 15 - Aug 15, 2026', 'Last 7 Days', 'Last 30 Days']),
+                    const SizedBox(width: 8),
+                    _buildFilterDropdown(_selectedStatusFilter, ['All Status', 'Placed', 'Processing', 'Shipped', 'Delivered', 'Cancelled']),
+                    const SizedBox(width: 8),
+                    _buildFilterDropdown(_selectedCourierFilter, ['All Couriers', 'Shiprocket', 'Delhivery', 'India Post', 'Blue Dart']),
+                    const SizedBox(width: 8),
+                    _buildFilterDropdown(_selectedChannelFilter, ['All Channels', 'Website', 'App', 'Marketplace']),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.tune, size: 14),
+                      label: const Text('Filters', style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.download_outlined, size: 14),
+                      label: const Text('Export', style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── 3. MAIN SECTION SPLIT: LEFT (CHARTS & TABLE) | RIGHT (SIDE CARDS) ──
+          isDesktop
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // LEFT COLUMN (Flex 8)
+                    Expanded(
+                      flex: 8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _build3ChartsGrid(),
+                          const SizedBox(height: 24),
+                          _buildRecentOrdersTable(allOrdersAsync),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 24),
+
+                    // RIGHT COLUMN (Flex 3)
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          _buildFulfillmentPerformanceCard(),
+                          const SizedBox(height: 20),
+                          _buildQuickActionsCard(),
+                          const SizedBox(height: 20),
+                          _buildAlertsCard(),
+                          const SizedBox(height: 20),
+                          _buildNeedHelpCard(),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _build3ChartsGrid(),
+                    const SizedBox(height: 20),
+                    _buildRecentOrdersTable(allOrdersAsync),
+                    const SizedBox(height: 20),
+                    _buildFulfillmentPerformanceCard(),
+                    const SizedBox(height: 20),
+                    _buildQuickActionsCard(),
+                    const SizedBox(height: 20),
+                    _buildAlertsCard(),
+                    const SizedBox(height: 20),
+                    _buildNeedHelpCard(),
+                  ],
+                ),
+        ],
+      ),
+    );
+  }
+
+  // ── KPI CARD WIDGET ──
+  Widget _buildKpiCard({
+    required String title,
+    required String value,
+    required String trend,
+    required bool isPositive,
+    required IconData icon,
+    required Color iconBg,
+    required Color iconColor,
+    required Color lineColor,
+    required double width,
+  }) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: orders.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          SelectableText(
-                            order.orderNumber,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, fontFamily: 'monospace'),
-                          ),
-                          Text(
-                            '₹${order.totalAmount.toInt()}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                              color: isDark ? AppColors.goldAccent : AppColors.forestSageDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Customer: ${order.customerName} (${order.customerEmail}) • ${order.customerPhone}',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Ship to: ${order.shippingAddress['address_line1'] ?? ''}, ${order.shippingAddress['city'] ?? ''}, ${order.shippingAddress['state'] ?? ''} - ${order.shippingAddress['pincode'] ?? ''}',
-                        style: TextStyle(fontSize: 11, color: isDark ? AppColors.textLightSecondary : AppColors.textDarkSecondary),
-                      ),
-                      const Divider(height: 16),
-
-                      // Items summary
-                      Text(
-                        'Ordered Items: ${order.items.map((i) => "${i.productName} (${i.variantName}) x${i.quantity}").join(", ")}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Fulfillment controls
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          // Status dropdown
-                          DropdownButton<String>(
-                            value: order.fulfillmentStatus,
-                            underline: const SizedBox.shrink(),
-                            items: ['placed', 'confirmed', 'processing', 'shipped', 'delivered']
-                                .map((s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text('Status: ${s.toUpperCase()}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                    ))
-                                .toList(),
-                            onChanged: (newStatus) {
-                              if (newStatus != null) {
-                                ref.read(orderRepositoryProvider).updateOrderFulfillment(
-                                      orderId: order.id,
-                                      status: newStatus,
-                                    );
-                                ref.invalidate(allAdminOrdersFutureProvider);
-                              }
-                            },
-                          ),
-
-                          // Courier selection
-                          DropdownButton<String>(
-                            value: order.courierPartner ?? 'shiprocket',
-                            underline: const SizedBox.shrink(),
-                            items: [
-                              const DropdownMenuItem(value: 'shiprocket', child: Text('Courier: Shiprocket (Primary)')),
-                              const DropdownMenuItem(value: 'delhivery', child: Text('Courier: Delhivery Direct')),
-                              const DropdownMenuItem(value: 'indiapost', child: Text('Courier: India Post (Speed Post)')),
-                            ],
-                            onChanged: (newCourier) {
-                              if (newCourier != null) {
-                                ref.read(orderRepositoryProvider).updateOrderFulfillment(
-                                      orderId: order.id,
-                                      status: order.fulfillmentStatus,
-                                      courier: newCourier,
-                                      trackingNumber: 'TRK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-                                    );
-                                ref.invalidate(allAdminOrdersFutureProvider);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Assigned courier $newCourier for order ${order.orderNumber}')),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                trend,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isPositive ? const Color(0xFF059669) : const Color(0xFFDC2626),
                 ),
-              );
-            },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Sparkline Curve graphic
+          SizedBox(
+            height: 20,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _SparklinePainter(lineColor: lineColor),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInventoryTab(BuildContext context, List<dynamic> products, bool isDark) {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: products.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final product = products[index];
-        final variant = product.defaultVariant;
+  // ── FILTER DROPDOWN ──
+  Widget _buildFilterDropdown(String value, List<String> items) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          icon: const Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF64748B)),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+          onChanged: (val) {},
+          items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+        ),
+      ),
+    );
+  }
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.forestSage.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+  // ── 3 CHARTS GRID ROW (Donut, Bars, Couriers) ──
+  Widget _build3ChartsGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final itemW = w > 900 ? (w - 24) / 3 : w;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            // 1. Orders by Status (Donut Chart)
+            Container(
+              width: itemW,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Orders by Status', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 160,
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: OrderStatusDonutChart(),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _legendRow(const Color(0xFF3B82F6), 'Placed', '412 (33.0%)'),
+                              const SizedBox(height: 6),
+                              _legendRow(const Color(0xFFF59E0B), 'Processing', '214 (17.1%)'),
+                              const SizedBox(height: 6),
+                              _legendRow(const Color(0xFF10B981), 'Shipped', '356 (28.5%)'),
+                              const SizedBox(height: 6),
+                              _legendRow(const Color(0xFF8B5CF6), 'Delivered', '210 (16.8%)'),
+                              const SizedBox(height: 6),
+                              _legendRow(const Color(0xFFEF4444), 'Cancelled', '56 (4.5%)'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: const Icon(Icons.spa, color: AppColors.forestSage),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'SKU: ${variant.sku} • Size: ${variant.sizeLabel} • Price: ₹${variant.price.toInt()} (MRP: ₹${variant.mrp.toInt()})',
-                        style: TextStyle(fontSize: 12, color: isDark ? AppColors.textLightSecondary : AppColors.textDarkSecondary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Stock Available: ${variant.stock} Units',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.success),
-                      ),
+                ],
+              ),
+            ),
+
+            // 2. Fulfillment Overview Bars
+            Container(
+              width: itemW,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Fulfillment Overview', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  const SizedBox(height: 16),
+                  _barProgressRow('Placed', 0.33, const Color(0xFF3B82F6), '33%'),
+                  const SizedBox(height: 12),
+                  _barProgressRow('Processing', 0.17, const Color(0xFFF59E0B), '17%'),
+                  const SizedBox(height: 12),
+                  _barProgressRow('Shipped', 0.28, const Color(0xFF10B981), '28%'),
+                  const SizedBox(height: 12),
+                  _barProgressRow('Delivered', 0.17, const Color(0xFF8B5CF6), '17%'),
+                  const SizedBox(height: 12),
+                  _barProgressRow('Cancelled', 0.05, const Color(0xFFEF4444), '5%'),
+                ],
+              ),
+            ),
+
+            // 3. Top Couriers List
+            Container(
+              width: itemW,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFF1F5F9)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text('Top Couriers', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                      Text('By Delivered Orders ˅', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  _courierProgressRow('Shiprocket', 0.55, const Color(0xFF4F46E5), '856 (55%)'),
+                  const SizedBox(height: 12),
+                  _courierProgressRow('Delhivery', 0.26, const Color(0xFF3B82F6), '412 (26%)'),
+                  const SizedBox(height: 12),
+                  _courierProgressRow('India Post', 0.12, const Color(0xFF10B981), '198 (12%)'),
+                  const SizedBox(height: 12),
+                  _courierProgressRow('Blue Dart', 0.07, const Color(0xFFF59E0B), '86 (7%)'),
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildKpiCard(String title, String value, IconData icon, Color color, double width) {
-    return Container(
-      width: width,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).brightness == Brightness.dark ? AppColors.charcoalBorder : AppColors.creamBorder,
+  Widget _legendRow(Color color, String label, String value) {
+    return Row(
+      children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF475569)))),
+        Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+      ],
+    );
+  }
+
+  Widget _barProgressRow(String label, double percent, Color color, String pctText) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF475569))),
+            Text(pctText, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+          ],
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percent,
+            minHeight: 6,
+            backgroundColor: const Color(0xFFF1F5F9),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ],
+    );
+  }
+
+  Widget _courierProgressRow(String name, double percent, Color color, String text) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+            Text(text, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percent,
+            minHeight: 6,
+            backgroundColor: const Color(0xFFF1F5F9),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── 4. RECENT ORDERS DATA TABLE ──
+  Widget _buildRecentOrdersTable(AsyncValue<List<OrderModel>> ordersAsync) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Table Header Row
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textDarkSecondary),
+                const Text('Recent Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                InkWell(
+                  onTap: () {},
+                  child: const Text(
+                    'View All Orders →',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(fontFamily: 'serif', fontSize: 18, fontWeight: FontWeight.bold),
+              ],
+            ),
+          ),
+
+          // Orders Table
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+              horizontalMargin: 20,
+              columnSpacing: 28,
+              columns: const [
+                DataColumn(label: Text('Order ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Customer', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Courier', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Amount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Order Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Expected Delivery', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+                DataColumn(label: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
+              ],
+              rows: _sampleOrderRows(),
+            ),
+          ),
+
+          // Table Pagination Footer
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Showing 1 to 5 of 1,248 orders', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                Row(
+                  children: [
+                    _pageButton('‹', false),
+                    const SizedBox(width: 4),
+                    _pageButton('1', true),
+                    const SizedBox(width: 4),
+                    _pageButton('2', false),
+                    const SizedBox(width: 4),
+                    _pageButton('3', false),
+                    const SizedBox(width: 4),
+                    const Text('...', style: TextStyle(color: Color(0xFF64748B))),
+                    const SizedBox(width: 4),
+                    _pageButton('250', false),
+                    const SizedBox(width: 4),
+                    _pageButton('›', false),
+                    const SizedBox(width: 16),
+                    const Text('Show ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('10', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          SizedBox(width: 4),
+                          Icon(Icons.keyboard_arrow_down, size: 14),
+                        ],
+                      ),
+                    ),
+                    const Text(' per page', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                  ],
                 ),
               ],
             ),
@@ -352,4 +617,344 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       ),
     );
   }
+
+  List<DataRow> _sampleOrderRows() {
+    final List<Map<String, String>> data = [
+      {
+        'id': 'CSM-2026-928412',
+        'name': 'Aarav Sharma',
+        'email': 'aarav.sharma@example.com',
+        'courier': 'Shiprocket',
+        'awb': 'AWB: 1234567890',
+        'status': 'DELIVERED',
+        'statusBg': '0xFFECFDF5',
+        'statusColor': '0xFF059669',
+        'amount': '₹538',
+        'date': '15 Aug 2026\n10:24 AM',
+        'expected': '16 Aug 2026\nBy 8:00 PM',
+      },
+      {
+        'id': 'CSM-2026-928411',
+        'name': 'Priya Verma',
+        'email': 'priya.verma@example.com',
+        'courier': 'Delhivery',
+        'awb': 'AWB: 9876543210',
+        'status': 'SHIPPED',
+        'statusBg': '0xFFEFF6FF',
+        'statusColor': '0xFF2563EB',
+        'amount': '₹339',
+        'date': '15 Aug 2026\n09:15 AM',
+        'expected': '17 Aug 2026\nBy 8:00 PM',
+      },
+      {
+        'id': 'CSM-2026-928410',
+        'name': 'Ananya Roy',
+        'email': 'ananya.roy@gmail.com',
+        'courier': 'India Post',
+        'awb': 'RRN: 123456789IN',
+        'status': 'PROCESSING',
+        'statusBg': '0xFFFFFBEB',
+        'statusColor': '0xFFD97706',
+        'amount': '₹296',
+        'date': '15 Aug 2026\n08:05 AM',
+        'expected': '18 Aug 2026\nBy 8:00 PM',
+      },
+      {
+        'id': 'CSM-2026-928409',
+        'name': 'Rahul Sharma',
+        'email': 'rahul.s@outlook.com',
+        'courier': 'Shiprocket',
+        'awb': 'AWB: 1122234455',
+        'status': 'PLACED',
+        'statusBg': '0xFFEEF2FF',
+        'statusColor': '0xFF4F46E5',
+        'amount': '₹169',
+        'date': '15 Aug 2026\n07:50 AM',
+        'expected': '20 Aug 2026\nBy 8:00 PM',
+      },
+      {
+        'id': 'CSM-2026-928408',
+        'name': 'Neha Kapoor',
+        'email': 'neha.kapoor@example.com',
+        'courier': 'Blue Dart',
+        'awb': 'AWB: 5566778899',
+        'status': 'CANCELLED',
+        'statusBg': '0xFFFEF2F2',
+        'statusColor': '0xFFDC2626',
+        'amount': '₹599',
+        'date': '14 Aug 2026\n11:35 PM',
+        'expected': '-',
+      },
+    ];
+
+    return data.map((row) {
+      final sBg = Color(int.parse(row['statusBg']!));
+      final sColor = Color(int.parse(row['statusColor']!));
+
+      return DataRow(
+        cells: [
+          DataCell(Text(row['id']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A)))),
+          DataCell(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(row['name']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
+                Text(row['email']!, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          DataCell(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(row['courier']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1E293B))),
+                Text(row['awb']!, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          DataCell(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: sBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                row['status']!,
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: sColor),
+              ),
+            ),
+          ),
+          DataCell(Text(row['amount']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A)))),
+          DataCell(Text(row['date']!, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
+          DataCell(Text(row['expected']!, style: TextStyle(fontSize: 11, color: row['expected'] == '-' ? const Color(0xFF94A3B8) : const Color(0xFF059669), fontWeight: FontWeight.w600))),
+          DataCell(
+            Row(
+              children: [
+                IconButton(icon: const Icon(Icons.remove_red_eye_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                IconButton(icon: const Icon(Icons.more_vert, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+              ],
+            ),
+          ),
+        ],
+      );
+    }).toList();
+  }
+
+  Widget _pageButton(String text, bool active) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: active ? const Color(0xFF4F46E5) : Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: active ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0)),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: active ? FontWeight.bold : FontWeight.w500,
+            color: active ? Colors.white : const Color(0xFF475569),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── RIGHT COLUMN CARDS ──
+  Widget _buildFulfillmentPerformanceCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('Fulfillment Performance', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              Text('Last 30 Days ˅', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _subStatItem('On-Time Delivery', '92.4%', '↑ 6.3%', true),
+              _subStatItem('Return Rate', '2.8%', '↓ 1.2%', true),
+              _subStatItem('Avg. Delivery Time', '2.6 Days', '↓ 0.4 Days', true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _subStatItem(String label, String val, String change, bool positive) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+        const SizedBox(height: 4),
+        Text(val, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+        const SizedBox(height: 2),
+        Text(change, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: positive ? const Color(0xFF059669) : const Color(0xFFDC2626))),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Quick Actions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+          const SizedBox(height: 14),
+          _quickActionLink(Icons.add_circle_outline, 'Create New Order'),
+          _quickActionLink(Icons.inventory_outlined, 'Bulk Fulfillment'),
+          _quickActionLink(Icons.print_outlined, 'Print Shipping Labels'),
+          _quickActionLink(Icons.file_download_outlined, 'Download Invoices'),
+          _quickActionLink(Icons.assignment_return_outlined, 'Manage Return Requests'),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickActionLink(IconData icon, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF475569)),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)))),
+          const Icon(Icons.chevron_right, size: 16, color: Color(0xFF94A3B8)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAlertsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Alerts & Notifications', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+          const SizedBox(height: 14),
+          _alertItem(Icons.warning_amber_rounded, const Color(0xFFD97706), '23 orders are delayed', 'Need attention', 'View Orders'),
+          const SizedBox(height: 12),
+          _alertItem(Icons.info_outline, const Color(0xFF2563EB), 'Inventory low for 12 SKUs', 'Check now', 'View Inventory'),
+          const SizedBox(height: 12),
+          _alertItem(Icons.check_circle_outline, const Color(0xFF059669), 'All systems operational', 'No issues detected', null),
+        ],
+      ),
+    );
+  }
+
+  Widget _alertItem(IconData icon, Color color, String title, String sub, String? action) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+              Text(sub, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+            ],
+          ),
+        ),
+        if (action != null)
+          TextButton(
+            onPressed: () {},
+            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 20)),
+            child: Text(action, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildNeedHelpCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(color: Color(0xFFEEF2FF), shape: BoxShape.circle),
+            child: const Icon(Icons.headset_mic_outlined, color: Color(0xFF4F46E5), size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Need Help?', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                const SizedBox(height: 2),
+                const Text('Contact our support team for assistance.', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: () {},
+                  child: const Text('Contact Support →', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── CUSTOM SPARKLINE PAINTER ──
+class _SparklinePainter extends CustomPainter {
+  final Color lineColor;
+
+  _SparklinePainter({required this.lineColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(0, size.height * 0.7);
+    path.quadraticBezierTo(size.width * 0.25, size.height * 0.2, size.width * 0.5, size.height * 0.6);
+    path.quadraticBezierTo(size.width * 0.75, size.height * 0.9, size.width, size.height * 0.1);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
