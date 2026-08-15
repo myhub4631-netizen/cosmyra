@@ -6,6 +6,7 @@ import '../widgets/admin_analytics_view.dart';
 import '../widgets/admin_auth_dialog.dart';
 import '../widgets/admin_catalog_view.dart';
 import '../widgets/admin_customers_view.dart';
+import '../widgets/admin_homepage_cms_view.dart';
 import '../widgets/admin_orders_view.dart';
 import '../widgets/admin_promotions_view.dart';
 import '../widgets/admin_settings_view.dart';
@@ -33,6 +34,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     {'title': 'Reviews', 'icon': Icons.star_outline, 'hasChild': true, 'viewIndex': 4},
     {'title': 'Withdrawals', 'icon': Icons.account_balance_wallet_outlined, 'hasChild': false, 'viewIndex': 3},
     {'title': 'Reports', 'icon': Icons.bar_chart_outlined, 'hasChild': false, 'viewIndex': 0},
+    {'title': 'Website', 'icon': Icons.language_outlined, 'hasChild': true, 'viewIndex': 7},
     {'title': 'Settings', 'icon': Icons.settings_outlined, 'hasChild': false, 'viewIndex': 6},
     {'title': 'System Logs', 'icon': Icons.list_alt_outlined, 'hasChild': false, 'viewIndex': 6},
   ];
@@ -45,6 +47,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
     AdminCustomersView(),
     AdminPromotionsView(),
     AdminSettingsView(),
+    AdminHomepageCmsView(),
   ];
 
   @override
@@ -322,6 +325,16 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                       _buildSubMenuItem('Delivered', false),
                       _buildSubMenuItem('Cancelled', false),
                       _buildSubMenuItem('Returned / Refunds', false),
+                      const SizedBox(height: 4),
+                    ],
+
+                    // Expanded Sub-menu for Website
+                    if (item['title'] == 'Website' && isSelected) ...[
+                      _buildSubMenuItem('Homepage', true),
+                      _buildSubMenuItem('Pages', false),
+                      _buildSubMenuItem('Navigation', false),
+                      _buildSubMenuItem('Blog', false),
+                      _buildSubMenuItem('Popup Manager', false),
                       const SizedBox(height: 4),
                     ],
                   ],

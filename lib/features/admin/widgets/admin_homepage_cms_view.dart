@@ -1,0 +1,818 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class AdminHomepageCmsView extends ConsumerStatefulWidget {
+  const AdminHomepageCmsView({super.key});
+
+  @override
+  ConsumerState<AdminHomepageCmsView> createState() => _AdminHomepageCmsViewState();
+}
+
+class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
+  int _selectedTab = 0; // 0: Sections, 1: SEO, 2: Theme, 3: Custom CSS/JS
+  bool _isSaving = false;
+  bool _allChangesSaved = true;
+
+  // SEO Controller State
+  final _metaTitleCtrl = TextEditingController(text: 'Vaidyam Botanicals • Pure Herbal Skincare & Wellness');
+  final _metaDescCtrl = TextEditingController(text: 'Discover 100% authentic Ayurvedic formulations, herbal hair oils, serums, and natural soaps.');
+
+  // Custom CSS/JS State
+  final _customCssCtrl = TextEditingController(text: '/* Custom Global Styling */\n.hero-slider { border-radius: 16px; }\n.deal-card:hover { transform: translateY(-4px); }');
+  final _customJsCtrl = TextEditingController(text: '// Custom Analytics & Scripts\nconsole.log("Cosmyra Homepage Loaded");');
+
+  // Homepage Sections Data
+  final List<Map<String, dynamic>> _sectionsList = [
+    {
+      'id': 'sec-1',
+      'number': 1,
+      'title': 'Hero Banner / Slider',
+      'isActive': true,
+      'description': 'Main banner slider that appears at the top of the homepage.',
+      'meta': '5 Slides • Auto Play: 5s • Show Arrows: Yes • Show Dots: Yes',
+      'type': 'slider',
+      'items': [
+        {'title': 'Monsoon Herbal Sale', 'sub': 'Flat 20% OFF', 'color': const Color(0xFFFEF3C7)},
+        {'title': 'Pure Neem Facewash', 'sub': 'New Launch', 'color': const Color(0xFFD1FAE5)},
+        {'title': 'Kumkumadi Tailam', 'sub': 'Best Seller', 'color': const Color(0xFFEEF2FF)},
+        {'title': 'Ayurvedic Hair Care', 'sub': '100% Natural', 'color': const Color(0xFFE0E7FF)},
+        {'title': 'Botanical Soaps Pack', 'sub': 'Organic', 'color': const Color(0xFFF3E8FF)},
+      ],
+      'addLabel': '+ Add Slide',
+    },
+    {
+      'id': 'sec-2',
+      'number': 2,
+      'title': 'Shop by Categories',
+      'isActive': true,
+      'description': 'Category grid section with icons and category links.',
+      'meta': '8 Categories • Columns: 8 • Style: Circle • Show Title: Yes',
+      'type': 'categories',
+      'items': [
+        {'name': 'Haircare', 'icon': Icons.spa},
+        {'name': 'Skincare', 'icon': Icons.face},
+        {'name': 'Soaps', 'icon': Icons.clean_hands},
+        {'name': 'Wellness Oils', 'icon': Icons.opacity},
+        {'name': 'Elixirs', 'icon': Icons.local_pharmacy},
+        {'name': 'Gift Combos', 'icon': Icons.card_giftcard},
+        {'name': 'Aloe Vera', 'icon': Icons.eco},
+        {'name': 'Body Care', 'icon': Icons.self_improvement},
+      ],
+      'addLabel': '+ Add Category',
+    },
+    {
+      'id': 'sec-3',
+      'number': 3,
+      'title': "Today's Best Deals",
+      'isActive': true,
+      'description': 'Showcase best selling products with offers.',
+      'meta': '6 Products • Show Discount: Yes • Show Rating: Yes',
+      'type': 'deals',
+      'items': [
+        {'name': 'Anti-Dandruff Shampoo', 'tag': '29% OFF', 'price': '₹399'},
+        {'name': 'De-Tan Botanical Soap', 'tag': '23% OFF', 'price': '₹199'},
+        {'name': 'Deep Clean Face Wash', 'tag': '28% OFF', 'price': '₹299'},
+        {'name': 'Herbal Hair Oil', 'tag': '25% OFF', 'price': '₹349'},
+        {'name': 'Vitamin C Serum', 'tag': '20% OFF', 'price': '₹599'},
+        {'name': 'Kumkumadi Night Cream', 'tag': '25% OFF', 'price': '₹699'},
+      ],
+      'addLabel': '+ Add Product',
+    },
+    {
+      'id': 'sec-4',
+      'number': 4,
+      'title': 'Trending & Popular Formulations',
+      'isActive': true,
+      'description': 'Highlight trending and popular formulations.',
+      'meta': '4 Products • Layout: Horizontal • Show Filter: Yes',
+      'type': 'trending',
+      'items': [
+        {'name': 'Bhringraj Elixir', 'tag': 'Trending'},
+        {'name': 'Nalpamaradi Oil', 'tag': 'Popular'},
+        {'name': 'Ubtan Scrub', 'tag': 'New'},
+        {'name': 'Rose Water Toner', 'tag': 'Hot'},
+      ],
+      'addLabel': '+ Add Item',
+    },
+    {
+      'id': 'sec-5',
+      'number': 5,
+      'title': 'Benefits / Trust Badges',
+      'isActive': true,
+      'description': 'Key features and trust indicators.',
+      'meta': '4 Items • Style: Icon + Text • Background: Light',
+      'type': 'benefits',
+      'items': [
+        {'title': 'Free Shipping', 'sub': 'On orders over ₹999', 'icon': Icons.local_shipping_outlined},
+        {'title': 'Easy Returns', 'sub': 'Within 7 days', 'icon': Icons.replay_outlined},
+        {'title': 'Best Quality', 'sub': '100% Original', 'icon': Icons.verified_outlined},
+        {'title': 'Secure Payments', 'sub': 'Multiple options', 'icon': Icons.lock_outline},
+      ],
+      'addLabel': '+ Add Item',
+    },
+    {
+      'id': 'sec-6',
+      'number': 6,
+      'title': 'Top Brands',
+      'isActive': true,
+      'description': 'Display top brands customers love.',
+      'meta': '6 Brands • Style: Logo Grid • Show Title: Yes',
+      'type': 'brands',
+      'items': [
+        {'name': 'VAIDYAM'},
+        {'name': 'KOTTAKKAL'},
+        {'name': 'FOREST ESSENTIALS'},
+        {'name': 'KAMA AYURVEDA'},
+        {'name': 'BIOTIQUE'},
+        {'name': 'COSMYRA'},
+      ],
+      'addLabel': '+ Add Brand',
+    },
+    {
+      'id': 'sec-7',
+      'number': 7,
+      'title': 'Newsletter Section',
+      'isActive': true,
+      'description': 'Newsletter subscription section.',
+      'meta': 'Style: Center • Background: Dark',
+      'type': 'newsletter',
+      'items': [],
+      'addLabel': '',
+    },
+  ];
+
+  void _showAddSectionModal() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Add New Homepage Section', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: SizedBox(
+            width: 450,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSectionTemplateTile('Testimonials & Reviews', 'Show customer feedback carousel', Icons.rate_review_outlined),
+                  _buildSectionTemplateTile('Video Banner', 'Embed YouTube or HTML5 video background', Icons.play_circle_outline),
+                  _buildSectionTemplateTile('FAQ Accordion', 'Frequently asked questions block', Icons.quiz_outlined),
+                  _buildSectionTemplateTile('Instagram Feed', 'Live Instagram posts grid', Icons.camera_alt_outlined),
+                  _buildSectionTemplateTile('Countdown Flash Sale', 'Timer countdown for flash deals', Icons.timer_outlined),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionTemplateTile(String title, String desc, IconData icon) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, color: const Color(0xFF4F46E5), size: 20),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      subtitle: Text(desc, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+      trailing: const Icon(Icons.add_circle_outline, color: Color(0xFF4F46E5)),
+      onTap: () {
+        setState(() {
+          _sectionsList.add({
+            'id': 'sec-${_sectionsList.length + 1}',
+            'number': _sectionsList.length + 1,
+            'title': title,
+            'isActive': true,
+            'description': desc,
+            'meta': 'Active • Custom Block',
+            'type': 'custom',
+            'items': [],
+            'addLabel': '+ Add Item',
+          });
+          _allChangesSaved = false;
+        });
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Section "$title" added!')));
+      },
+    );
+  }
+
+  void _showEditSectionDialog(Map<String, dynamic> section) {
+    final titleCtrl = TextEditingController(text: section['title']);
+    final descCtrl = TextEditingController(text: section['description']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Edit Section: ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Section Title')),
+              const SizedBox(height: 12),
+              TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Description / Subtitle')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              onPressed: () {
+                setState(() {
+                  section['title'] = titleCtrl.text;
+                  section['description'] = descCtrl.text;
+                  _allChangesSaved = false;
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Save Changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _saveAllChanges() {
+    setState(() => _isSaving = true);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+          _allChangesSaved = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All homepage changes published to live storefront!')),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Page Header & Actions Bar
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Homepage Content Manager',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Advanced', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Manage, customize and control all sections of your homepage.',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Opening live storefront preview...')),
+                      );
+                    },
+                    icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF374151)),
+                    label: const Text('Preview Homepage', style: TextStyle(color: Color(0xFF374151), fontSize: 13, fontWeight: FontWeight.w600)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      side: const BorderSide(color: Color(0xFFD1D5DB)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton.icon(
+                    onPressed: _showAddSectionModal,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('+ Add Section ▾', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F46E5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          // 2. Tab Bar & Global Save Strip
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Tabs List
+              Row(
+                children: [
+                  _buildNavTab(0, 'Sections', Icons.grid_view_outlined),
+                  const SizedBox(width: 8),
+                  _buildNavTab(1, 'SEO Settings', Icons.language_outlined),
+                  const SizedBox(width: 8),
+                  _buildNavTab(2, 'Theme Settings', Icons.palette_outlined),
+                  const SizedBox(width: 8),
+                  _buildNavTab(3, 'Custom CSS/JS', Icons.code_outlined),
+                ],
+              ),
+
+              // Save Status & Button
+              Row(
+                children: [
+                  Row(
+                    children: [
+                      Icon(_allChangesSaved ? Icons.check_circle : Icons.error_outline, size: 14, color: _allChangesSaved ? const Color(0xFF059669) : const Color(0xFFD97706)),
+                      const SizedBox(width: 4),
+                      Text(
+                        _allChangesSaved ? 'All changes saved' : 'Unsaved changes',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _allChangesSaved ? const Color(0xFF059669) : const Color(0xFFD97706)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: _isSaving ? null : _saveAllChanges,
+                    icon: _isSaving
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.save_outlined, size: 16),
+                    label: const Text('Save All Changes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F46E5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // 3. Tab Body Views
+          if (_selectedTab == 0) _buildSectionsTabBody(),
+          if (_selectedTab == 1) _buildSeoTabBody(),
+          if (_selectedTab == 2) _buildThemeTabBody(),
+          if (_selectedTab == 3) _buildCustomCssJsTabBody(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavTab(int index, String title, IconData icon) {
+    final isActive = _selectedTab == index;
+    return InkWell(
+      onTap: () => setState(() => _selectedTab = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: isActive ? Border.all(color: const Color(0xFFE5E7EB)) : null,
+          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4)] : null,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF6B7280)),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? const Color(0xFF111827) : const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------- TAB 0: SECTIONS MANAGER LIST ----------------
+  Widget _buildSectionsTabBody() {
+    return Column(
+      children: [
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _sectionsList.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final sec = _sectionsList[index];
+            return _buildSectionCard(sec);
+          },
+        ),
+
+        const SizedBox(height: 20),
+
+        // Bottom Tip Bar & Reorder Action
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.info_outline, size: 16, color: Color(0xFF4F46E5)),
+                  SizedBox(width: 8),
+                  Text('Tip: Drag and drop sections to reorder them on your homepage.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                ],
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Reorder drag-and-drop mode active!')),
+                  );
+                },
+                icon: const Icon(Icons.swap_vert, size: 16, color: Color(0xFF374151)),
+                label: const Text('Reorder Sections', style: TextStyle(fontSize: 12, color: Color(0xFF374151))),
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFD1D5DB))),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionCard(Map<String, dynamic> sec) {
+    final isActive = sec['isActive'] == true;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Drag Handle
+              const Icon(Icons.drag_indicator, color: Color(0xFF9CA3AF), size: 20),
+              const SizedBox(width: 10),
+
+              // Number Badge Circle
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(color: Color(0xFFEEF2FF), shape: BoxShape.circle),
+                child: Center(
+                  child: Text(
+                    '${sec['number']}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Title & Meta Information
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(sec['title'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: isActive ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isActive ? 'Active' : 'Disabled',
+                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isActive ? const Color(0xFF059669) : const Color(0xFF6B7280)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(sec['description'], style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                    const SizedBox(height: 2),
+                    Text(sec['meta'], style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+
+              // Action Buttons Row
+              Row(
+                children: [
+                  Switch(
+                    value: isActive,
+                    activeColor: const Color(0xFF4F46E5),
+                    onChanged: (val) {
+                      setState(() {
+                        sec['isActive'] = val;
+                        _allChangesSaved = false;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF6B7280)),
+                    onPressed: () => _showEditSectionDialog(sec),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add, size: 18, color: Color(0xFF6B7280)),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined, size: 18, color: Color(0xFF6B7280)),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18, color: Color(0xFF6B7280)),
+                    onPressed: () {
+                      setState(() {
+                        final copy = Map<String, dynamic>.from(sec);
+                        copy['id'] = 'sec-${_sectionsList.length + 1}';
+                        copy['number'] = _sectionsList.length + 1;
+                        copy['title'] = '${sec['title']} (Copy)';
+                        _sectionsList.add(copy);
+                        _allChangesSaved = false;
+                      });
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFDC2626)),
+                    onPressed: () {
+                      setState(() {
+                        _sectionsList.removeWhere((s) => s['id'] == sec['id']);
+                        _allChangesSaved = false;
+                      });
+                    },
+                  ),
+                  const Icon(Icons.keyboard_arrow_down, size: 18, color: Color(0xFF9CA3AF)),
+                ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 14),
+
+          // Visual Preview Strip for Items
+          if (sec['type'] == 'newsletter') ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0B132B),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text('Subscribe to our newsletter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      Text('Get updates on offers, new formulations and botanical rituals.', style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 10)),
+                    ],
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 180,
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('Enter your email address', style: TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(color: const Color(0xFF4F46E5), borderRadius: BorderRadius.circular(6)),
+                    child: const Text('Subscribe', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ...(sec['items'] as List).map((item) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFAFAFA),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFF3F4F6)),
+                      ),
+                      child: _buildItemPreviewWidget(sec['type'], item),
+                    );
+                  }).toList(),
+
+                  // Add Item CTA Button Card
+                  if (sec['addLabel'].toString().isNotEmpty)
+                    Container(
+                      width: 90,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE5E7EB), style: BorderStyle.solid),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.add, size: 16, color: Color(0xFF6B7280)),
+                          const SizedBox(height: 2),
+                          Text(sec['addLabel'], style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.center),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildItemPreviewWidget(String type, Map<String, dynamic> item) {
+    switch (type) {
+      case 'slider':
+        return Container(
+          width: 80,
+          height: 40,
+          decoration: BoxDecoration(color: item['color'] as Color, borderRadius: BorderRadius.circular(6)),
+          child: Center(
+            child: Text(item['title'] as String, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF111827)), textAlign: TextAlign.center),
+          ),
+        );
+      case 'categories':
+        return Column(
+          children: [
+            CircleAvatar(radius: 14, backgroundColor: const Color(0xFFEEF2FF), child: Icon(item['icon'] as IconData, size: 14, color: const Color(0xFF4F46E5))),
+            const SizedBox(height: 2),
+            Text(item['name'] as String, style: const TextStyle(fontSize: 9, color: Color(0xFF374151))),
+          ],
+        );
+      case 'deals':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(color: const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(4)),
+              child: Text(item['tag'] as String, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
+            ),
+            const SizedBox(height: 2),
+            Text(item['name'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+            Text(item['price'] as String, style: const TextStyle(fontSize: 9, color: Color(0xFF059669))),
+          ],
+        );
+      case 'benefits':
+        return Row(
+          children: [
+            Icon(item['icon'] as IconData, size: 16, color: const Color(0xFF4F46E5)),
+            const SizedBox(width: 6),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item['title'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                Text(item['sub'] as String, style: const TextStyle(fontSize: 8, color: Color(0xFF6B7280))),
+              ],
+            ),
+          ],
+        );
+      case 'brands':
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          child: Text(item['name'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+        );
+      default:
+        return Text(item['name']?.toString() ?? 'Item', style: const TextStyle(fontSize: 9));
+    }
+  }
+
+  // ---------------- TAB 1: SEO SETTINGS ----------------
+  Widget _buildSeoTabBody() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Homepage SEO & Meta Tags', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+          const SizedBox(height: 4),
+          const Text('Optimize search engine visibility and social media sharing cards for your homepage.', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+          const SizedBox(height: 20),
+          TextField(controller: _metaTitleCtrl, decoration: const InputDecoration(labelText: 'Meta Title', hintText: 'Enter title tag...')),
+          const SizedBox(height: 16),
+          TextField(controller: _metaDescCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'Meta Description', hintText: 'Enter meta description...')),
+          const SizedBox(height: 16),
+          const TextField(decoration: InputDecoration(labelText: 'OpenGraph Image URL', hintText: 'https://cosmyra.cloud/assets/og-image.jpg')),
+          const SizedBox(height: 16),
+          const TextField(decoration: InputDecoration(labelText: 'Canonical URL', hintText: 'https://cosmyra.cloud/')),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- TAB 2: THEME SETTINGS ----------------
+  Widget _buildThemeTabBody() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Homepage Styling & Theme Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text('Primary Accent Color: ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              Container(width: 24, height: 24, decoration: const BoxDecoration(color: Color(0xFF4F46E5), shape: BoxShape.circle)),
+              const SizedBox(width: 8),
+              const Text('#4F46E5', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text('Font Family: ', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(border: Border.all(color: const Color(0xFFE5E7EB)), borderRadius: BorderRadius.circular(6)),
+                child: const Text('Plus Jakarta Sans / Inter', style: TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- TAB 3: CUSTOM CSS/JS ----------------
+  Widget _buildCustomCssJsTabBody() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Custom CSS Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+          const SizedBox(height: 6),
+          TextField(controller: _customCssCtrl, maxLines: 6, style: const TextStyle(fontFamily: 'monospace', fontSize: 12), decoration: const InputDecoration(border: OutlineInputBorder())),
+          const SizedBox(height: 20),
+          const Text('Custom JavaScript / Analytics Header Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+          const SizedBox(height: 6),
+          TextField(controller: _customJsCtrl, maxLines: 6, style: const TextStyle(fontFamily: 'monospace', fontSize: 12), decoration: const InputDecoration(border: OutlineInputBorder())),
+        ],
+      ),
+    );
+  }
+}
