@@ -60,6 +60,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           email: email,
           password: _passwordController.text.trim(),
           fullName: name,
+          phone: _phoneController.text.trim(),
         );
 
     if (!mounted) return;
