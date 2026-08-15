@@ -68,14 +68,14 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
       'meta': '8 Categories • Columns: 8 • Style: Circle • Show Title: Yes',
       'type': 'categories',
       'items': [
-        {'name': 'Haircare', 'icon': Icons.spa},
-        {'name': 'Skincare', 'icon': Icons.face},
-        {'name': 'Soaps', 'icon': Icons.clean_hands},
-        {'name': 'Wellness Oils', 'icon': Icons.opacity},
-        {'name': 'Elixirs', 'icon': Icons.local_pharmacy},
-        {'name': 'Gift Combos', 'icon': Icons.card_giftcard},
-        {'name': 'Aloe Vera', 'icon': Icons.eco},
-        {'name': 'Body Care', 'icon': Icons.self_improvement},
+        {'name': 'Haircare', 'title': 'Haircare & Oils', 'icon': Icons.spa, 'emoji': '💇', 'asset': 'assets/images/shampoo.jpg'},
+        {'name': 'Skincare', 'title': 'Skincare & Serums', 'icon': Icons.face, 'emoji': '✨', 'asset': 'assets/images/facewash.jpg'},
+        {'name': 'Soaps', 'title': 'Organic Soaps', 'icon': Icons.clean_hands, 'emoji': '🧴', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Wellness Oils', 'title': 'Wellness Oils', 'icon': Icons.opacity, 'emoji': '🌿', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Elixirs', 'title': 'Radiance Elixirs', 'icon': Icons.local_pharmacy, 'emoji': '🌸', 'asset': 'assets/images/shampoo.jpg'},
+        {'name': 'Gift Combos', 'title': 'Gift Combos', 'icon': Icons.card_giftcard, 'emoji': '🎁', 'asset': 'assets/images/soap.jpg'},
+        {'name': 'Aloe Vera', 'title': 'Aloe & Hydration', 'icon': Icons.eco, 'emoji': '💧', 'asset': 'assets/images/facewash.jpg'},
+        {'name': 'Body Care', 'title': 'Body Thailams', 'icon': Icons.self_improvement, 'emoji': '🍃', 'asset': 'assets/images/soap.jpg'},
       ],
       'addLabel': '+ Add Category',
     },
@@ -138,12 +138,12 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
       'meta': '6 Brands • Style: Logo Grid • Show Title: Yes',
       'type': 'brands',
       'items': [
-        {'name': 'VAIDYAM'},
-        {'name': 'KOTTAKKAL'},
-        {'name': 'FOREST ESSENTIALS'},
-        {'name': 'KAMA AYURVEDA'},
-        {'name': 'BIOTIQUE'},
-        {'name': 'COSMYRA'},
+        {'name': 'VAIDYAM', 'tag': 'Organic Botanicals'},
+        {'name': 'KOTTAKKAL', 'tag': 'Traditional Ayurveda'},
+        {'name': 'FOREST ESSENTIALS', 'tag': 'Luxurious Beauty'},
+        {'name': 'KAMA AYURVEDA', 'tag': 'Pure Formulations'},
+        {'name': 'BIOTIQUE', 'tag': 'Botanical Skincare'},
+        {'name': 'COSMYRA', 'tag': 'Ayurvedic Formulations'},
       ],
       'addLabel': '+ Add Brand',
     },
@@ -176,6 +176,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
       _reindexSections();
       _allChangesSaved = false;
     });
+    _syncProvider();
   }
 
   void _showReorderSectionsModal() {
@@ -200,6 +201,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                       _reindexSections();
                       _allChangesSaved = false;
                     });
+                    _syncProvider();
                     setModalState(() {});
                   },
                   itemBuilder: (context, index) {
@@ -314,6 +316,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
           _reindexSections();
           _allChangesSaved = false;
         });
+        _syncProvider();
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Section "$title" added!')));
       },
@@ -348,6 +351,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                   section['description'] = descCtrl.text;
                   _allChangesSaved = false;
                 });
+                _syncProvider();
                 Navigator.pop(context);
               },
               child: const Text('Save Changes'),
@@ -388,47 +392,243 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
   void _showAddItemDialog(Map<String, dynamic> section) {
     final titleCtrl = TextEditingController();
     final subCtrl = TextEditingController();
+    String selectedEmoji = section['type'] == 'categories' ? '✨' : '';
+
+    final popularEmojis = ['💇', '✨', '🧴', '🌿', '🌸', '🎁', '💧', '🍃', '🧪', '💆', '☀️', '⚡', '❤️', '👑'];
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Add Item to ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Item Name / Title', hintText: 'e.g. Kumkumadi Serum')),
-              const SizedBox(height: 12),
-              TextField(controller: subCtrl, decoration: const InputDecoration(labelText: 'Subtitle / Discount Tag / Price', hintText: 'e.g. 20% OFF or ₹399')),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
-              onPressed: () {
-                if (titleCtrl.text.trim().isNotEmpty) {
-                  setState(() {
-                    final items = section['items'] as List;
-                    items.add({
-                      'title': titleCtrl.text.trim(),
-                      'name': titleCtrl.text.trim(),
-                      'sub': subCtrl.text.trim(),
-                      'tag': subCtrl.text.trim().isNotEmpty ? subCtrl.text.trim() : 'New',
-                      'price': subCtrl.text.trim().contains('₹') ? subCtrl.text.trim() : '₹299',
-                      'color': const Color(0xFFEEF2FF),
-                      'icon': Icons.star,
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Add Item to ${section['title']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              content: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleCtrl,
+                        decoration: InputDecoration(
+                          labelText: section['type'] == 'categories' ? 'Category Name' : 'Item Name / Title',
+                          hintText: section['type'] == 'categories' ? 'e.g. Face Serum' : 'e.g. Kumkumadi Serum',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (section['type'] != 'categories')
+                        TextField(
+                          controller: subCtrl,
+                          decoration: const InputDecoration(labelText: 'Subtitle / Discount Tag / Price', hintText: 'e.g. 20% OFF or ₹399'),
+                        ),
+
+                      if (section['type'] == 'categories') ...[
+                        const SizedBox(height: 16),
+                        const Text('Choose Category Icon / Emoji:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF374151))),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: popularEmojis.map((e) {
+                            final isSel = selectedEmoji == e;
+                            return InkWell(
+                              onTap: () {
+                                setModalState(() => selectedEmoji = e);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isSel ? const Color(0xFFEEF2FF) : const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: isSel ? const Color(0xFF4F46E5) : Colors.transparent, width: 2),
+                                ),
+                                child: Text(e, style: const TextStyle(fontSize: 22)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text(
+                              selectedEmoji.isNotEmpty ? 'Selected Icon: $selectedEmoji' : 'Selected Icon: None (No Icon)',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF4F46E5)),
+                            ),
+                            const Spacer(),
+                            if (selectedEmoji.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: () => setModalState(() => selectedEmoji = ''),
+                                icon: const Icon(Icons.close, size: 14, color: Color(0xFFDC2626)),
+                                label: const Text('Remove Icon', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                  onPressed: () {
+                    final nameText = titleCtrl.text.trim();
+                    if (nameText.isNotEmpty) {
+                      setState(() {
+                        final items = section['items'] as List;
+                        items.add({
+                          'title': nameText,
+                          'name': nameText,
+                          'sub': subCtrl.text.trim(),
+                          'tag': subCtrl.text.trim().isNotEmpty ? subCtrl.text.trim() : 'New',
+                          'price': subCtrl.text.trim().contains('₹') ? subCtrl.text.trim() : '₹299',
+                          'color': const Color(0xFFEEF2FF),
+                          'icon': Icons.spa,
+                          'emoji': selectedEmoji,
+                        });
+                        if (section['type'] == 'categories') {
+                          section['meta'] = '${items.length} Categories • Columns: ${items.length} • Style: Circle • Show Title: Yes';
+                        }
+                        _allChangesSaved = false;
+                      });
+                      _syncProvider();
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added "$nameText" to ${section['title']}')));
+                    }
+                  },
+                  child: const Text('Add Item'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showEditItemDialog(Map<String, dynamic> section, int itemIdx) {
+    final items = section['items'] as List;
+    final item = items[itemIdx] as Map<String, dynamic>;
+
+    final titleCtrl = TextEditingController(text: item['title']?.toString() ?? item['name']?.toString() ?? '');
+    final subCtrl = TextEditingController(text: item['sub']?.toString() ?? item['tag']?.toString() ?? '');
+    String selectedEmoji = item['emoji']?.toString() ?? '';
+
+    final popularEmojis = ['💇', '✨', '🧴', '🌿', '🌸', '🎁', '💧', '🍃', '🧪', '💆', '☀️', '⚡', '❤️', '👑'];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Edit ${item['name'] ?? 'Item'}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              content: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleCtrl,
+                        decoration: InputDecoration(
+                          labelText: section['type'] == 'categories' ? 'Category Name' : 'Item Name / Title',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (section['type'] != 'categories')
+                        TextField(
+                          controller: subCtrl,
+                          decoration: const InputDecoration(labelText: 'Subtitle / Tag / Price'),
+                        ),
+
+                      if (section['type'] == 'categories') ...[
+                        const SizedBox(height: 16),
+                        const Text('Category Icon / Emoji:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF374151))),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: popularEmojis.map((e) {
+                            final isSel = selectedEmoji == e;
+                            return InkWell(
+                              onTap: () {
+                                setModalState(() => selectedEmoji = e);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isSel ? const Color(0xFFEEF2FF) : const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: isSel ? const Color(0xFF4F46E5) : Colors.transparent, width: 2),
+                                ),
+                                child: Text(e, style: const TextStyle(fontSize: 22)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Text(
+                              selectedEmoji.isNotEmpty ? 'Selected Icon: $selectedEmoji' : 'Selected Icon: None (No Icon)',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF4F46E5)),
+                            ),
+                            const Spacer(),
+                            if (selectedEmoji.isNotEmpty)
+                              TextButton.icon(
+                                onPressed: () => setModalState(() => selectedEmoji = ''),
+                                icon: const Icon(Icons.close, size: 14, color: Color(0xFFDC2626)),
+                                label: const Text('Remove Icon', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: const Color(0xFFDC2626)),
+                  onPressed: () {
+                    setState(() {
+                      items.removeAt(itemIdx);
+                      _allChangesSaved = false;
                     });
-                    _allChangesSaved = false;
-                  });
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added "${titleCtrl.text}" to ${section['title']}')));
-                }
-              },
-              child: const Text('Add Item'),
-            ),
-          ],
+                    _syncProvider();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Delete Item'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                  onPressed: () {
+                    final nameText = titleCtrl.text.trim();
+                    if (nameText.isNotEmpty) {
+                      setState(() {
+                        item['title'] = nameText;
+                        item['name'] = nameText;
+                        item['sub'] = subCtrl.text.trim();
+                        item['emoji'] = selectedEmoji;
+                        _allChangesSaved = false;
+                      });
+                      _syncProvider();
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Updated "$nameText"')));
+                    }
+                  },
+                  child: const Text('Save Item'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -451,6 +651,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                   _reindexSections();
                   _allChangesSaved = false;
                 });
+                _syncProvider();
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted "${section['title']}"')));
               },
@@ -464,6 +665,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
 
   void _saveAllChanges() {
     setState(() => _isSaving = true);
+    _syncProvider();
     Future.delayed(const Duration(milliseconds: 600), () {
       if (mounted) {
         setState(() {
@@ -781,6 +983,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                         sec['isActive'] = val;
                         _allChangesSaved = false;
                       });
+                      _syncProvider();
                     },
                   ),
                   const SizedBox(width: 4),
@@ -812,6 +1015,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                         _reindexSections();
                         _allChangesSaved = false;
                       });
+                      _syncProvider();
                     },
                   ),
                   IconButton(
@@ -892,15 +1096,18 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          Container(
-                            margin: const EdgeInsets.only(right: 10),
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFAFAFA),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: const Color(0xFFF3F4F6)),
+                          InkWell(
+                            onTap: () => _showEditItemDialog(sec, itemIdx),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFAFAFA),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFF3F4F6)),
+                              ),
+                              child: _buildItemPreviewWidget(sec['type'], item),
                             ),
-                            child: _buildItemPreviewWidget(sec['type'], item),
                           ),
                           Positioned(
                             top: -6,
@@ -909,6 +1116,9 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                               onTap: () {
                                 setState(() {
                                   (sec['items'] as List).removeAt(itemIdx);
+                                  if (sec['type'] == 'categories') {
+                                    sec['meta'] = '${(sec['items'] as List).length} Categories • Columns: ${(sec['items'] as List).length} • Style: Circle • Show Title: Yes';
+                                  }
                                   _allChangesSaved = false;
                                 });
                                 _syncProvider();
@@ -962,17 +1172,27 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
         return Container(
           width: 80,
           height: 40,
-          decoration: BoxDecoration(color: item['color'] as Color, borderRadius: BorderRadius.circular(6)),
+          decoration: BoxDecoration(color: item['color'] as Color? ?? const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(6)),
           child: Center(
-            child: Text(item['title'] as String, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF111827)), textAlign: TextAlign.center),
+            child: Text(item['title']?.toString() ?? 'Slide', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF111827)), textAlign: TextAlign.center),
           ),
         );
       case 'categories':
+        final emoji = item['emoji']?.toString() ?? '';
+        final iconData = item['icon'] is IconData ? (item['icon'] as IconData) : null;
+        final name = item['name']?.toString() ?? item['title']?.toString() ?? 'Category';
+
         return Column(
           children: [
-            CircleAvatar(radius: 14, backgroundColor: const Color(0xFFEEF2FF), child: Icon(item['icon'] as IconData, size: 14, color: const Color(0xFF4F46E5))),
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: const Color(0xFFEEF2FF),
+              child: emoji.isNotEmpty
+                  ? Text(emoji, style: const TextStyle(fontSize: 12))
+                  : (iconData != null ? Icon(iconData, size: 14, color: const Color(0xFF4F46E5)) : const Icon(Icons.spa, size: 14, color: Color(0xFF4F46E5))),
+            ),
             const SizedBox(height: 2),
-            Text(item['name'] as String, style: const TextStyle(fontSize: 9, color: Color(0xFF374151))),
+            Text(name, style: const TextStyle(fontSize: 9, color: Color(0xFF374151))),
           ],
         );
       case 'deals':
@@ -982,23 +1202,23 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
               decoration: BoxDecoration(color: const Color(0xFFFEE2E2), borderRadius: BorderRadius.circular(4)),
-              child: Text(item['tag'] as String, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
+              child: Text(item['tag']?.toString() ?? 'OFFER', style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
             ),
             const SizedBox(height: 2),
-            Text(item['name'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
-            Text(item['price'] as String, style: const TextStyle(fontSize: 9, color: Color(0xFF059669))),
+            Text(item['name']?.toString() ?? 'Product', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+            Text(item['price']?.toString() ?? '₹299', style: const TextStyle(fontSize: 9, color: Color(0xFF059669))),
           ],
         );
       case 'benefits':
         return Row(
           children: [
-            Icon(item['icon'] as IconData, size: 16, color: const Color(0xFF4F46E5)),
+            Icon(item['icon'] as IconData? ?? Icons.verified_outlined, size: 16, color: const Color(0xFF4F46E5)),
             const SizedBox(width: 6),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['title'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
-                Text(item['sub'] as String, style: const TextStyle(fontSize: 8, color: Color(0xFF6B7280))),
+                Text(item['title']?.toString() ?? 'Feature', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
+                Text(item['sub']?.toString() ?? '', style: const TextStyle(fontSize: 8, color: Color(0xFF6B7280))),
               ],
             ),
           ],
@@ -1006,10 +1226,10 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
       case 'brands':
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Text(item['name'] as String, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+          child: Text(item['name']?.toString() ?? 'Brand', style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
         );
       default:
-        return Text(item['name']?.toString() ?? 'Item', style: const TextStyle(fontSize: 9));
+        return Text(item['name']?.toString() ?? item['title']?.toString() ?? 'Item', style: const TextStyle(fontSize: 9));
     }
   }
 

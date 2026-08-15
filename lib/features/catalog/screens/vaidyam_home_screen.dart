@@ -826,12 +826,14 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                         border: Border.all(color: _borderGray),
                       ),
                       child: Center(
-                        child: iconData != null
-                            ? Icon(iconData, size: 28, color: _primaryPurple)
-                            : Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 32),
-                              ),
+                        child: emoji.isNotEmpty
+                            ? Text(emoji, style: const TextStyle(fontSize: 32))
+                            : (iconData != null
+                                ? Icon(iconData, size: 28, color: _primaryPurple)
+                                : Text(
+                                    title.isNotEmpty ? title.substring(0, 1).toUpperCase() : '✨',
+                                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _primaryPurple),
+                                  )),
                       ),
                     ),
                     const SizedBox(height: 10),
