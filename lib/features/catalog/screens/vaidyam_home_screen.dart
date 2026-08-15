@@ -126,25 +126,33 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     super.dispose();
   }
 
-  void _addDealToCart(Map<String, dynamic> deal) {
+  void _addDealToCart(Map<String, dynamic> deal, {bool isBuyNow = false}) {
+    final double itemPrice = (deal['price'] is num)
+        ? (deal['price'] as num).toDouble()
+        : (double.tryParse(deal['price'].toString().replaceAll('₹', '').replaceAll(',', '')) ?? 499.0);
+
+    final double itemMrp = (deal['originalPrice'] is num)
+        ? (deal['originalPrice'] as num).toDouble()
+        : (double.tryParse(deal['originalPrice']?.toString().replaceAll('₹', '').replaceAll(',', '') ?? '699') ?? (itemPrice * 1.2));
+
     final product = ProductModel(
-      id: deal['id'],
+      id: deal['id']?.toString() ?? 'p-${DateTime.now().millisecondsSinceEpoch}',
       brandId: 'brand-vaidyam',
-      categoryId: deal['category'],
-      name: deal['name'],
-      slug: deal['id'],
+      categoryId: deal['category']?.toString() ?? 'Botanical Care',
+      name: deal['name']?.toString() ?? 'Ayurvedic Product',
+      slug: deal['id']?.toString() ?? 'p-slug',
       description: 'Organic botanical formulation handcrafted for daily wellness.',
       ingredients: 'Organic Ayurvedic herbs & cold-pressed oils',
       freeFromClaims: const ['Paraben Free', 'Sulfate Free'],
-      imageUrls: [deal['image']],
+      imageUrls: [deal['image']?.toString() ?? 'assets/images/shampoo.jpg'],
       variants: [
         ProductVariant(
           id: '${deal['id']}-v1',
-          productId: deal['id'],
+          productId: deal['id']?.toString() ?? 'p-id',
           sku: '${deal['id']}-SKU',
           sizeLabel: 'Standard Pack',
-          price: (deal['price'] as num).toDouble(),
-          mrp: (deal['originalPrice'] as num).toDouble(),
+          price: itemPrice,
+          mrp: itemMrp,
           stock: 25,
           isDefault: true,
         ),
@@ -153,15 +161,19 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
     ref.read(cartProvider.notifier).addItem(product: product, variant: product.defaultVariant);
 
-    showCenterActionToast(
-      context,
-      title: 'Added to Shopping Bag! 🛍️',
-      message: deal['name'] as String,
-      icon: Icons.check_circle_rounded,
-      iconColor: const Color(0xFF059669),
-      primaryActionLabel: 'VIEW CART',
-      onPrimaryAction: () => context.push('/cart'),
-    );
+    if (isBuyNow) {
+      context.push('/checkout');
+    } else {
+      showCenterActionToast(
+        context,
+        title: 'Added to Shopping Bag! 🛍️',
+        message: deal['name'] as String,
+        icon: Icons.check_circle_rounded,
+        iconColor: const Color(0xFF059669),
+        primaryActionLabel: 'VIEW CART',
+        onPrimaryAction: () => context.push('/cart'),
+      );
+    }
   }
 
   @override
@@ -922,7 +934,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
         // Deals Grid Cards Row
         SizedBox(
-          height: 310,
+          height: 335,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _dealProducts.length,
@@ -939,7 +951,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   Widget _buildDealProductCard(Map<String, dynamic> deal) {
     return Container(
-      width: 200,
+      width: 220,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1029,18 +1041,39 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           ),
           const Spacer(),
 
-          // Shop Now Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => _addDealToCart(deal),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryPurple,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          // Add to Cart & Buy Now Row
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _addDealToCart(deal, isBuyNow: false),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    side: const BorderSide(color: _primaryPurple),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Add to Cart', style: TextStyle(color: _primaryPurple, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
               ),
-              child: const Text('Shop Now', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-            ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _addDealToCart(deal, isBuyNow: true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    elevation: 0,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1225,7 +1258,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               itemCount: trendingProducts.length.clamp(0, 4),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: count,
-                childAspectRatio: 0.72,
+                childAspectRatio: isDesktop ? 0.98 : 0.88,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
@@ -1298,13 +1331,8 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFBBF7D0)),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/facewash.jpg'),
-                            fit: BoxFit.cover,
-                            opacity: 0.15,
-                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFDCFCE7)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1313,52 +1341,39 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF166534),
-                                borderRadius: BorderRadius.circular(12),
+                                color: const Color(0xFFDCFCE7),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Text('NEW LAUNCH', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                              child: const Text('Small-Batch Fresh', style: TextStyle(color: Color(0xFF15803D), fontSize: 11, fontWeight: FontWeight.bold)),
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Pure Saffron & Honey Hydro Glow Serum',
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF14532D)),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Infused with 24K Kumkumadi oil extracts for instant 24-hour hydration & dermal radiance.',
-                                  style: TextStyle(fontSize: 13, color: Color(0xFF166534)),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: () => context.push('/explore'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF166534),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                  ),
-                                  child: const Text('EXPLORE FORMULATION', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                ),
-                              ],
+                            Text('Tejasvi Saffron Brightening Polish', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey.shade900)),
+                            const Text('Handcrafted with pure Kashmiri saffron, sandalwood dust, and raw turmeric root for radiant glow.', style: TextStyle(fontSize: 12, color: Color(0xFF15803D))),
+                            ElevatedButton(
+                              onPressed: () => context.push('/explore'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF166534),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Discover New Collection', style: TextStyle(fontWeight: FontWeight.bold)),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 16),
 
-                    // Right 3 Products Grid
+                    // Right Cards Grid
                     Expanded(
-                      flex: 6,
+                      flex: 8,
                       child: GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: newProducts.length,
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
-                          childAspectRatio: 0.7,
+                          childAspectRatio: 0.96,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
@@ -1524,15 +1539,48 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                             Text(item['originalPrice'] as String, style: const TextStyle(fontSize: 11, color: _textMuted, decoration: TextDecoration.lineThrough)),
                           ],
                         ),
-                        ElevatedButton(
-                          onPressed: () => context.push('/cart'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryPurple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          ),
-                          child: const Text('Add to Cart', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        Row(
+                          children: [
+                            OutlinedButton(
+                              onPressed: () => _addDealToCart({
+                                'id': 'bestseller-${item['title']}',
+                                'name': item['title'],
+                                'price': item['price'],
+                                'originalPrice': item['originalPrice'],
+                                'category': 'Best Seller',
+                                'image': item['image'],
+                              }, isBuyNow: false),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: _primaryPurple),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text('Add to Cart', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _primaryPurple)),
+                            ),
+                            const SizedBox(width: 6),
+                            ElevatedButton(
+                              onPressed: () => _addDealToCart({
+                                'id': 'bestseller-${item['title']}',
+                                'name': item['title'],
+                                'price': item['price'],
+                                'originalPrice': item['originalPrice'],
+                                'category': 'Best Seller',
+                                'image': item['image'],
+                              }, isBuyNow: true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _primaryPurple,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                elevation: 0,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text('Buy Now', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -1729,6 +1777,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   prod['name'] as String,
@@ -1741,28 +1790,50 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                   prod['category'] as String,
                   style: const TextStyle(fontSize: 10, color: _textMuted),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 12),
-                    const SizedBox(width: 2),
-                    Text('${prod['rating']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const SizedBox(width: 2),
+                        Text('${prod['rating']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textDark)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textDark)),
-                    InkWell(
-                      onTap: () => _addDealToCart(prod),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _primaryPurple,
-                          borderRadius: BorderRadius.circular(4),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _addDealToCart(prod, isBuyNow: false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          side: const BorderSide(color: _primaryPurple),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Add', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                        child: const Text('Add to Cart', style: TextStyle(color: _primaryPurple, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => _addDealToCart(prod, isBuyNow: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          elevation: 0,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
