@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
 import '../../cart/models/cart_item_model.dart';
 import '../models/order_model.dart';
@@ -17,6 +19,34 @@ final allAdminOrdersFutureProvider = FutureProvider<List<OrderModel>>((ref) asyn
 });
 
 class OrderRepository {
+  static const String _storageKey = 'cosmyra_all_orders_v3';
+  static final List<OrderModel> _localOrders = [];
+  static bool _isLoaded = false;
+
+  Future<void> _ensureLoaded() async {
+    if (_isLoaded) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString(_storageKey);
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        _localOrders.clear();
+        _localOrders.addAll(
+          decoded.map((item) => OrderModel.fromJson(Map<String, dynamic>.from(item as Map))),
+        );
+      }
+    } catch (_) {}
+    _isLoaded = true;
+  }
+
+  Future<void> _saveOrdersToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = _localOrders.map((o) => o.toJson()).toList();
+      await prefs.setString(_storageKey, jsonEncode(jsonList));
+    } catch (_) {}
+  }
+
   /// Place an order (handles guest or authenticated customer)
   Future<OrderModel> placeOrder({
     String? userId,
@@ -32,6 +62,7 @@ class OrderRepository {
     required double totalAmount,
     required String paymentMethod,
   }) async {
+    await _ensureLoaded();
     final orderNumber = 'CSM-${DateTime.now().year}-${Random().nextInt(900000) + 100000}';
 
     final orderData = {
@@ -88,9 +119,7 @@ class OrderRepository {
             });
           }
         }
-      } catch (e) {
-        // Log error and continue with local constructed model
-      }
+      } catch (_) {}
     }
 
     final placedOrder = OrderModel(
@@ -125,11 +154,13 @@ class OrderRepository {
     );
 
     _localOrders.insert(0, placedOrder);
+    await _saveOrdersToStorage();
     return placedOrder;
   }
 
   /// Get orders for current logged-in user
-  Future<List<OrderModel>> getUserOrders() async {
+  Future<List<OrderModel>> getUserOrders({String? email}) async {
+    await _ensureLoaded();
     if (SupabaseConfig.isConfigured && supabase.auth.currentUser != null) {
       try {
         final response = await supabase
@@ -139,16 +170,23 @@ class OrderRepository {
             .order('created_at', ascending: false);
 
         if (response.isNotEmpty) {
-          return (response as List).map((json) => OrderModel.fromJson(json)).toList();
+          return (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
         }
       } catch (_) {}
     }
 
-    return _localOrders;
+    if (email != null && email.isNotEmpty) {
+      final userLower = email.toLowerCase().trim();
+      final filtered = _localOrders.where((o) => o.customerEmail.toLowerCase().trim() == userLower).toList();
+      if (filtered.isNotEmpty) return filtered;
+    }
+
+    return List.from(_localOrders);
   }
 
   /// Get all orders for Admin Web Dashboard
   Future<List<OrderModel>> getAllOrdersForAdmin() async {
+    await _ensureLoaded();
     if (SupabaseConfig.isConfigured) {
       try {
         final response = await supabase
@@ -157,12 +195,12 @@ class OrderRepository {
             .order('created_at', ascending: false);
 
         if (response.isNotEmpty) {
-          return (response as List).map((json) => OrderModel.fromJson(json)).toList();
+          return (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))).toList();
         }
       } catch (_) {}
     }
 
-    return _localOrders.isEmpty ? _seedAdminOrders : _localOrders;
+    return List.from(_localOrders);
   }
 
   /// Update order courier and status (Admin feature)
@@ -172,6 +210,7 @@ class OrderRepository {
     String? courier,
     String? trackingNumber,
   }) async {
+    await _ensureLoaded();
     if (SupabaseConfig.isConfigured) {
       try {
         await supabase.from('orders').update({
@@ -182,7 +221,7 @@ class OrderRepository {
       } catch (_) {}
     }
 
-    final index = _localOrders.indexWhere((o) => o.id == orderId);
+    final index = _localOrders.indexWhere((o) => o.id == orderId || o.orderNumber == orderId);
     if (index != -1) {
       final current = _localOrders[index];
       _localOrders[index] = OrderModel(
@@ -207,57 +246,8 @@ class OrderRepository {
         createdAt: current.createdAt,
         items: current.items,
       );
+      await _saveOrdersToStorage();
     }
     return true;
   }
-
-  static final List<OrderModel> _localOrders = [];
-
-  static final List<OrderModel> _seedAdminOrders = [
-    OrderModel(
-      id: 'seed-ord-1',
-      orderNumber: 'CSM-2026-928412',
-      isGuest: false,
-      customerName: 'Aarav Sharma',
-      customerEmail: 'aarav.sharma@example.com',
-      customerPhone: '+91 9876543210',
-      shippingAddress: {
-        'address_line1': 'Flat 402, Green Glen Heights, Bellandur',
-        'city': 'Bengaluru',
-        'state': 'Karnataka',
-        'pincode': '560103',
-      },
-      subtotal: 598.0,
-      discount: 59.8,
-      shippingFee: 0.0,
-      totalAmount: 538.2,
-      paymentMethod: 'razorpay',
-      paymentStatus: 'captured',
-      fulfillmentStatus: 'placed',
-      courierPartner: 'shiprocket',
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-      items: const [
-        OrderItemModel(
-          id: 'itm-1',
-          orderId: 'seed-ord-1',
-          productVariantId: 'var-1-200',
-          productName: 'Vaidyam Anti-Dandruff Herbal Shampoo',
-          variantName: '200 ml',
-          unitPrice: 399.0,
-          quantity: 1,
-          totalPrice: 399.0,
-        ),
-        OrderItemModel(
-          id: 'itm-2',
-          orderId: 'seed-ord-1',
-          productVariantId: 'var-2-125',
-          productName: 'Vaidyam De-Tan Botanical Handcrafted Soap',
-          variantName: '125 g',
-          unitPrice: 199.0,
-          quantity: 1,
-          totalPrice: 199.0,
-        ),
-      ],
-    ),
-  ];
 }

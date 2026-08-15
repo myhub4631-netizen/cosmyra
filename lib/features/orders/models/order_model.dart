@@ -32,6 +32,19 @@ class OrderItemModel {
       totalPrice: (json['total_price_inr'] as num?)?.toDouble() ?? 0.0,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'order_id': orderId,
+      'product_variant_id': productVariantId,
+      'product_name': productName,
+      'variant_name': variantName,
+      'unit_price_inr': unitPrice,
+      'quantity': quantity,
+      'total_price_inr': totalPrice,
+    };
+  }
 }
 
 /// Order Model
@@ -48,7 +61,7 @@ class OrderModel {
   final double discount;
   final double shippingFee;
   final double totalAmount;
-  final String paymentMethod; // 'razorpay' | 'cod'
+  final String paymentMethod; // 'razorpay' | 'cod' | 'UPI' | etc.
   final String paymentStatus; // 'pending' | 'captured' | 'failed'
   final String fulfillmentStatus; // 'placed' | 'confirmed' | 'processing' | 'shipped' | 'delivered'
   final String? courierPartner; // 'shiprocket' | 'delhivery' | 'indiapost'
@@ -84,7 +97,7 @@ class OrderModel {
     final rawItems = json['order_items'];
     List<OrderItemModel> parsedItems = [];
     if (rawItems is List) {
-      parsedItems = rawItems.map((i) => OrderItemModel.fromJson(i)).toList();
+      parsedItems = rawItems.map((i) => OrderItemModel.fromJson(Map<String, dynamic>.from(i as Map))).toList();
     }
 
     return OrderModel(
@@ -95,8 +108,8 @@ class OrderModel {
       customerName: json['customer_name'] ?? '',
       customerEmail: json['customer_email'] ?? '',
       customerPhone: json['customer_phone'] ?? '',
-      shippingAddress: json['shipping_address'] is Map<String, dynamic>
-          ? json['shipping_address']
+      shippingAddress: json['shipping_address'] is Map
+          ? Map<String, dynamic>.from(json['shipping_address'] as Map)
           : {},
       subtotal: (json['subtotal_inr'] as num?)?.toDouble() ?? 0.0,
       discount: (json['discount_inr'] as num?)?.toDouble() ?? 0.0,
@@ -113,5 +126,30 @@ class OrderModel {
           : DateTime.now(),
       items: parsedItems,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'order_number': orderNumber,
+      'user_id': userId,
+      'is_guest': isGuest,
+      'customer_name': customerName,
+      'customer_email': customerEmail,
+      'customer_phone': customerPhone,
+      'shipping_address': shippingAddress,
+      'subtotal_inr': subtotal,
+      'discount_inr': discount,
+      'shipping_fee_inr': shippingFee,
+      'total_amount_inr': totalAmount,
+      'payment_method': paymentMethod,
+      'payment_status': paymentStatus,
+      'fulfillment_status': fulfillmentStatus,
+      'courier_partner': courierPartner,
+      'tracking_number': trackingNumber,
+      'tracking_url': trackingUrl,
+      'created_at': createdAt.toIso8601String(),
+      'order_items': items.map((i) => i.toJson()).toList(),
+    };
   }
 }

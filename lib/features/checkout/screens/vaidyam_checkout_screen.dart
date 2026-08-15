@@ -5,6 +5,7 @@ import '../../../config/theme/app_colors.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../orders/repositories/order_repository.dart';
 
 class VaidyamCheckoutScreen extends ConsumerStatefulWidget {
   const VaidyamCheckoutScreen({super.key});
@@ -686,7 +687,48 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final auth = ref.read(authControllerProvider);
+                final user = ref.read(currentUserProvider);
+                final currentCartState = ref.read(cartProvider);
+
+                final String name = _nameController.text.trim().isNotEmpty
+                    ? _nameController.text.trim()
+                    : (auth.userName ?? user?.userMetadata?['full_name'] ?? 'Customer');
+                final String phone = _phoneController.text.trim().isNotEmpty
+                    ? _phoneController.text.trim()
+                    : (auth.userPhone ?? user?.phone ?? '+91 94730 40903');
+                final String email = auth.userEmail ?? user?.email ?? '1mdollar2027@gmail.com';
+
+                final Map<String, dynamic> shippingAddressMap = {
+                  'name': name,
+                  'phone': phone,
+                  'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Valley',
+                  'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Patna',
+                  'state': _selectedState,
+                  'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '800001',
+                };
+
+                final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
+                      userId: user?.id,
+                      isGuest: auth.isGuest,
+                      customerName: name,
+                      customerEmail: email,
+                      customerPhone: phone,
+                      shippingAddress: shippingAddressMap,
+                      cartItems: currentCartState.items,
+                      subtotal: subtotal,
+                      discount: discount,
+                      shippingFee: 0.0,
+                      totalAmount: total,
+                      paymentMethod: _selectedPaymentMethod,
+                    );
+
+                ref.invalidate(userOrdersFutureProvider);
+                ref.invalidate(allAdminOrdersFutureProvider);
+
+                if (!context.mounted) return;
+
                 showDialog(
                   context: context,
                   builder: (dialogCtx) => AlertDialog(
@@ -699,7 +741,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                       ],
                     ),
                     content: Text(
-                      'Thank you for your order, ${_nameController.text}! Your order total of ₹${total.toInt()} has been successfully confirmed via $_selectedPaymentMethod.\n\nEstimated Delivery: 2-3 Business Days.',
+                      'Thank you for your order, $name!\n\nOrder Number: ${placedOrder.orderNumber}\nTotal Amount: ₹${total.toInt()} via $_selectedPaymentMethod.\n\nEstimated Delivery: 2-3 Business Days.',
                       style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
                     ),
                     actions: [
@@ -707,7 +749,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                         onPressed: () {
                           ref.read(cartProvider.notifier).clearCart();
                           Navigator.pop(dialogCtx);
-                          context.go('/dashboard');
+                          context.go('/dashboard?tab=My%20Orders');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4F46E5),
