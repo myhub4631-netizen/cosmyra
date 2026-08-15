@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
 import '../models/product_model.dart';
 
@@ -18,7 +20,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   void updateProduct(ProductModel product) {
-    state = state.map((p) => p.id == product.id ? product : p).toList();
+    state = [
+      for (final p in state)
+        if (p.id == product.id) product else p,
+    ];
   }
 
   void deleteProduct(String productId) {
@@ -45,9 +50,8 @@ final categoriesFutureProvider = FutureProvider<List<CategoryModel>>((ref) async
   return ref.watch(productRepositoryProvider).getCategories();
 });
 
-final productsFutureProvider = Provider<AsyncValue<List<ProductModel>>>((ref) {
-  final inMemoryProducts = ref.watch(adminProductsProvider);
-  return AsyncData(inMemoryProducts);
+final productsFutureProvider = FutureProvider<List<ProductModel>>((ref) async {
+  return ref.watch(adminProductsProvider);
 });
 
 final selectedCategoryProvider = StateProvider<String?>((ref) => null);
@@ -59,7 +63,27 @@ final wishlistProvider = StateNotifierProvider<WishlistNotifier, Set<String>>((r
 });
 
 class WishlistNotifier extends StateNotifier<Set<String>> {
-  WishlistNotifier() : super({'prod-1', 'prod-2', 'prod-3', 'prod-4', 'prod-5', 'prod-6'});
+  WishlistNotifier() : super({}) {
+    _loadWishlistFromStorage();
+  }
+
+  Future<void> _loadWishlistFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_user_wishlist_v1');
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        state = decoded.map((e) => e.toString()).toSet();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveWishlistToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cosmyra_user_wishlist_v1', jsonEncode(state.toList()));
+    } catch (_) {}
+  }
 
   void toggleWishlist(String productId) {
     if (state.contains(productId)) {
@@ -67,14 +91,22 @@ class WishlistNotifier extends StateNotifier<Set<String>> {
     } else {
       state = {...state, productId};
     }
+    _saveWishlistToStorage();
   }
 
   void removeFromWishlist(String productId) {
     state = {...state}..remove(productId);
+    _saveWishlistToStorage();
+  }
+
+  void addToWishlist(String productId) {
+    state = {...state, productId};
+    _saveWishlistToStorage();
   }
 
   void clearWishlist() {
     state = {};
+    _saveWishlistToStorage();
   }
 
   bool isWishlisted(String productId) => state.contains(productId);
