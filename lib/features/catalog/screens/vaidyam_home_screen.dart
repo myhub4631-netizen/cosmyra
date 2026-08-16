@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -53,8 +54,38 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     {'name': 'BIOTIQUE', 'tag': 'Botanical Skincare'},
   ];
 
+  Timer? _countdownTimer;
+  Duration _saleTimeLeft = const Duration(hours: 5, minutes: 42, seconds: 18);
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdownTimer();
+  }
+
+  void _startCountdownTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        if (_saleTimeLeft.inSeconds > 0) {
+          _saleTimeLeft = _saleTimeLeft - const Duration(seconds: 1);
+        } else {
+          _saleTimeLeft = const Duration(hours: 24);
+        }
+      });
+    });
+  }
+
+  String get _formattedCountdown {
+    final hours = _saleTimeLeft.inHours.toString().padLeft(2, '0');
+    final minutes = (_saleTimeLeft.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_saleTimeLeft.inSeconds % 60).toString().padLeft(2, '0');
+    return '${hours}h ${minutes}m ${seconds}s';
+  }
+
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -873,33 +904,73 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF3E8FF),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.local_offer_outlined, color: Color(0xFF4F46E5), size: 20),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Today\'s Best Deals',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF3E8FF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.local_offer_outlined, color: Color(0xFF4F46E5), size: 20),
+                      ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Handpicked offers just for you – Limited time only!',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'Today\'s Best Deals',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Handpicked offers just for you – Limited time only!',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                        ),
+                      ],
                     ),
                   ],
+                ),
+                // Live Sale Countdown Timer Badge Counter
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.timer_outlined, size: 14, color: Color(0xFFDC2626)),
+                      const SizedBox(width: 5),
+                      const Text(
+                        '🔥 Sale Ends In: ',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB91C1C)),
+                      ),
+                      Text(
+                        _formattedCountdown,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFDC2626),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -918,21 +989,32 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         Stack(
           children: [
             SizedBox(
-              height: 365,
+              height: 385,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: activeProducts.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
                   final deal = activeProducts[index];
-                  return _buildDealProductCard(deal);
+                  return _DealProductCardWidget(
+                    deal: deal,
+                    onAddToCart: _addDealToCart,
+                    onToggleWishlist: () {
+                      ref.read(wishlistProvider.notifier).toggleWishlist(
+                        deal['id']?.toString() ?? deal['name']?.toString() ?? '',
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
+                      );
+                    },
+                  );
                 },
               ),
             ),
             if (isDesktop)
               Positioned(
                 right: 0,
-                top: 150,
+                top: 160,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -954,157 +1036,17 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   Widget _buildDealProductCard(Map<String, dynamic> deal) {
-    final String imageUrl = deal['image'] as String? ?? '';
-    final bool isHttp = imageUrl.startsWith('http');
-
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Top Image & Badges Stack
-          Stack(
-            children: [
-              Container(
-                height: 135,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: ProductImageWidget(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    height: 135,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
-              // Discount Tag Badge (Top-Left)
-              if (deal['discount'] != null)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      deal['discount'].toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              // Wishlist Heart Button (Top-Right)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
-                    onPressed: () {
-                      ref.read(wishlistProvider.notifier).toggleWishlist(deal['id']?.toString() ?? deal['name']?.toString() ?? '');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Category Pill & Rating Badge Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E8FF),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  deal['category']?.toString() ?? 'BOTANICAL',
-                  style: const TextStyle(color: Color(0xFF6B21A8), fontSize: 9, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.star, size: 12, color: Color(0xFFF59E0B)),
-                  const SizedBox(width: 2),
-                  Text(
-                    '${deal['rating'] ?? 4.8}',
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Title
-          Text(
-            deal['name']?.toString() ?? '',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const Spacer(),
-
-          // Larger Add to Cart & Buy Now Action Buttons Row
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _addDealToCart(deal, isBuyNow: false),
-                  icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
-                  label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    side: const BorderSide(color: Color(0xFF4F46E5)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    minimumSize: const Size(0, 38),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _addDealToCart(deal, isBuyNow: true),
-                  icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
-                  label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4F46E5),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 0,
-                    minimumSize: const Size(0, 38),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return _DealProductCardWidget(
+      deal: deal,
+      onAddToCart: _addDealToCart,
+      onToggleWishlist: () {
+        ref.read(wishlistProvider.notifier).toggleWishlist(
+          deal['id']?.toString() ?? deal['name']?.toString() ?? '',
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
+        );
+      },
     );
   }
 
@@ -2310,6 +2252,264 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _DealProductCardWidget extends StatefulWidget {
+  final Map<String, dynamic> deal;
+  final Function(Map<String, dynamic>, {bool isBuyNow}) onAddToCart;
+  final VoidCallback onToggleWishlist;
+
+  const _DealProductCardWidget({
+    required this.deal,
+    required this.onAddToCart,
+    required this.onToggleWishlist,
+  });
+
+  @override
+  State<_DealProductCardWidget> createState() => _DealProductCardWidgetState();
+}
+
+class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final deal = widget.deal;
+    final String imageUrl = deal['image'] as String? ?? '';
+
+    // Parse price and MRP
+    final rawPriceStr = deal['price']?.toString().replaceAll('₹', '').replaceAll(',', '').trim() ?? '399';
+    final double priceNum = double.tryParse(rawPriceStr) ?? 399.0;
+    final double mrpNum = deal['mrp'] != null
+        ? (double.tryParse(deal['mrp'].toString().replaceAll('₹', '').replaceAll(',', '').trim()) ?? (priceNum * 1.25))
+        : (priceNum * 1.25);
+    final int discountPct = deal['discount'] != null
+        ? (int.tryParse(deal['discount'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 20)
+        : (((mrpNum - priceNum) / mrpNum) * 100).round();
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 230,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isHovered ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
+            width: _isHovered ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered ? const Color(0xFF6366F1).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.03),
+              blurRadius: _isHovered ? 14 : 8,
+              offset: Offset(0, _isHovered ? 6 : 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Image Container with Smooth Scale Effect & Contain Fit
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 145,
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedScale(
+                      scale: _isHovered ? 1.08 : 1.0,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      child: ProductImageWidget(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
+                        height: 145,
+                        width: double.infinity,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Quick Overview Floating Badge Overlay on Hover!
+                if (_isHovered)
+                  Positioned(
+                    bottom: 6,
+                    left: 6,
+                    right: 6,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 180),
+                      opacity: _isHovered ? 1.0 : 0.0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1B4B).withValues(alpha: 0.94),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Quick Overview • Pure Botanical',
+                              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // Discount Tag Badge (Top-Left)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626),
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                    ),
+                    child: Text(
+                      '$discountPct% OFF',
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+
+                // Wishlist Heart Button (Top-Right)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
+                      onPressed: widget.onToggleWishlist,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Category Pill & Rating Badge Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E8FF),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    deal['category']?.toString() ?? 'BOTANICAL',
+                    style: const TextStyle(color: Color(0xFF6B21A8), fontSize: 9, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Icon(Icons.star, size: 12, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 2),
+                    Text(
+                      '${deal['rating'] ?? 4.8}',
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+
+            // Title
+            Text(
+              deal['name']?.toString() ?? '',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+
+            // Price & Original MRP & Savings Row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  '₹${priceNum.toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF111827)),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '₹${mrpNum.toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  ' Save ₹${(mrpNum - priceNum).toStringAsFixed(0)}',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Add to Cart & Buy Now Action Buttons Row
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => widget.onAddToCart(deal, isBuyNow: false),
+                    icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
+                    label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: BorderSide(color: _isHovered ? const Color(0xFF4338CA) : const Color(0xFF4F46E5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      minimumSize: const Size(0, 38),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => widget.onAddToCart(deal, isBuyNow: true),
+                    icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
+                    label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4F46E5),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      elevation: 0,
+                      minimumSize: const Size(0, 38),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
