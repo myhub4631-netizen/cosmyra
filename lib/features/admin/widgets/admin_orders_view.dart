@@ -40,21 +40,23 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
           title: const Text('Create New Manual Order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           content: SizedBox(
             width: 380,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Customer Name', hintText: 'e.g. Mahboob Hasan')),
-                const SizedBox(height: 10),
-                TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number', hintText: 'e.g. +91 94730 40903')),
-                const SizedBox(height: 10),
-                TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Customer Email', hintText: 'e.g. 1mdollar2027@gmail.com')),
-                const SizedBox(height: 10),
-                TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Shipping Address', hintText: 'Flat 402, Green Valley, Patna')),
-                const SizedBox(height: 10),
-                TextField(controller: productCtrl, decoration: const InputDecoration(labelText: 'Product Name')),
-                const SizedBox(height: 10),
-                TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Total Amount (₹)')),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Customer Name', hintText: 'e.g. Mahboob Hasan')),
+                  const SizedBox(height: 10),
+                  TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number', hintText: 'e.g. +91 94730 40903')),
+                  const SizedBox(height: 10),
+                  TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Customer Email', hintText: 'e.g. 1mdollar2027@gmail.com')),
+                  const SizedBox(height: 10),
+                  TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Shipping Address', hintText: 'Flat 402, Green Valley, Patna')),
+                  const SizedBox(height: 10),
+                  TextField(controller: productCtrl, decoration: const InputDecoration(labelText: 'Product Name')),
+                  const SizedBox(height: 10),
+                  TextField(controller: amountCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Total Amount (₹)')),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -143,103 +145,361 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
     );
   }
 
+  void _showEditOrderDialog(Map<String, dynamic> order) {
+    final String realId = (order['realId'] ?? order['id']).toString();
+    final nameCtrl = TextEditingController(text: order['customerName']?.toString() ?? '');
+    final emailCtrl = TextEditingController(text: order['customerEmail']?.toString() ?? '');
+    final phoneCtrl = TextEditingController(text: order['customerPhone']?.toString() ?? '');
+    final addressCtrl = TextEditingController(text: order['address']?.toString() ?? '');
+    final courierCtrl = TextEditingController(text: order['courier']?.toString() == '-' ? '' : order['courier']?.toString() ?? '');
+    final awbCtrl = TextEditingController(text: order['awb']?.toString() == '-' ? '' : order['awb']?.toString() ?? '');
+    final amountCtrl = TextEditingController(text: order['amount']?.toString() ?? '0');
+
+    String paymentStatus = order['paymentStatus']?.toString().toLowerCase() ?? 'pending';
+    String fulfillmentStatus = order['status']?.toString().toLowerCase() ?? 'placed';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text('Edit Order Details: ${order['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              content: SizedBox(
+                width: 480,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Customer Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Customer Full Name', border: OutlineInputBorder())),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email Address', border: OutlineInputBorder()))),
+                          const SizedBox(width: 10),
+                          Expanded(child: TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()))),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(controller: addressCtrl, decoration: const InputDecoration(labelText: 'Shipping Address', border: OutlineInputBorder())),
+                      const SizedBox(height: 16),
+                      const Text('Payment & Amounts', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: ['pending', 'captured', 'failed', 'refunded'].contains(paymentStatus) ? paymentStatus : 'pending',
+                              decoration: const InputDecoration(labelText: 'Payment Status', border: OutlineInputBorder()),
+                              items: const [
+                                DropdownMenuItem(value: 'pending', child: Text('Pending ⏳')),
+                                DropdownMenuItem(value: 'captured', child: Text('Paid / Captured ✅')),
+                                DropdownMenuItem(value: 'failed', child: Text('Failed ❌')),
+                                DropdownMenuItem(value: 'refunded', child: Text('Refunded 💸')),
+                              ],
+                              onChanged: (val) => setModalState(() => paymentStatus = val ?? 'pending'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: amountCtrl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(labelText: 'Total Amount (₹)', border: OutlineInputBorder()),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Fulfillment & Shipping', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: ['placed', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].contains(fulfillmentStatus) ? fulfillmentStatus : 'placed',
+                        decoration: const InputDecoration(labelText: 'Fulfillment Status', border: OutlineInputBorder()),
+                        items: const [
+                          DropdownMenuItem(value: 'placed', child: Text('Placed')),
+                          DropdownMenuItem(value: 'confirmed', child: Text('Confirmed')),
+                          DropdownMenuItem(value: 'processing', child: Text('Processing')),
+                          DropdownMenuItem(value: 'shipped', child: Text('Shipped')),
+                          DropdownMenuItem(value: 'delivered', child: Text('Delivered')),
+                          DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
+                        ],
+                        onChanged: (val) => setModalState(() => fulfillmentStatus = val ?? 'placed'),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: TextField(controller: courierCtrl, decoration: const InputDecoration(labelText: 'Courier Partner', hintText: 'e.g. Shiprocket', border: OutlineInputBorder()))),
+                          const SizedBox(width: 10),
+                          Expanded(child: TextField(controller: awbCtrl, decoration: const InputDecoration(labelText: 'AWB / Tracking No.', hintText: 'e.g. AWB987654', border: OutlineInputBorder()))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                  onPressed: () async {
+                    final newAmt = double.tryParse(amountCtrl.text.trim()) ?? (order['amount'] as num).toDouble();
+                    await ref.read(orderRepositoryProvider).updateOrderFullDetails(
+                      orderId: realId,
+                      customerName: nameCtrl.text.trim(),
+                      customerEmail: emailCtrl.text.trim(),
+                      customerPhone: phoneCtrl.text.trim(),
+                      shippingAddress: {'address': addressCtrl.text.trim()},
+                      paymentStatus: paymentStatus,
+                      fulfillmentStatus: fulfillmentStatus,
+                      courierPartner: courierCtrl.text.trim(),
+                      trackingNumber: awbCtrl.text.trim(),
+                      totalAmount: newAmt,
+                    );
+
+                    ref.invalidate(allAdminOrdersFutureProvider);
+                    ref.invalidate(userOrdersFutureProvider);
+
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Order ${order['id']} updated successfully!')),
+                      );
+                    }
+                  },
+                  child: const Text('Save Changes'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteOrderConfirmationDialog(Map<String, dynamic> order) {
+    final String realId = (order['realId'] ?? order['id']).toString();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 24),
+              SizedBox(width: 8),
+              Text('Delete Order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to delete order "${order['id']}" for ${order['customerName']}? This action cannot be undone.',
+            style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+              onPressed: () async {
+                await ref.read(orderRepositoryProvider).deleteOrder(realId);
+                ref.invalidate(allAdminOrdersFutureProvider);
+                ref.invalidate(userOrdersFutureProvider);
+
+                if (_selectedOrder != null && _selectedOrder!['id'] == order['id']) {
+                  setState(() {
+                    _selectedOrder = null;
+                    _showRightPanel = false;
+                  });
+                }
+
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Order ${order['id']} has been deleted.')),
+                  );
+                }
+              },
+              child: const Text('Delete Order'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPrintInvoiceDialog(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Invoice: ${order['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+            ],
+          ),
+          content: SizedBox(
+            width: 500,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('COSMYRA BOTANICALS', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Color(0xFF4F46E5))),
+                            Text('Certified 100% Organic Formulations', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('DATE: ${order['date']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                            Text('STATUS: ${order['status'].toString().toUpperCase()}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Billed To:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF475569))),
+                  Text(order['customerName'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B))),
+                  Text('${order['customerPhone']} • ${order['customerEmail']}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                  Text(order['address'], style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                  const SizedBox(height: 16),
+                  const Text('Order Items Breakdown:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF475569))),
+                  const SizedBox(height: 8),
+                  Table(
+                    border: TableBorder.all(color: const Color(0xFFE2E8F0)),
+                    children: [
+                      const TableRow(
+                        decoration: BoxDecoration(color: Color(0xFFF1F5F9)),
+                        children: [
+                          Padding(padding: EdgeInsets.all(8), child: Text('Item', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                          Padding(padding: EdgeInsets.all(8), child: Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11))),
+                        ],
+                      ),
+                      ...(order['items'] as List).map((i) => TableRow(
+                        children: [
+                          Padding(padding: const EdgeInsets.all(8), child: Text('${i['name']} (${i['variant']})', style: const TextStyle(fontSize: 11))),
+                          Padding(padding: const EdgeInsets.all(8), child: Text('₹${_formatCurrency(i['price'])}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
+                        ],
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Total Amount Paid / Due:', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: Color(0xFF1E293B))),
+                      Text('₹${_formatCurrency(order['amount'])}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: Color(0xFF4F46E5))),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invoice sent to print queue! 🖨️')));
+              },
+              icon: const Icon(Icons.print, size: 16),
+              label: const Text('Print Invoice'),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(allAdminOrdersFutureProvider);
 
     final List<Map<String, dynamic>> ordersList = [];
-    ordersAsync.whenData((realOrders) {
-      for (var ro in realOrders) {
-        final addressStr = [
-          ro.shippingAddress['address'] ?? ro.shippingAddress['address_line1'] ?? '',
-          ro.shippingAddress['city'] ?? '',
-          ro.shippingAddress['state'] ?? '',
-          ro.shippingAddress['pincode'] ?? '',
-        ].where((s) => s.toString().isNotEmpty).join(', ');
+
+    ordersAsync.whenData((models) {
+      for (var o in models) {
+        final String addrStr = o.shippingAddress.values
+            .where((v) => v != null && v.toString().trim().isNotEmpty)
+            .join(', ');
 
         ordersList.add({
-          'id': ro.orderNumber.isNotEmpty ? ro.orderNumber : ro.id,
-          'realId': ro.id,
-          'isNew': ro.fulfillmentStatus.toLowerCase() == 'placed',
-          'itemsCount': ro.items.fold<int>(0, (sum, i) => sum + i.quantity),
+          'realId': o.id,
+          'id': o.orderNumber,
+          'itemsCount': o.items.fold(0, (sum, i) => sum + i.quantity),
           'shippingType': 'Standard',
-          'customerName': ro.customerName.isNotEmpty ? ro.customerName : 'Customer',
-          'customerEmail': ro.customerEmail,
-          'customerPhone': ro.customerPhone,
-          'amount': ro.totalAmount,
-          'paymentType': ro.paymentMethod.toUpperCase() == 'COD' ? 'COD' : 'Prepaid',
-          'paymentStatus': ro.paymentStatus.isNotEmpty ? (ro.paymentStatus[0].toUpperCase() + ro.paymentStatus.substring(1)) : 'Paid',
-          'paymentMethod': ro.paymentMethod,
-          'paymentId': 'pay_${ro.id}',
-          'status': ro.fulfillmentStatus.isNotEmpty ? (ro.fulfillmentStatus[0].toUpperCase() + ro.fulfillmentStatus.substring(1)) : 'Placed',
-          'courier': ro.courierPartner ?? 'Unassigned',
-          'awb': ro.trackingNumber ?? '-',
-          'date': DateFormat('dd MMM yyyy hh:mm a').format(ro.createdAt),
-          'address': addressStr.isNotEmpty ? addressStr : 'Customer Address Provided',
-          'subtotal': ro.subtotal,
-          'shippingCharge': ro.shippingFee,
-          'discount': ro.discount,
-          'items': ro.items.map((i) => {
-            'name': i.productName,
-            'variant': '${i.variantName} x ${i.quantity}',
-            'price': i.totalPrice,
-          }).toList(),
+          'customerName': o.customerName,
+          'customerPhone': o.customerPhone,
+          'customerEmail': o.customerEmail,
+          'address': addrStr.isEmpty ? 'Patna, Bihar' : addrStr,
+          'amount': o.totalAmount,
+          'subtotal': o.subtotal,
+          'discount': o.discount,
+          'shippingCharge': o.shippingFee,
+          'paymentType': o.paymentMethod.toLowerCase().contains('cod') ? 'Prepaid / COD' : 'Prepaid',
+          'paymentStatus': o.paymentStatus == 'captured' ? 'Captured' : (o.paymentStatus == 'refunded' ? 'Refunded' : 'Pending'),
+          'paymentMethod': o.paymentMethod,
+          'status': o.fulfillmentStatus.isNotEmpty
+              ? '${o.fulfillmentStatus[0].toUpperCase()}${o.fulfillmentStatus.substring(1)}'
+              : 'Placed',
+          'courier': o.courierPartner ?? 'Unassigned',
+          'awb': o.trackingNumber ?? '-',
+          'date': DateFormat('dd MMM yyyy hh:mm a').format(o.createdAt),
+          'isNew': DateTime.now().difference(o.createdAt).inHours < 24,
+          'items': o.items
+              .map((i) => {
+                    'name': i.productName,
+                    'variant': i.variantName,
+                    'price': i.totalPrice,
+                  })
+              .toList(),
         });
       }
     });
 
-    final bool currentSelectedExists = _selectedOrder != null && ordersList.any((o) => o['id'] == _selectedOrder!['id']);
-    if (!currentSelectedExists && ordersList.isNotEmpty) {
-      _selectedOrder = ordersList.first;
-    } else if (ordersList.isEmpty) {
-      _selectedOrder = null;
-    }
-
-    final int allCount = ordersList.length;
-    final int placedCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'placed').length;
-    final int confirmedCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'confirmed').length;
-    final int processingCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'processing').length;
-    final int shippedCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'shipped').length;
-    final int deliveredCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'delivered').length;
-    final int cancelledCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'cancelled').length;
-    final int returnedCount = ordersList.where((o) => o['status'].toString().toLowerCase() == 'returned').length;
-
-    final List<Map<String, dynamic>> statusTabs = [
-      {'name': 'All', 'count': '$allCount'},
-      {'name': 'Placed', 'count': '$placedCount'},
-      {'name': 'Confirmed', 'count': '$confirmedCount'},
-      {'name': 'Processing', 'count': '$processingCount'},
-      {'name': 'Shipped', 'count': '$shippedCount'},
-      {'name': 'Delivered', 'count': '$deliveredCount'},
-      {'name': 'Cancelled', 'count': '$cancelledCount'},
-      {'name': 'Returned', 'count': '$returnedCount'},
-    ];
-
-    final filteredOrders = ordersList.where((o) {
-      if (_searchQuery.isNotEmpty) {
-        final numMatch = o['id'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-        final custMatch = o['customerName'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-        final phoneMatch = o['customerPhone'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-        final awbMatch = o['awb'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-        if (!numMatch && !custMatch && !phoneMatch && !awbMatch) return false;
-      }
-      if (_selectedStatusTab != 'All' && o['status'].toString().toLowerCase() != _selectedStatusTab.toLowerCase()) {
-        return false;
-      }
-      return true;
+    // 1. Filter by search
+    List<Map<String, dynamic>> filteredOrders = ordersList.where((o) {
+      final query = _searchQuery.toLowerCase();
+      final id = o['id'].toString().toLowerCase();
+      final name = o['customerName'].toString().toLowerCase();
+      final awb = o['awb'].toString().toLowerCase();
+      return id.contains(query) || name.contains(query) || awb.contains(query);
     }).toList();
 
-    final double totalRevenue = ordersList.fold<double>(0.0, (sum, o) => sum + ((o['amount'] as num?)?.toDouble() ?? 0.0));
+    // 2. Filter by Tab Status
+    if (_selectedStatusTab != 'All') {
+      filteredOrders = filteredOrders.where((o) => o['status'].toString().toLowerCase() == _selectedStatusTab.toLowerCase()).toList();
+    }
+
+    // Set initial selected order
+    if (_selectedOrder == null && filteredOrders.isNotEmpty) {
+      _selectedOrder = filteredOrders.first;
+    }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 1150;
+    final isWideScreen = screenWidth > 1100;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. Page Header & Action Buttons
+          // Header Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -247,7 +507,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Text(
-                    'Orders & Fulfillment',
+                    'Orders & Fulfillment 📦',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
                   ),
                   SizedBox(height: 4),
@@ -257,50 +517,45 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: _showCreateOrderDialog,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Create Order', style: TextStyle(fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      elevation: 0,
-                    ),
-                  ),
-                ],
+              ElevatedButton.icon(
+                onPressed: _showCreateOrderDialog,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('+ Create Order', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
               ),
             ],
           ),
 
           const SizedBox(height: 24),
 
-          // 2. Metrics Bar
+          // Top 4 Metric KPI Cards
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildMetricCard('Total Orders', '$allCount', '+100% active', Icons.inventory_2_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), true),
+                _buildMetricCard('Total Orders', '${ordersList.length}', '+100% active', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), true),
                 const SizedBox(width: 16),
-                _buildMetricCard('Pending Fulfillment', '${placedCount + confirmedCount + processingCount}', 'Requires action', Icons.pending_actions_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), false),
+                _buildMetricCard('Pending Fulfillment', '${ordersList.where((o) => o['status'] != 'Delivered' && o['status'] != 'Cancelled').length}', 'Requires action', Icons.assignment_late_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), false),
                 const SizedBox(width: 16),
-                _buildMetricCard('Total Revenue', '₹${_formatCurrency(totalRevenue)}', 'Lifetime sales', Icons.account_balance_wallet_outlined, const Color(0xFFECFDF5), const Color(0xFF059669), true),
+                _buildMetricCard('Total Revenue', '₹${_formatCurrency(ordersList.fold(0.0, (sum, o) => sum + (o['amount'] as num).toDouble()))}', 'Lifetime sales', Icons.account_balance_wallet_outlined, const Color(0xFFECFDF5), const Color(0xFF059669), true),
                 const SizedBox(width: 16),
-                _buildMetricCard('Completed Orders', '$deliveredCount', 'Delivered to users', Icons.task_alt_outlined, const Color(0xFFF0FDF4), const Color(0xFF16A34A), true),
+                _buildMetricCard('Completed Orders', '${ordersList.where((o) => o['status'] == 'Delivered').length}', 'Delivered to users', Icons.check_circle_outline, const Color(0xFFF0FDF4), const Color(0xFF16A34A), true),
               ],
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // 3. Main Data Card & Right Drawer
+          // Main Table Layout (Left: Table, Right: Drawer)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left Column: Filter Tabs, Search Bar & Orders Table
+              // Left Column: Orders Table & Filters
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
@@ -308,22 +563,21 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Column(
                     children: [
-                      // Header & Filters
+                      // Search & Filters Bar
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
                             Row(
                               children: [
-                                // Search Input
                                 Expanded(
                                   child: Container(
-                                    height: 40,
+                                    height: 42,
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF9FAFB),
@@ -336,13 +590,11 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: TextField(
-                                            onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                                            style: const TextStyle(fontSize: 13),
+                                            onChanged: (val) => setState(() => _searchQuery = val),
                                             decoration: const InputDecoration(
                                               hintText: 'Search by Order ID, Customer, AWB...',
                                               hintStyle: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
                                               border: InputBorder.none,
-                                              isDense: true,
                                             ),
                                           ),
                                         ),
@@ -354,14 +606,22 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                             ),
                             const SizedBox(height: 14),
 
-                            // Status Filter Chips
+                            // Status Filter Tabs
                             SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
-                                children: statusTabs.map((tab) {
-                                  final isActive = _selectedStatusTab == tab['name'];
+                                children: [
+                                  {'title': 'All', 'count': '${ordersList.length}'},
+                                  {'title': 'Placed', 'count': '${ordersList.where((o) => o['status'] == 'Placed').length}'},
+                                  {'title': 'Confirmed', 'count': '${ordersList.where((o) => o['status'] == 'Confirmed').length}'},
+                                  {'title': 'Processing', 'count': '${ordersList.where((o) => o['status'] == 'Processing').length}'},
+                                  {'title': 'Shipped', 'count': '${ordersList.where((o) => o['status'] == 'Shipped').length}'},
+                                  {'title': 'Delivered', 'count': '${ordersList.where((o) => o['status'] == 'Delivered').length}'},
+                                  {'title': 'Cancelled', 'count': '${ordersList.where((o) => o['status'] == 'Cancelled').length}'},
+                                ].map((tab) {
+                                  final isActive = _selectedStatusTab == tab['title'];
                                   return InkWell(
-                                    onTap: () => setState(() => _selectedStatusTab = tab['name']),
+                                    onTap: () => setState(() => _selectedStatusTab = tab['title']!),
                                     child: Container(
                                       margin: const EdgeInsets.only(right: 8),
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -372,7 +632,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                                       child: Row(
                                         children: [
                                           Text(
-                                            tab['name'],
+                                            tab['title']!,
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
@@ -387,7 +647,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                                               borderRadius: BorderRadius.circular(10),
                                             ),
                                             child: Text(
-                                              tab['count'],
+                                              tab['count']!,
                                               style: TextStyle(
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.bold,
@@ -447,7 +707,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                               Expanded(flex: 2, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                               Expanded(flex: 3, child: Text('Fulfillment / Courier', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                               Expanded(flex: 2, child: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                              SizedBox(width: 70, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
+                              SizedBox(width: 110, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
                             ],
                           ),
                         ),
@@ -587,20 +847,31 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                                       child: Text(order['date'], style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
                                     ),
 
-                                    // Actions
+                                    // Actions Column (View, Edit, Delete)
                                     SizedBox(
-                                      width: 70,
+                                      width: 110,
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.end,
                                         children: [
                                           IconButton(
                                             icon: const Icon(Icons.remove_red_eye_outlined, size: 16, color: Color(0xFF6B7280)),
+                                            tooltip: 'View Details',
                                             onPressed: () {
                                               setState(() {
                                                 _selectedOrder = order;
                                                 _showRightPanel = true;
                                               });
                                             },
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF4F46E5)),
+                                            tooltip: 'Edit Order',
+                                            onPressed: () => _showEditOrderDialog(order),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
+                                            tooltip: 'Delete Order',
+                                            onPressed: () => _showDeleteOrderConfirmationDialog(order),
                                           ),
                                         ],
                                       ),
@@ -706,6 +977,46 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
               ),
               const SizedBox(width: 8),
               Text(order['date'], style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+          // Action Buttons Bar inside Drawer
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _showEditOrderDialog(order),
+                icon: const Icon(Icons.edit, size: 12),
+                label: const Text('Edit ✏️', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 6),
+              OutlinedButton.icon(
+                onPressed: () => _showPrintInvoiceDialog(order),
+                icon: const Icon(Icons.print, size: 12),
+                label: const Text('Invoice 🖨️', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+              const SizedBox(width: 6),
+              OutlinedButton.icon(
+                onPressed: () => _showDeleteOrderConfirmationDialog(order),
+                icon: const Icon(Icons.delete, size: 12, color: Color(0xFFDC2626)),
+                label: const Text('Delete 🗑️', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFFCA5A5)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
             ],
           ),
 

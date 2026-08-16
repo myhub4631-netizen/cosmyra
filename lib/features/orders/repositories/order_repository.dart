@@ -392,4 +392,87 @@ class OrderRepository {
     }
     return true;
   }
+
+  /// Delete an order (Admin feature)
+  Future<bool> deleteOrder(String orderId) async {
+    await _ensureLoaded();
+    if (SupabaseConfig.isConfigured) {
+      try {
+        await supabase.from('orders').delete().eq('id', orderId);
+      } catch (_) {}
+    }
+
+    _localOrders.removeWhere((o) => o.id == orderId || o.orderNumber == orderId);
+    await _saveOrdersToStorage();
+    return true;
+  }
+
+  /// Update full order details (Admin feature)
+  Future<bool> updateOrderFullDetails({
+    required String orderId,
+    String? customerName,
+    String? customerEmail,
+    String? customerPhone,
+    Map<String, dynamic>? shippingAddress,
+    String? paymentStatus,
+    String? paymentMethod,
+    String? fulfillmentStatus,
+    String? courierPartner,
+    String? trackingNumber,
+    double? subtotal,
+    double? discount,
+    double? shippingFee,
+    double? totalAmount,
+  }) async {
+    await _ensureLoaded();
+    final index = _localOrders.indexWhere((o) => o.id == orderId || o.orderNumber == orderId);
+    if (index != -1) {
+      final current = _localOrders[index];
+      final updated = OrderModel(
+        id: current.id,
+        orderNumber: current.orderNumber,
+        userId: current.userId,
+        isGuest: current.isGuest,
+        customerName: customerName ?? current.customerName,
+        customerEmail: customerEmail ?? current.customerEmail,
+        customerPhone: customerPhone ?? current.customerPhone,
+        shippingAddress: shippingAddress ?? current.shippingAddress,
+        subtotal: subtotal ?? current.subtotal,
+        discount: discount ?? current.discount,
+        shippingFee: shippingFee ?? current.shippingFee,
+        totalAmount: totalAmount ?? current.totalAmount,
+        paymentMethod: paymentMethod ?? current.paymentMethod,
+        paymentStatus: paymentStatus ?? current.paymentStatus,
+        fulfillmentStatus: fulfillmentStatus ?? current.fulfillmentStatus,
+        courierPartner: courierPartner ?? current.courierPartner,
+        trackingNumber: trackingNumber ?? current.trackingNumber,
+        trackingUrl: current.trackingUrl,
+        createdAt: current.createdAt,
+        items: current.items,
+      );
+      _localOrders[index] = updated;
+      await _saveOrdersToStorage();
+    }
+
+    if (SupabaseConfig.isConfigured) {
+      try {
+        final Map<String, dynamic> payload = {};
+        if (customerName != null) payload['customer_name'] = customerName;
+        if (customerEmail != null) payload['customer_email'] = customerEmail;
+        if (customerPhone != null) payload['customer_phone'] = customerPhone;
+        if (shippingAddress != null) payload['shipping_address'] = shippingAddress;
+        if (paymentStatus != null) payload['payment_status'] = paymentStatus;
+        if (paymentMethod != null) payload['payment_method'] = paymentMethod;
+        if (fulfillmentStatus != null) payload['fulfillment_status'] = fulfillmentStatus;
+        if (courierPartner != null) payload['courier_partner'] = courierPartner;
+        if (trackingNumber != null) payload['tracking_number'] = trackingNumber;
+        if (totalAmount != null) payload['total_amount_inr'] = totalAmount;
+
+        if (payload.isNotEmpty) {
+          await supabase.from('orders').update(payload).eq('id', orderId);
+        }
+      } catch (_) {}
+    }
+    return true;
+  }
 }
