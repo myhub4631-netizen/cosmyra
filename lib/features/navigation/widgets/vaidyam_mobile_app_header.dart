@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../admin/controllers/brand_settings_controller.dart';
+import '../../admin/controllers/mobile_app_settings_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 
 class VaidyamMobileAppHeader extends ConsumerWidget {
@@ -20,11 +21,12 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final brandSettings = ref.watch(brandSettingsProvider);
+    final mobileSettings = ref.watch(mobileAppSettingsProvider);
     final cartState = ref.watch(cartProvider);
     final int cartCount = cartState.totalItemCount;
 
-    final String logoUrl = brandSettings.headerLogoUrl;
-    final String brandName = brandSettings.brandName.isNotEmpty ? brandSettings.brandName : 'Vaidyam';
+    final String logoUrl = mobileSettings.mobileLogoUrl.isNotEmpty ? mobileSettings.mobileLogoUrl : brandSettings.headerLogoUrl;
+    final String brandName = mobileSettings.mobileAppName.isNotEmpty ? mobileSettings.mobileAppName : (brandSettings.brandName.isNotEmpty ? brandSettings.brandName : 'Vaidyam');
     final String brandTagline = brandSettings.brandTagline.isNotEmpty ? brandSettings.brandTagline : 'Botanicals';
 
     return Container(

@@ -6,6 +6,7 @@ import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
+import '../../admin/controllers/mobile_app_settings_controller.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../../navigation/widgets/vaidyam_mobile_app_header.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
@@ -85,6 +86,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
+    final mobileSettings = ref.watch(mobileAppSettingsProvider);
     final int cartCount = cartState.totalItemCount;
 
     return Scaffold(
@@ -95,13 +97,26 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 0. Top Announcement Marquee Bar (Managed via Mobile App Panel)
+              if (mobileSettings.showAnnouncementBar && mobileSettings.announcementBarText.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  color: const Color(0xFF4338CA),
+                  child: Text(
+                    mobileSettings.announcementBarText,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
               // 1. App Header with Hamburger, Admin-managed Logo & Brand Text, Search Bar, Bell & Cart
               const VaidyamMobileAppHeader(),
 
               const SizedBox(height: 8),
 
               // 3. Horizontal Category Story Bubbles
-              _buildCategoryStoryBubbles(),
+              if (mobileSettings.showCategoryGrid) _buildCategoryStoryBubbles(),
 
               const SizedBox(height: 16),
 

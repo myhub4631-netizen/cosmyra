@@ -11,6 +11,7 @@ import 'admin_dashboard_screen.dart';
 
 import '../widgets/admin_branding_view.dart';
 import '../widgets/admin_coupons_view.dart';
+import '../widgets/admin_mobile_app_view.dart';
 
 class AdminMasterScreen extends ConsumerStatefulWidget {
   const AdminMasterScreen({super.key});
@@ -75,6 +76,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminHomepageCmsView(),
       const AdminFooterCmsView(),
       const AdminBrandingView(),
+      const AdminMobileAppView(),
     ];
 
     return Scaffold(
@@ -358,6 +360,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
 
                 const SizedBox(height: 16),
                 _groupHeader('SALES CHANNELS'),
+                _navItem('Mobile App Panel 📱', Icons.phone_iphone_outlined, 10),
                 _navItem('Website', Icons.web_outlined, 7, hasChildren: true),
                 if (_expandedParentMenus.contains('Website')) ...[
                   _subNavItem('Homepage', 7, () => setState(() => _activeViewIndex = 7)),
