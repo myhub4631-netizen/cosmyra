@@ -141,7 +141,7 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
           ),
           child: Row(
             children: [
-              // Brand Logo & Tagline
+              // Brand Logo
               InkWell(
                 onTap: () => context.go('/'),
                 child: Row(
@@ -149,14 +149,14 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                   children: [
                     if (brandSettings.headerLogoUrl.isNotEmpty)
                       ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 52, maxWidth: 260),
+                        constraints: const BoxConstraints(maxHeight: 56, maxWidth: 280),
                         child: ProductImageWidget(
                           imageUrl: brandSettings.headerLogoUrl,
-                          height: 52,
+                          height: 56,
                           fit: BoxFit.contain,
                         ),
                       )
-                    else
+                    else ...[
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
@@ -165,7 +165,6 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                         ),
                         child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
                       ),
-                    if (!brandSettings.hideBrandTextWithLogo || brandSettings.headerLogoUrl.isEmpty) ...[
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

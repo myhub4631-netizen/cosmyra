@@ -214,18 +214,18 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
       children: [
         // Brand Logo
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (customLogo.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 48, maxWidth: 220),
                 child: ProductImageWidget(
                   imageUrl: customLogo,
-                  width: 36,
-                  height: 36,
+                  height: 48,
                   fit: BoxFit.contain,
                 ),
               )
-            else
+            else ...[
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -234,16 +234,17 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
                 ),
                 child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
               ),
-            const SizedBox(width: 10),
-            Text(
-              brandSettings.brandName.isNotEmpty ? brandSettings.brandName : footerState.brandName,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: -0.5,
+              const SizedBox(width: 10),
+              Text(
+                brandSettings.brandName.isNotEmpty ? brandSettings.brandName : footerState.brandName,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
+            ],
           ],
         ),
         const SizedBox(height: 14),
