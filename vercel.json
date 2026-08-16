@@ -1,10 +1,21 @@
 {
   "version": 2,
   "outputDirectory": "build/web",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/cosmyra_app.apk",
+      "dest": "/cosmyra_app.apk",
+      "headers": {
+        "Content-Type": "application/vnd.android.package-archive",
+        "Content-Disposition": "attachment; filename=cosmyra_app.apk"
+      }
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
