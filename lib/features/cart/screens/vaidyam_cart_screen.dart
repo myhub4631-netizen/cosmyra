@@ -5,6 +5,7 @@ import '../controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
 class VaidyamCartScreen extends ConsumerStatefulWidget {
   const VaidyamCartScreen({super.key});
@@ -66,6 +67,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      bottomNavigationBar: screenWidth <= 768 ? const VaidyamMobileBottomNavBar(activeTab: 'Cart') : null,
       body: SingleChildScrollView(
         child: Column(
           children: [

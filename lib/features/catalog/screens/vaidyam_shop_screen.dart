@@ -6,6 +6,7 @@ import '../../../config/theme/app_colors.dart';
 import '../../../shared/widgets/center_action_toast.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
+import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
@@ -80,8 +81,6 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
     // Sorting
     if (_sortBy == 'Price: Low to High') {
       filteredProducts.sort((a, b) => a.defaultVariant.price.compareTo(b.defaultVariant.price));
-    } else if (_sortBy == 'Price: High to Low') {
-      filteredProducts.sort((a, b) => b.defaultVariant.price.compareTo(a.defaultVariant.price));
     } else if (_sortBy == 'Newest') {
       filteredProducts.sort((a, b) => b.id.compareTo(a.id));
     }
@@ -91,6 +90,7 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
+      bottomNavigationBar: screenWidth <= 768 ? const VaidyamMobileBottomNavBar(activeTab: 'Categories') : null,
       body: SingleChildScrollView(
         child: Column(
         children: [

@@ -12,6 +12,7 @@ import '../widgets/product_image_widget.dart';
 
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
+import '../widgets/vaidyam_mobile_home_screen_widget.dart';
 
 class VaidyamHomeScreen extends ConsumerStatefulWidget {
   const VaidyamHomeScreen({super.key});
@@ -114,7 +115,6 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
@@ -137,6 +137,13 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'rawModel': p,
       };
     }).toList();
+
+    if (screenWidth <= 768) {
+      return VaidyamMobileHomeScreenWidget(
+        activeProducts: activeProducts,
+        onAddToCart: _addDealToCart,
+      );
+    }
 
     return Scaffold(
       backgroundColor: _lightBg,

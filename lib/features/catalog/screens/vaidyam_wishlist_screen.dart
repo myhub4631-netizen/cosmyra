@@ -10,6 +10,7 @@ import '../widgets/product_image_widget.dart';
 
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
+import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
 class VaidyamWishlistScreen extends ConsumerStatefulWidget {
   const VaidyamWishlistScreen({super.key});
@@ -101,6 +102,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
 
     return Scaffold(
       backgroundColor: _lightBg,
+      bottomNavigationBar: screenWidth <= 768 ? const VaidyamMobileBottomNavBar(activeTab: 'Wishlist') : null,
       body: SingleChildScrollView(
         child: Column(
           children: [

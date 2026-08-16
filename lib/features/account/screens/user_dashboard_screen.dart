@@ -10,6 +10,7 @@ import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
+import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../../orders/repositories/order_repository.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
@@ -920,6 +921,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F6),
+      bottomNavigationBar: screenWidth <= 768 ? const VaidyamMobileBottomNavBar(activeTab: 'Account') : null,
       body: SingleChildScrollView(
         child: Column(
           children: [
