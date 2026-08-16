@@ -22,6 +22,7 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
   int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website (Homepage), 8: Website (Footer), 9: Logo & Branding, 10: Mobile App Panel
+  int _mobileAppSubTab = 0;
 
   // Expanded parent menus
   final Set<String> _expandedParentMenus = {'Website', 'Mobile App', 'COMMERCE'};
@@ -82,7 +83,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminHomepageCmsView(),
       const AdminFooterCmsView(),
       const AdminBrandingView(),
-      const AdminMobileAppView(),
+      AdminMobileAppView(key: ValueKey('mobile_app_tab_$_mobileAppSubTab'), initialSubTab: _mobileAppSubTab),
     ];
 
     return Scaffold(
@@ -380,12 +381,12 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
 
                 _navItem('Mobile App', Icons.phone_iphone_rounded, 10, hasChildren: true),
                 if (_expandedParentMenus.contains('Mobile App')) ...[
-                  _subNavItem('App Banners', 10, () => setState(() => _activeViewIndex = 10)),
-                  _subNavItem('App Pages', 10, () => setState(() => _activeViewIndex = 10)),
-                  _subNavItem('App Categories', 10, () => setState(() => _activeViewIndex = 10)),
-                  _subNavItem('App Collections', 10, () => setState(() => _activeViewIndex = 10)),
-                  _subNavItem('App Configurations', 10, () => setState(() => _activeViewIndex = 10)),
-                  _subNavItem('Bottom Navigation', 10, () => setState(() => _activeViewIndex = 10)),
+                  _subNavItem('App Banners', 10, () => setState(() { _mobileAppSubTab = 0; _activeViewIndex = 10; })),
+                  _subNavItem('App Pages', 10, () => setState(() { _mobileAppSubTab = 1; _activeViewIndex = 10; })),
+                  _subNavItem('App Categories', 10, () => setState(() { _mobileAppSubTab = 2; _activeViewIndex = 10; })),
+                  _subNavItem('App Collections', 10, () => setState(() { _mobileAppSubTab = 3; _activeViewIndex = 10; })),
+                  _subNavItem('App Configurations', 10, () => setState(() { _mobileAppSubTab = 4; _activeViewIndex = 10; })),
+                  _subNavItem('Bottom Navigation', 10, () => setState(() { _mobileAppSubTab = 5; _activeViewIndex = 10; })),
                 ],
 
                 const SizedBox(height: 14),
