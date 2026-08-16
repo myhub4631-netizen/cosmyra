@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../admin/controllers/brand_settings_controller.dart';
 import '../../admin/controllers/mobile_app_settings_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
+import 'vaidyam_app_drawer_sheet.dart';
 
 class VaidyamMobileAppHeader extends ConsumerWidget {
   final VoidCallback? onOpenDrawer;
@@ -40,7 +41,7 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
             icon: const Icon(Icons.menu_rounded, color: _textDark, size: 24),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            onPressed: onOpenDrawer ?? () => _showCategoryDrawerSheet(context),
+            onPressed: onOpenDrawer ?? () => VaidyamAppDrawerSheet.show(context),
           ),
 
           const SizedBox(width: 8),
