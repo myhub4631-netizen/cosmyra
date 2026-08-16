@@ -6,6 +6,7 @@ import '../../catalog/repositories/product_repository.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
+import '../widgets/vaidyam_mobile_cart_screen_widget.dart';
 
 class VaidyamCartScreen extends ConsumerStatefulWidget {
   const VaidyamCartScreen({super.key});
@@ -64,6 +65,17 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 950;
+
+    if (screenWidth <= 768) {
+      return VaidyamMobileCartScreenWidget(
+        itemsList: itemsList,
+        totalMrp: totalMrp,
+        subtotal: subtotal,
+        discount: discount,
+        finalTotal: finalTotal,
+        itemCount: itemCount,
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
