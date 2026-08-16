@@ -107,6 +107,39 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
         children: [
           const VaidyamHeaderWidget(activeTab: 'Shop', showValuePropositions: true),
 
+          if (screenWidth <= 768 && _selectedCategory != null)
+            Container(
+              width: double.infinity,
+              color: const Color(0xFFEEF2FF),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategory = null;
+                      });
+                    },
+                    child: Row(
+                      children: const [
+                        Icon(Icons.arrow_back_ios_new_rounded, size: 14, color: Color(0xFF4338CA)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Back to All Categories',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4338CA)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Category: ${_selectedCategory!}',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            ),
+
           const SizedBox(height: 16),
 
           // 4. Main Body: Responsive Filter Sidebar + Products Catalog Grid

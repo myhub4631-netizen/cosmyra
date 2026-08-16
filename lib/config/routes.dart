@@ -16,6 +16,7 @@ import '../features/auth/screens/login_screen.dart';
 import '../features/account/screens/user_dashboard_screen.dart';
 
 import '../features/catalog/screens/vaidyam_home_screen.dart';
+import '../features/catalog/screens/vaidyam_shop_screen.dart';
 import '../features/catalog/screens/vaidyam_wishlist_screen.dart';
 import '../features/orders/screens/vaidyam_orders_screen.dart';
 
@@ -25,6 +26,18 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const VaidyamHomeScreen(),
+    ),
+    GoRoute(
+      path: '/shop',
+      builder: (context, state) => const VaidyamShopScreen(),
+    ),
+    GoRoute(
+      path: '/categories',
+      builder: (context, state) => const VaidyamShopScreen(),
+    ),
+    GoRoute(
+      path: '/category',
+      builder: (context, state) => const VaidyamShopScreen(),
     ),
     GoRoute(
       path: '/explore',
