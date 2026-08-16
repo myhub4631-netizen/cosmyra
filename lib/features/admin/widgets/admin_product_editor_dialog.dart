@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/theme/app_colors.dart';
@@ -111,6 +113,73 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
     _keywordsController.dispose();
     _canonicalUrlController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickLocalComputerImage() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        final bytes = file.bytes;
+        if (bytes != null) {
+          final extension = file.extension?.toLowerCase() ?? 'jpg';
+          final mimeType = extension == 'png'
+              ? 'image/png'
+              : extension == 'webp'
+                  ? 'image/webp'
+                  : extension == 'gif'
+                      ? 'image/gif'
+                      : extension == 'bmp'
+                          ? 'image/bmp'
+                          : 'image/jpeg';
+          final base64String = base64Encode(bytes);
+          final dataUrl = 'data:$mimeType;base64,$base64String';
+
+          setState(() {
+            _imageUrls.add(dataUrl);
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✓ Custom image "${file.name}" added successfully!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error selecting image: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  ImageProvider _getGalleryImageProvider(String url) {
+    if (url.startsWith('data:')) {
+      try {
+        final base64Str = url.split(',').last;
+        return MemoryImage(base64Decode(base64Str));
+      } catch (_) {
+        return const AssetImage('assets/images/shampoo.jpg');
+      }
+    } else if (url.startsWith('http://') || url.startsWith('https://')) {
+      return NetworkImage(url);
+    } else if (url.isNotEmpty) {
+      return AssetImage(url);
+    }
+    return const AssetImage('assets/images/shampoo.jpg');
   }
 
   @override
@@ -394,13 +463,58 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Computer File Upload Card Container
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1F2937) : const Color(0xFFF9FAFB),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.cloud_upload_outlined, color: AppColors.forestSage, size: 22),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Upload Custom Image from Computer',
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textDarkPrimary),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Select high quality photos from your device (JPG, JPEG, PNG, WEBP, GIF, BMP)',
+                                style: TextStyle(fontSize: 11, color: AppColors.textDarkSecondary),
+                              ),
+                              const SizedBox(height: 12),
+                              ElevatedButton.icon(
+                                onPressed: _pickLocalComputerImage,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.forestSage,
+                                  foregroundColor: AppColors.softWhite,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                icon: const Icon(Icons.folder_open, size: 18),
+                                label: const Text('Browse Files from Computer', style: TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Web URL / Asset Path Option
                         Row(
                           children: [
                             Expanded(
                               child: TextField(
                                 controller: _newImageUrlController,
                                 decoration: const InputDecoration(
-                                  labelText: 'Add Product Image Asset URL or File Path',
+                                  labelText: 'Or Paste Image URL / Asset Path',
                                   hintText: 'assets/images/shampoo.jpg or https://...',
                                 ),
                               ),
@@ -417,7 +531,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                               },
                               style: ElevatedButton.styleFrom(backgroundColor: AppColors.forestSage, foregroundColor: AppColors.softWhite),
                               icon: const Icon(Icons.add_photo_alternate, size: 18),
-                              label: const Text('Add Image'),
+                              label: const Text('Add URL'),
                             ),
                           ],
                         ),
@@ -472,7 +586,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                                       color: AppColors.forestSage.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                       image: DecorationImage(
-                                        image: url.startsWith('http') ? NetworkImage(url) as ImageProvider : AssetImage(url),
+                                        image: _getGalleryImageProvider(url),
                                         fit: BoxFit.cover,
                                         onError: (_, __) {},
                                       ),

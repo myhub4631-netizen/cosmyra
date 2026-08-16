@@ -764,7 +764,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                 borderRadius: BorderRadius.circular(8),
                                                 image: imageUrl.isNotEmpty
                                                     ? DecorationImage(
-                                                        image: imageUrl.startsWith('http') ? NetworkImage(imageUrl) as ImageProvider : AssetImage(imageUrl),
+                                                        image: imageUrl.startsWith('data:')
+                                                            ? MemoryImage(base64Decode(imageUrl.split(',').last)) as ImageProvider
+                                                            : (imageUrl.startsWith('http') ? NetworkImage(imageUrl) as ImageProvider : AssetImage(imageUrl)),
                                                         fit: BoxFit.cover,
                                                       )
                                                     : null,

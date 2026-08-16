@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -447,9 +448,11 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
                       color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(8),
                       image: DecorationImage(
-                        image: (p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('http'))
-                            ? NetworkImage(p.imageUrls.first) as ImageProvider
-                            : AssetImage(p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg'),
+                        image: p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('data:')
+                            ? MemoryImage(base64Decode(p.imageUrls.first.split(',').last)) as ImageProvider
+                            : ((p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('http'))
+                                ? NetworkImage(p.imageUrls.first) as ImageProvider
+                                : AssetImage(p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg')),
                         fit: BoxFit.cover,
                       ),
                     ),
