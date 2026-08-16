@@ -86,46 +86,7 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(width: 10),
-
-          // 3. Center Pill Search Field
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.push('/shop'),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search_rounded, color: _textDark, size: 18),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'Search for products, categories...',
-                        style: TextStyle(fontSize: 11, color: _textMuted),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.mic_none_rounded, color: _textDark, size: 18),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Voice search activated 🎙️')),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          const Spacer(),
 
           const SizedBox(width: 8),
 

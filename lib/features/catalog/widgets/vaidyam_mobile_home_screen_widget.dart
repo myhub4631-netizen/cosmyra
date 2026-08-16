@@ -10,6 +10,7 @@ import '../../admin/controllers/mobile_app_settings_controller.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../../navigation/widgets/vaidyam_mobile_app_header.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../../../shared/widgets/vaidyam_mobile_ajax_search_bar.dart';
 
 class VaidyamMobileHomeScreenWidget extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> activeProducts;
@@ -117,6 +118,11 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
 
               // 3. Horizontal Category Story Bubbles
               if (mobileSettings.showCategoryGrid) _buildCategoryStoryBubbles(),
+
+              const SizedBox(height: 12),
+
+              // 3.5 Dynamic Live AJAX Search Box (Blue Box Location!)
+              const VaidyamMobileAjaxSearchBar(),
 
               const SizedBox(height: 16),
 
