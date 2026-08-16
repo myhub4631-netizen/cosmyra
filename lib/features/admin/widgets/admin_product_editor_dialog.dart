@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:html' as html;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/theme/app_colors.dart';
@@ -38,13 +40,13 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
   bool _pittaBalance = true;
   bool _kaphaBalance = false;
 
-  // Tab 3: Images
+  // Tab 3: Image Gallery
   late List<String> _imageUrls;
-  final TextEditingController _newImageUrlController = TextEditingController();
   int _primaryImageIndex = 0;
+  late TextEditingController _newImageUrlController;
   late TextEditingController _imageAltController;
 
-  // Tab 4: SEO Metadata
+  // Tab 4: SEO & Metadata
   late TextEditingController _metaTitleController;
   late TextEditingController _metaDescController;
   late TextEditingController _keywordsController;
@@ -54,32 +56,30 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    final p = widget.product;
-    final v = p?.defaultVariant;
 
+    final p = widget.product;
     _nameController = TextEditingController(text: p?.name ?? '');
     _slugController = TextEditingController(text: p?.slug ?? '');
-    _skuController = TextEditingController(text: v?.sku ?? 'VDM-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}');
-    _sizeController = TextEditingController(text: v?.sizeLabel ?? '200 ml');
-    _priceController = TextEditingController(text: v != null ? v.price.toInt().toString() : '399');
-    _mrpController = TextEditingController(text: v != null ? v.mrp.toInt().toString() : '499');
-    _stockController = TextEditingController(text: v != null ? v.stock.toString() : '100');
-    
-    final validCats = ['cat-haircare', 'cat-skincare', 'cat-wellness'];
-    _selectedCategory = (p != null && validCats.contains(p.categoryId)) ? p.categoryId : 'cat-haircare';
+    _skuController = TextEditingController(text: p?.defaultVariant.sku ?? '');
+    _sizeController = TextEditingController(text: p?.defaultVariant.sizeLabel ?? '');
+    _priceController = TextEditingController(text: p?.defaultVariant.price.toInt().toString() ?? '');
+    _mrpController = TextEditingController(text: p?.defaultVariant.mrp.toInt().toString() ?? '');
+    _stockController = TextEditingController(text: p?.defaultVariant.stock.toString() ?? '100');
+    _selectedCategory = p?.categoryId ?? 'cat-haircare';
     _isFeatured = p?.isFeatured ?? false;
 
     _taglineController = TextEditingController(text: p?.tagline ?? 'Clinically proven botanical formulation');
     _descController = TextEditingController(text: p?.description ?? '');
     _ingredientsController = TextEditingController(text: p?.ingredients ?? '');
     _howToUseController = TextEditingController(text: p?.howToUse ?? 'Apply generously onto damp area and massage gently for 2 minutes.');
+    _vataBalance = true;
+    _pittaBalance = true;
+    _kaphaBalance = false;
 
     _imageUrls = p != null && p.imageUrls.isNotEmpty
         ? List.from(p.imageUrls)
-        : [
-            'assets/images/shampoo.jpg',
-            'assets/images/soap.jpg',
-          ];
+        : ['assets/images/shampoo.jpg'];
+    _newImageUrlController = TextEditingController();
     _imageAltController = TextEditingController(text: '${p?.name ?? "Cosmyra Product"} - Vaidyam Botanicals');
 
     _metaTitleController = TextEditingController(text: p != null ? '${p.name} | Cosmyra Vaidyam Botanicals' : 'Ayurvedic Botanical Skin & Haircare | Cosmyra');
@@ -116,6 +116,52 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
   }
 
   Future<void> _pickLocalComputerImage() async {
+    if (kIsWeb) {
+      try {
+        final uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = '.jpg,.jpeg,.png,.webp,.gif,.bmp,image/*';
+        uploadInput.multiple = false;
+        uploadInput.click();
+
+        uploadInput.onChange.listen((event) {
+          final files = uploadInput.files;
+          if (files != null && files.isNotEmpty) {
+            final file = files[0];
+            final reader = html.FileReader();
+
+            reader.onLoadEnd.listen((e) {
+              final result = reader.result;
+              if (result != null && result is String) {
+                setState(() {
+                  _imageUrls.add(result);
+                });
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('✓ Custom image "${file.name}" uploaded successfully!'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              }
+            });
+
+            reader.readAsDataUrl(file);
+          }
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error selecting image: $e'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+      return;
+    }
+
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
