@@ -7,6 +7,7 @@ import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../coupons/controllers/coupon_controller.dart';
 import '../../orders/repositories/order_repository.dart';
+import '../widgets/vaidyam_mobile_checkout_screen_widget.dart';
 
 class VaidyamCheckoutScreen extends ConsumerStatefulWidget {
   const VaidyamCheckoutScreen({super.key});
@@ -78,9 +79,102 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
     final double discount = cartState.couponDiscount;
     final double shippingFee = cartState.shippingFee;
     final double total = cartState.finalTotal;
-
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 950;
+
+    final List<Map<String, dynamic>> itemsList = cartState.items.asMap().entries.map((entry) {
+      final item = entry.value;
+      return <String, dynamic>{
+        'id': item.product.id,
+        'name': item.product.name,
+        'category': item.product.categoryId,
+        'variant': item.variant.sizeLabel.isNotEmpty ? item.variant.sizeLabel : 'Standard Pack',
+        'price': item.variant.price,
+        'mrp': item.variant.mrp,
+        'quantity': item.quantity,
+        'image': item.product.imageUrls.isNotEmpty ? item.product.imageUrls.first : 'assets/images/shampoo.jpg',
+        'index': entry.key,
+      };
+    }).toList();
+
+    if (screenWidth <= 768) {
+      final auth = ref.watch(authControllerProvider);
+      final user = ref.watch(currentUserProvider);
+      final String name = _nameController.text.trim().isNotEmpty
+          ? _nameController.text.trim()
+          : (auth.userName ?? user?.userMetadata?['full_name'] ?? 'Mahboob Hasan');
+      final String phone = _phoneController.text.trim().isNotEmpty
+          ? _phoneController.text.trim()
+          : (auth.userPhone ?? user?.phone ?? '+91 94730 40903');
+
+      return VaidyamMobileCheckoutScreenWidget(
+        itemsList: itemsList,
+        subtotal: subtotal,
+        discount: discount,
+        shippingFee: shippingFee,
+        finalTotal: total,
+        userName: name,
+        userPhone: phone,
+        address: _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Glen Heights, Bellandur',
+        city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Bengaluru',
+        state: _selectedState.isNotEmpty ? _selectedState : 'Karnataka',
+        pincode: _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '560103',
+        onPlaceOrder: () async {
+          final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
+                userId: user?.id,
+                isGuest: auth.isGuest,
+                customerName: name,
+                customerEmail: auth.userEmail ?? user?.email ?? 'customer@cosmyra.cloud',
+                customerPhone: phone,
+                shippingAddress: {
+                  'name': name,
+                  'phone': phone,
+                  'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Glen Heights, Bellandur',
+                  'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Bengaluru',
+                  'state': _selectedState,
+                  'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '560103',
+                },
+                cartItems: cartState.items,
+                subtotal: subtotal,
+                discount: discount,
+                shippingFee: 0.0,
+                totalAmount: total,
+                paymentMethod: _selectedPaymentMethod,
+              );
+
+          ref.invalidate(userOrdersFutureProvider);
+          ref.invalidate(allAdminOrdersFutureProvider);
+          ref.read(cartProvider.notifier).clearCart();
+
+          if (!context.mounted) return;
+
+          showDialog(
+            context: context,
+            builder: (dialogCtx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: const [
+                  Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
+                  SizedBox(width: 10),
+                  Text('Order Placed! 🛍️'),
+                ],
+              ),
+              content: Text('Order #${placedOrder.id} has been placed successfully!\n\nThank you for shopping with Cosmyra.'),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(dialogCtx);
+                    context.go('/account');
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4338CA)),
+                  child: const Text('View Order Details', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F6),
