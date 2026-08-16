@@ -857,6 +857,27 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                                   _selectedOrder = order;
                                   _showRightPanel = true;
                                 });
+                                if (!isWideScreen) {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                                    builder: (context) {
+                                      return DraggableScrollableSheet(
+                                        initialChildSize: 0.85,
+                                        maxChildSize: 0.95,
+                                        minChildSize: 0.5,
+                                        expand: false,
+                                        builder: (context, scrollCtrl) {
+                                          return SingleChildScrollView(
+                                            controller: scrollCtrl,
+                                            child: _buildOrderDetailsDrawer(order),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                }
                               },
                               child: Container(
                                 color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,

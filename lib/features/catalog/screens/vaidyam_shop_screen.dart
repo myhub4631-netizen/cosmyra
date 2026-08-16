@@ -98,235 +98,108 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
 
           const SizedBox(height: 16),
 
-          // 4. Main Body: Left Filter Sidebar + Right Products Catalog
+          // 4. Main Body: Responsive Filter Sidebar + Products Catalog Grid
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left Filter Sidebar (260px)
-                SizedBox(
-                  width: 260,
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFF3F4F6)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Categories Filter
-                        const Text('Shop by Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
-                        const SizedBox(height: 12),
-                        _buildCategoryItem('All Categories', null, allProducts.length),
-                        _buildCategoryItem('Haircare', 'cat-haircare', allProducts.where((p) => p.categoryId == 'cat-haircare').length),
-                        _buildCategoryItem('Skincare', 'cat-skincare', allProducts.where((p) => p.categoryId == 'cat-skincare').length),
-                        _buildCategoryItem('Wellness Oils', 'cat-wellness', allProducts.where((p) => p.categoryId == 'cat-wellness').length),
-                        _buildCategoryItem('Soaps & Bars', 'cat-skincare', allProducts.where((p) => p.name.contains('Soap')).length),
-                        _buildCategoryItem('Elixirs', 'cat-skincare', 4),
-
-                        const Divider(height: 32),
-
-                        // Price Range Slider
-                        const Text('Filter By Price Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
-                        const SizedBox(height: 12),
-                        RangeSlider(
-                          values: _priceRange,
-                          min: 0,
-                          max: 5000,
-                          divisions: 50,
-                          activeColor: const Color(0xFF6366F1),
-                          inactiveColor: const Color(0xFFE5E7EB),
-                          labels: RangeLabels('₹${_priceRange.start.toInt()}', '₹${_priceRange.end.toInt()}'),
-                          onChanged: (values) => setState(() => _priceRange = values),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('₹${_priceRange.start.toInt()}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
-                            Text('₹${_priceRange.end.toInt()}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
-                          ],
-                        ),
-
-                        const Divider(height: 32),
-
-                        // Rating Filter
-                        const Text('Rating', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
-                        const SizedBox(height: 10),
-                        _buildRatingRadio(5.0, '5 Stars (120)'),
-                        _buildRatingRadio(4.0, '4 Stars & above (85)'),
-                        _buildRatingRadio(3.0, '3 Stars & above (43)'),
-
-                        const Divider(height: 32),
-
-                        // Ayurvedic Concerns Filter
-                        const Text('Ayurvedic Concerns', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
-                        const SizedBox(height: 10),
-                        _buildConcernCheckbox('Anti-Dandruff'),
-                        _buildConcernCheckbox('De-Tan & Glow'),
-                        _buildConcernCheckbox('Acne Defense'),
-                        _buildConcernCheckbox('Hair Growth'),
-                        _buildConcernCheckbox('Oil Control'),
-
-                        const SizedBox(height: 16),
-                        Center(
-                          child: TextButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _selectedCategory = null;
-                                _priceRange = const RangeValues(0, 5000);
-                                _minRatingFilter = null;
-                                _selectedConcerns.clear();
-                                _searchController.clear();
-                              });
-                            },
-                            icon: const Icon(Icons.refresh, size: 16, color: Color(0xFF6366F1)),
-                            label: const Text('Reset All Filters', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 24),
-
-                // Right Section: Top Promo Banner + Sorting Bar + Product Grid
-                Expanded(
-                  child: Column(
+            padding: EdgeInsets.symmetric(horizontal: isWide ? 24.0 : 12.0),
+            child: isWide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Top Featured Promo Banner
-                      Container(
-                        width: double.infinity,
-                        height: 160,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF3E8FF), Color(0xFFFAF5FF), Color(0xFFF8FAFC)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                      // Left Filter Sidebar (260px)
+                      SizedBox(
+                        width: 260,
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFF3F4F6)),
                           ),
-                          borderRadius: BorderRadius.circular(16),
+                          child: _buildFilterSidebarContent(allProducts),
                         ),
+                      ),
+
+                      const SizedBox(width: 24),
+
+                      // Right Section: Catalog Grid
+                      Expanded(
+                        child: _buildProductsCatalogSection(context, filteredProducts, allProducts, isWide, screenWidth),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      // Mobile Filter Button Bar
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           children: [
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text('UP TO 40% OFF', style: TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold, fontSize: 12)),
-                                  const SizedBox(height: 6),
-                                  const Text('Summer Botanical Collection', style: TextStyle(fontFamily: 'serif', fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
-                                  const SizedBox(height: 12),
-                                  ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF6366F1),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                    ),
-                                    child: const Text('Shop Now', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ),
-                                ],
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                                    builder: (context) {
+                                      return DraggableScrollableSheet(
+                                        initialChildSize: 0.8,
+                                        maxChildSize: 0.95,
+                                        minChildSize: 0.5,
+                                        expand: false,
+                                        builder: (context, scrollCtrl) {
+                                          return SingleChildScrollView(
+                                            controller: scrollCtrl,
+                                            padding: const EdgeInsets.all(20),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    const Text('Filter & Refine Products 🎛️', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                                                  ],
+                                                ),
+                                                const Divider(),
+                                                _buildFilterSidebarContent(allProducts),
+                                                const SizedBox(height: 20),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF6366F1),
+                                                      foregroundColor: Colors.white,
+                                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                    ),
+                                                    onPressed: () => Navigator.pop(context),
+                                                    child: const Text('Apply Filters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                                icon: const Icon(Icons.tune, size: 16, color: Color(0xFF6366F1)),
+                                label: Text(
+                                  _selectedCategory != null || _selectedConcerns.isNotEmpty
+                                      ? 'Filters Applied (${(_selectedCategory != null ? 1 : 0) + _selectedConcerns.length}) 🎛️'
+                                      : 'Filter Products 🎛️',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6366F1)),
+                                ),
                               ),
-                            ),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset('assets/images/shampoo.jpg', width: 140, height: 110, fit: BoxFit.cover),
                             ),
                           ],
                         ),
                       ),
-
-                      const SizedBox(height: 20),
-
-                      // Control & Sorting Bar
-                      Row(
-                        children: [
-                          Text(
-                            'Showing 1–${filteredProducts.length} of ${allProducts.length} results',
-                            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
-                          ),
-                          const Spacer(),
-
-                          // Sort By Dropdown
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _sortBy,
-                                style: const TextStyle(fontSize: 13, color: Color(0xFF374151), fontWeight: FontWeight.w500),
-                                items: ['Popularity', 'Price: Low to High', 'Price: High to Low', 'Newest']
-                                    .map((s) => DropdownMenuItem(value: s, child: Text('Sort by: $s')))
-                                    .toList(),
-                                onChanged: (val) => setState(() => _sortBy = val ?? 'Popularity'),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          // View Switcher (Grid vs List)
-                          IconButton(
-                            icon: Icon(Icons.grid_view, color: _isGridView ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF)),
-                            onPressed: () => setState(() => _isGridView = true),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.view_list, color: !_isGridView ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF)),
-                            onPressed: () => setState(() => _isGridView = false),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Products Grid / List View
-                      filteredProducts.isEmpty
-                          ? Container(
-                              padding: const EdgeInsets.all(60),
-                              child: const Center(
-                                child: Text('No botanical products match your selected filter criteria.'),
-                              ),
-                            )
-                          : _isGridView
-                              ? GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent: 260,
-                                    mainAxisExtent: 330,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                  ),
-                                  itemCount: filteredProducts.length,
-                                  itemBuilder: (context, index) {
-                                    final p = filteredProducts[index];
-                                    return _buildProductCard(context, p);
-                                  },
-                                )
-                              : ListView.separated(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: filteredProducts.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                  itemBuilder: (context, index) {
-                                    final p = filteredProducts[index];
-                                    return _buildProductListTile(context, p);
-                                  },
-                                ),
+                      _buildProductsCatalogSection(context, filteredProducts, allProducts, isWide, screenWidth),
                     ],
                   ),
-                ),
-              ],
-            ),
           ),
 
           const SizedBox(height: 40),
@@ -483,6 +356,232 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterSidebarContent(List<ProductModel> allProducts) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Categories Filter
+        const Text('Shop by Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
+        const SizedBox(height: 12),
+        _buildCategoryItem('All Categories', null, allProducts.length),
+        _buildCategoryItem('Haircare', 'cat-haircare', allProducts.where((p) => p.categoryId == 'cat-haircare').length),
+        _buildCategoryItem('Skincare', 'cat-skincare', allProducts.where((p) => p.categoryId == 'cat-skincare').length),
+        _buildCategoryItem('Wellness Oils', 'cat-wellness', allProducts.where((p) => p.categoryId == 'cat-wellness').length),
+        _buildCategoryItem('Soaps & Bars', 'cat-skincare', allProducts.where((p) => p.name.contains('Soap')).length),
+        _buildCategoryItem('Elixirs', 'cat-skincare', 4),
+
+        const Divider(height: 32),
+
+        // Price Range Slider
+        const Text('Filter By Price Range', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
+        const SizedBox(height: 12),
+        RangeSlider(
+          values: _priceRange,
+          min: 0,
+          max: 5000,
+          divisions: 50,
+          activeColor: const Color(0xFF6366F1),
+          inactiveColor: const Color(0xFFE5E7EB),
+          labels: RangeLabels('₹${_priceRange.start.toInt()}', '₹${_priceRange.end.toInt()}'),
+          onChanged: (values) => setState(() => _priceRange = values),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('₹${_priceRange.start.toInt()}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
+            Text('₹${_priceRange.end.toInt()}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
+          ],
+        ),
+
+        const Divider(height: 32),
+
+        // Rating Filter
+        const Text('Rating', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
+        const SizedBox(height: 10),
+        _buildRatingRadio(5.0, '5 Stars (120)'),
+        _buildRatingRadio(4.0, '4 Stars & above (85)'),
+        _buildRatingRadio(3.0, '3 Stars & above (43)'),
+
+        const Divider(height: 32),
+
+        // Ayurvedic Concerns Filter
+        const Text('Ayurvedic Concerns', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF111827))),
+        const SizedBox(height: 10),
+        _buildConcernCheckbox('Anti-Dandruff'),
+        _buildConcernCheckbox('De-Tan & Glow'),
+        _buildConcernCheckbox('Acne Defense'),
+        _buildConcernCheckbox('Hair Growth'),
+        _buildConcernCheckbox('Oil Control'),
+
+        const SizedBox(height: 16),
+        Center(
+          child: TextButton.icon(
+            onPressed: () {
+              setState(() {
+                _selectedCategory = null;
+                _priceRange = const RangeValues(0, 5000);
+                _minRatingFilter = null;
+                _selectedConcerns.clear();
+                _searchController.clear();
+              });
+            },
+            icon: const Icon(Icons.refresh, size: 16, color: Color(0xFF6366F1)),
+            label: const Text('Reset All Filters', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF6366F1))),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductsCatalogSection(
+    BuildContext context,
+    List<ProductModel> filteredProducts,
+    List<ProductModel> allProducts,
+    bool isWide,
+    double screenWidth,
+  ) {
+    return Column(
+      children: [
+        // Top Featured Promo Banner
+        Container(
+          width: double.infinity,
+          height: isWide ? 160 : 130,
+          padding: EdgeInsets.symmetric(horizontal: isWide ? 32 : 16, vertical: isWide ? 24 : 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFF3E8FF), Color(0xFFFAF5FF), Color(0xFFF8FAFC)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('UP TO 40% OFF', style: TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold, fontSize: 11)),
+                    const SizedBox(height: 4),
+                    Text('Summer Botanical Collection', style: TextStyle(fontFamily: 'serif', fontSize: isWide ? 26 : 18, fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6366F1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text('Shop Now', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+              if (isWide)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset('assets/images/shampoo.jpg', width: 140, height: 110, fit: BoxFit.cover),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Control & Sorting Bar
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Showing 1–${filteredProducts.length} of ${allProducts.length} results',
+                style: TextStyle(fontSize: isWide ? 13 : 11, color: const Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Sort By Dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _sortBy,
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF374151), fontWeight: FontWeight.w500),
+                  items: ['Popularity', 'Price: Low to High', 'Price: High to Low', 'Newest']
+                      .map((s) => DropdownMenuItem(value: s, child: Text(isWide ? 'Sort by: $s' : s)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _sortBy = val ?? 'Popularity'),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // View Switcher (Grid vs List)
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(Icons.grid_view, size: 20, color: _isGridView ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF)),
+              onPressed: () => setState(() => _isGridView = true),
+            ),
+            const SizedBox(width: 6),
+            IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(Icons.view_list, size: 20, color: !_isGridView ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF)),
+              onPressed: () => setState(() => _isGridView = false),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        // Products Grid / List View
+        filteredProducts.isEmpty
+            ? Container(
+                padding: const EdgeInsets.all(40),
+                child: const Center(
+                  child: Text('No botanical products match your selected filter criteria.'),
+                ),
+              )
+            : _isGridView
+                ? GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 4),
+                      childAspectRatio: screenWidth < 600 ? 0.58 : 0.72,
+                      crossAxisSpacing: screenWidth < 600 ? 10 : 16,
+                      mainAxisSpacing: screenWidth < 600 ? 10 : 16,
+                    ),
+                    itemCount: filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final p = filteredProducts[index];
+                      return _buildProductCard(context, p);
+                    },
+                  )
+                : ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredProducts.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final p = filteredProducts[index];
+                      return _buildProductListTile(context, p);
+                    },
+                  ),
+      ],
     );
   }
 }
