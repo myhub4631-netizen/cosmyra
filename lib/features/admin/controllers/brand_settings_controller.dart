@@ -18,8 +18,8 @@ class BrandSettings {
     this.footerLogoUrl = '',
     this.faviconUrl = '',
     this.appIconUrl = '',
-    this.brandName = 'Vaidyam Botanicals',
-    this.brandTagline = 'Pure Ayurveda. Real Results.',
+    this.brandName = 'Cosmyra',
+    this.brandTagline = 'Pure Ayurveda & Botanical Wellness',
     this.hideBrandTextWithLogo = false,
   });
 
@@ -61,8 +61,8 @@ class BrandSettings {
       footerLogoUrl: json['footerLogoUrl']?.toString() ?? '',
       faviconUrl: json['faviconUrl']?.toString() ?? '',
       appIconUrl: json['appIconUrl']?.toString() ?? '',
-      brandName: json['brandName']?.toString() ?? 'Vaidyam Botanicals',
-      brandTagline: json['brandTagline']?.toString() ?? 'Pure Ayurveda. Real Results.',
+      brandName: json['brandName']?.toString() ?? 'Cosmyra',
+      brandTagline: json['brandTagline']?.toString() ?? 'Pure Ayurveda & Botanical Wellness',
       hideBrandTextWithLogo: json['hideBrandTextWithLogo'] == true,
     );
   }

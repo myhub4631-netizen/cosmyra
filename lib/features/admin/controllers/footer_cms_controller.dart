@@ -16,13 +16,13 @@ class FooterCmsState {
 
   FooterCmsState({
     required this.sections,
-    this.brandName = 'Vaidyam Botanicals',
+    this.brandName = 'Cosmyra',
     this.brandDescription = 'Your premier destination for certified organic Ayurveda formulation. Pure wellness delivered to your doorstep.',
     this.newsletterTitle = 'Subscribe to our newsletter',
     this.newsletterSubtitle = 'Get updates on offers, new formulations and botanical rituals.',
-    this.copyrightText = '© 2026 Vaidyam Botanicals. All Rights Reserved.',
-    this.metaTitle = 'Vaidyam Botanicals • Authentic Herbal & Ayurvedic Formulations',
-    this.schemaOrg = '{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Vaidyam Botanicals",\n  "url": "https://cosmyra.cloud"\n}',
+    this.copyrightText = '© 2026 Cosmyra. All Rights Reserved.',
+    this.metaTitle = 'Cosmyra • Authentic Herbal & Ayurvedic Formulations',
+    this.schemaOrg = '{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Cosmyra",\n  "url": "https://cosmyra.cloud"\n}',
     this.customCss = '/* Footer Specific Styles */\n.footer-bg { background-color: #0B132B; }\n.footer-link:hover { color: #818CF8; }',
     this.customJs = '// Footer Scripts & Tracking\nconsole.log("Cosmyra Footer Initialized");',
   });

@@ -12,7 +12,7 @@ class HomepageCmsState {
 
   HomepageCmsState({
     required this.sections,
-    this.metaTitle = 'Vaidyam Botanicals • Pure Herbal Skincare & Wellness',
+    this.metaTitle = 'Cosmyra • Pure Herbal Skincare & Wellness',
     this.metaDescription = 'Discover 100% authentic Ayurvedic formulations, herbal hair oils, serums, and natural soaps.',
     this.customCss = '',
     this.customJs = '',

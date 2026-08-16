@@ -25,7 +25,7 @@ class CosmyraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Cosmyra • Vaidyam Botanicals',
+      title: 'Cosmyra • Pure Ayurveda & Botanical Wellness',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
