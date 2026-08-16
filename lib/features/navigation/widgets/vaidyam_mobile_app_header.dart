@@ -42,39 +42,37 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
 
           const SizedBox(width: 8),
 
-          // 2. Brand Logo & Text Option (Managed by Admin Dashboard!)
+          // 2. Brand Logo (Managed by Admin Dashboard!)
           InkWell(
             onTap: () => context.go('/'),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (logoUrl.isNotEmpty) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: logoUrl.startsWith('data:image')
-                          ? Image.memory(
-                              base64Decode(logoUrl.split(',').last),
-                              fit: BoxFit.cover,
-                            )
-                          : Image.network(
-                              logoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
+                if (logoUrl.isNotEmpty)
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 36, maxWidth: 140),
+                    child: logoUrl.startsWith('data:image')
+                        ? Image.memory(
+                            base64Decode(logoUrl.split(',').last),
+                            fit: BoxFit.contain,
+                          )
+                        : Image.network(
+                            logoUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Image.asset(
+                              'assets/images/cosmyra_logo.png',
+                              height: 32,
+                              fit: BoxFit.contain,
                             ),
-                    ),
+                          ),
+                  )
+                else
+                  Image.asset(
+                    'assets/images/cosmyra_logo.png',
+                    height: 32,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
                   ),
-                  if (!brandSettings.hideBrandTextWithLogo) ...[
-                    const SizedBox(width: 8),
-                    _buildBrandText(brandName, brandTagline),
-                  ],
-                ] else ...[
-                  _buildDefaultPurpleEmblem(),
-                  const SizedBox(width: 8),
-                  _buildBrandText(brandName, brandTagline),
-                ],
               ],
             ),
           ),

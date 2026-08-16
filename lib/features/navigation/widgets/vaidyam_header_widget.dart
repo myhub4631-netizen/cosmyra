@@ -154,7 +154,7 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                         ),
                       )
                     : Image.asset(
-                        'favicon.png',
+                        'assets/images/cosmyra_logo.png',
                         height: 48,
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => Container(
