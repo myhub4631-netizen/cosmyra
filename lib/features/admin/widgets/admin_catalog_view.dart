@@ -28,6 +28,35 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
     );
   }
 
+  void _duplicateProduct(BuildContext context, ProductModel product) {
+    final clonedProduct = ProductModel(
+      id: 'prod-${DateTime.now().millisecondsSinceEpoch}',
+      brandId: product.brandId,
+      categoryId: product.categoryId,
+      name: '${product.name} (Copy)',
+      slug: '${product.slug}-copy',
+      tagline: product.tagline,
+      description: product.description,
+      ingredients: product.ingredients,
+      howToUse: product.howToUse,
+      freeFromClaims: product.freeFromClaims,
+      isFeatured: product.isFeatured,
+      variants: product.variants
+          .map((v) => v.copyWith(
+                id: 'var-${DateTime.now().millisecondsSinceEpoch}',
+                sku: '${v.sku}-COPY',
+              ))
+          .toList(),
+      imageUrls: List.from(product.imageUrls),
+    );
+
+    ref.read(adminProductsProvider.notifier).addProduct(clonedProduct);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Duplicated "${product.name}" as "${clonedProduct.name}"')),
+    );
+    _showAddProductModal(context, clonedProduct);
+  }
+
   void _showDeleteConfirmationDialog(BuildContext context, ProductModel product) {
     showDialog(
       context: context,
@@ -928,9 +957,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // Actions (Eye, Edit, Delete & 3-dot Menu) (Width: 180)
+                                      // Actions (View, Edit, Delete & 3-dot Menu) (Width: 220)
                                       SizedBox(
-                                        width: 180,
+                                        width: 220,
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
@@ -1020,6 +1049,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                   case 'edit':
                                                     _showAddProductModal(context, prod);
                                                     break;
+                                                  case 'duplicate':
+                                                    _duplicateProduct(context, prod);
+                                                    break;
                                                   case 'change_image':
                                                     _showAddProductModal(context, prod);
                                                     break;
@@ -1048,6 +1080,16 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                       Icon(Icons.edit_outlined, size: 16, color: Color(0xFF4F46E5)),
                                                       SizedBox(width: 8),
                                                       Text('Edit Product', style: TextStyle(fontSize: 12)),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'duplicate',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.control_point_duplicate_outlined, size: 16, color: Color(0xFFD97706)),
+                                                      SizedBox(width: 8),
+                                                      Text('Duplicate / Clone SKU', style: TextStyle(fontSize: 12)),
                                                     ],
                                                   ),
                                                 ),
