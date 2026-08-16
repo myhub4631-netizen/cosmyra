@@ -162,7 +162,16 @@ class ProductModel {
     final imagesList = json['product_images'] ?? json['imageUrls'] ?? json['image_urls'];
     List<String> imgs = [];
     if (imagesList is List) {
-      imgs = imagesList.map((i) {
+      final sortedList = List.from(imagesList);
+      sortedList.sort((a, b) {
+        if (a is Map && b is Map) {
+          final int orderA = (a['display_order'] as num?)?.toInt() ?? 0;
+          final int orderB = (b['display_order'] as num?)?.toInt() ?? 0;
+          return orderA.compareTo(orderB);
+        }
+        return 0;
+      });
+      imgs = sortedList.map((i) {
         if (i is Map) return (i['image_url'] ?? i['url'] ?? '').toString();
         return i.toString();
       }).where((img) => img.isNotEmpty).toList();

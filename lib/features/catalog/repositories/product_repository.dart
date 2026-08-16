@@ -232,13 +232,18 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         await supabase.from('product_variants').upsert(variantData);
       }
 
+      // Purge old image entries in Supabase so updated images become primary
+      try {
+        await supabase.from('product_images').delete().eq('product_id', p.id);
+      } catch (_) {}
+
       for (int i = 0; i < p.imageUrls.length; i++) {
         final imgData = {
           'product_id': p.id,
           'image_url': p.imageUrls[i],
           'display_order': i,
         };
-        await supabase.from('product_images').upsert(imgData);
+        await supabase.from('product_images').insert(imgData);
       }
     } catch (e) {
       print('Sync product to Supabase error: $e');
