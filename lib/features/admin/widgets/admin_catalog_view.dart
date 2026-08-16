@@ -650,8 +650,8 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: isWideScreen ? screenWidth - 360 : 960,
+                          constraints: const BoxConstraints(
+                            minWidth: 1150,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,9 +1,10 @@
 {
   "version": 2,
+  "outputDirectory": "build/web",
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "/"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
