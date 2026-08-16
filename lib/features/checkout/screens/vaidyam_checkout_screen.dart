@@ -120,58 +120,62 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
         state: _selectedState.isNotEmpty ? _selectedState : 'Karnataka',
         pincode: _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '560103',
         onPlaceOrder: () async {
-          final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
-                userId: user?.id,
-                isGuest: auth.isGuest,
-                customerName: name,
-                customerEmail: auth.userEmail ?? user?.email ?? 'customer@cosmyra.cloud',
-                customerPhone: phone,
-                shippingAddress: {
-                  'name': name,
-                  'phone': phone,
-                  'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Glen Heights, Bellandur',
-                  'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Bengaluru',
-                  'state': _selectedState,
-                  'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '560103',
-                },
-                cartItems: cartState.items,
-                subtotal: subtotal,
-                discount: discount,
-                shippingFee: 0.0,
-                totalAmount: total,
-                paymentMethod: _selectedPaymentMethod,
-              );
+          await _ensureLoggedInAndPlaceOrder(context, () async {
+            final currentAuth = ref.read(authControllerProvider);
+            final currentUser = ref.read(currentUserProvider);
+            final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
+                  userId: currentUser?.id,
+                  isGuest: currentAuth.isGuest,
+                  customerName: name,
+                  customerEmail: currentAuth.userEmail ?? currentUser?.email ?? 'customer@cosmyra.cloud',
+                  customerPhone: phone,
+                  shippingAddress: {
+                    'name': name,
+                    'phone': phone,
+                    'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Glen Heights, Bellandur',
+                    'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Bengaluru',
+                    'state': _selectedState,
+                    'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '560103',
+                  },
+                  cartItems: cartState.items,
+                  subtotal: subtotal,
+                  discount: discount,
+                  shippingFee: 0.0,
+                  totalAmount: total,
+                  paymentMethod: _selectedPaymentMethod,
+                );
 
-          ref.invalidate(userOrdersFutureProvider);
-          ref.invalidate(allAdminOrdersFutureProvider);
-          ref.read(cartProvider.notifier).clearCart();
+            ref.invalidate(userOrdersFutureProvider);
+            ref.invalidate(allAdminOrdersFutureProvider);
+            ref.read(cartProvider.notifier).clearCart();
 
-          if (!context.mounted) return;
+            if (!context.mounted) return;
 
-          showDialog(
-            context: context,
-            builder: (dialogCtx) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Row(
-                children: const [
-                  Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
-                  SizedBox(width: 10),
-                  Text('Order Placed! 🛍️'),
+            showDialog(
+              context: context,
+              builder: (dialogCtx) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                title: Row(
+                  children: const [
+                    Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
+                    SizedBox(width: 10),
+                    Text('Order Placed! 🛍️'),
+                  ],
+                ),
+                content: Text('Order #${placedOrder.id} has been placed successfully!\n\nThank you for shopping with Cosmyra.'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogCtx);
+                      context.go('/account');
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4338CA)),
+                    child: const Text('View Order Details', style: TextStyle(color: Colors.white)),
+                  ),
                 ],
               ),
-              content: Text('Order #${placedOrder.id} has been placed successfully!\n\nThank you for shopping with Cosmyra.'),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(dialogCtx);
-                    context.go('/account');
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4338CA)),
-                  child: const Text('View Order Details', style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
-          );
+            );
+          });
         },
       );
     }
@@ -971,78 +975,80 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
             height: 50,
             child: ElevatedButton(
               onPressed: () async {
-                final auth = ref.read(authControllerProvider);
-                final user = ref.read(currentUserProvider);
-                final currentCartState = ref.read(cartProvider);
+                await _ensureLoggedInAndPlaceOrder(context, () async {
+                  final auth = ref.read(authControllerProvider);
+                  final user = ref.read(currentUserProvider);
+                  final currentCartState = ref.read(cartProvider);
 
-                final String name = _nameController.text.trim().isNotEmpty
-                    ? _nameController.text.trim()
-                    : (auth.userName ?? user?.userMetadata?['full_name'] ?? 'Customer');
-                final String phone = _phoneController.text.trim().isNotEmpty
-                    ? _phoneController.text.trim()
-                    : (auth.userPhone ?? user?.phone ?? '+91 94730 40903');
-                final String email = auth.userEmail ?? user?.email ?? '1mdollar2027@gmail.com';
+                  final String name = _nameController.text.trim().isNotEmpty
+                      ? _nameController.text.trim()
+                      : (auth.userName ?? user?.userMetadata?['full_name'] ?? 'Customer');
+                  final String phone = _phoneController.text.trim().isNotEmpty
+                      ? _phoneController.text.trim()
+                      : (auth.userPhone ?? user?.phone ?? '+91 94730 40903');
+                  final String email = auth.userEmail ?? user?.email ?? 'customer@cosmyra.cloud';
 
-                final Map<String, dynamic> shippingAddressMap = {
-                  'name': name,
-                  'phone': phone,
-                  'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Valley',
-                  'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Patna',
-                  'state': _selectedState,
-                  'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '800001',
-                };
+                  final Map<String, dynamic> shippingAddressMap = {
+                    'name': name,
+                    'phone': phone,
+                    'address': _addressController.text.trim().isNotEmpty ? _addressController.text.trim() : 'Flat 402, Green Valley',
+                    'city': _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : 'Patna',
+                    'state': _selectedState,
+                    'pincode': _pincodeController.text.trim().isNotEmpty ? _pincodeController.text.trim() : '800001',
+                  };
 
-                final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
-                      userId: user?.id,
-                      isGuest: auth.isGuest,
-                      customerName: name,
-                      customerEmail: email,
-                      customerPhone: phone,
-                      shippingAddress: shippingAddressMap,
-                      cartItems: currentCartState.items,
-                      subtotal: subtotal,
-                      discount: discount,
-                      shippingFee: 0.0,
-                      totalAmount: total,
-                      paymentMethod: _selectedPaymentMethod,
-                    );
+                  final placedOrder = await ref.read(orderRepositoryProvider).placeOrder(
+                        userId: user?.id,
+                        isGuest: auth.isGuest,
+                        customerName: name,
+                        customerEmail: email,
+                        customerPhone: phone,
+                        shippingAddress: shippingAddressMap,
+                        cartItems: currentCartState.items,
+                        subtotal: subtotal,
+                        discount: discount,
+                        shippingFee: 0.0,
+                        totalAmount: total,
+                        paymentMethod: _selectedPaymentMethod,
+                      );
 
-                ref.invalidate(userOrdersFutureProvider);
-                ref.invalidate(allAdminOrdersFutureProvider);
+                  ref.invalidate(userOrdersFutureProvider);
+                  ref.invalidate(allAdminOrdersFutureProvider);
 
-                if (!context.mounted) return;
+                  if (!context.mounted) return;
 
-                showDialog(
-                  context: context,
-                  builder: (dialogCtx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    title: Row(
-                      children: const [
-                        Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
-                        SizedBox(width: 10),
-                        Text('Order Placed!'),
+                  showDialog(
+                    context: context,
+                    builder: (dialogCtx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: const [
+                          Icon(Icons.check_circle, color: Color(0xFF059669), size: 28),
+                          SizedBox(width: 10),
+                          Text('Order Placed!'),
+                        ],
+                      ),
+                      content: Text(
+                        'Thank you for your order, $name!\n\nOrder Number: ${placedOrder.orderNumber}\nTotal Amount: ₹${total.toInt()} via $_selectedPaymentMethod.\n\nEstimated Delivery: 2-3 Business Days.',
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            ref.read(cartProvider.notifier).clearCart();
+                            Navigator.pop(dialogCtx);
+                            context.go('/dashboard?tab=My%20Orders');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F46E5),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Go to My Orders'),
+                        ),
                       ],
                     ),
-                    content: Text(
-                      'Thank you for your order, $name!\n\nOrder Number: ${placedOrder.orderNumber}\nTotal Amount: ₹${total.toInt()} via $_selectedPaymentMethod.\n\nEstimated Delivery: 2-3 Business Days.',
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF374151)),
-                    ),
-                    actions: [
-                      ElevatedButton(
-                        onPressed: () {
-                          ref.read(cartProvider.notifier).clearCart();
-                          Navigator.pop(dialogCtx);
-                          context.go('/dashboard?tab=My%20Orders');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4F46E5),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Go to My Orders'),
-                      ),
-                    ],
-                  ),
-                );
+                  );
+                });
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4F46E5),
@@ -1089,6 +1095,168 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _ensureLoggedInAndPlaceOrder(BuildContext context, Future<void> Function() onPlaceOrderAction) async {
+    final auth = ref.read(authControllerProvider);
+    final user = ref.read(currentUserProvider);
+    final bool isLoggedIn = auth.isLoggedIn || user != null;
+
+    if (isLoggedIn) {
+      await onPlaceOrderAction();
+      return;
+    }
+
+    final emailCtrl = TextEditingController();
+    final passwordCtrl = TextEditingController();
+    bool isLoading = false;
+    String? errorMsg;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.lock_outline_rounded, color: Color(0xFF4F46E5), size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Sign In to Place Order 🛍️', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                              Text('Sign in to confirm & track delivery', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                            ],
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Color(0xFF64748B)),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (errorMsg != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFECACA)),
+                      ),
+                      child: Text(errorMsg!, style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13)),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email Address',
+                      hintText: 'Enter your email',
+                      prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: passwordCtrl,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter your password',
+                      prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              final email = emailCtrl.text.trim();
+                              final pwd = passwordCtrl.text.trim();
+                              if (email.isEmpty || pwd.isEmpty) {
+                                setStateModal(() => errorMsg = 'Please enter both email and password.');
+                                return;
+                              }
+                              setStateModal(() {
+                                isLoading = true;
+                                errorMsg = null;
+                              });
+
+                              final success = await ref.read(authControllerProvider.notifier).signInWithEmail(email: email, password: pwd);
+                              if (success) {
+                                if (context.mounted) {
+                                  Navigator.pop(ctx);
+                                }
+                                await onPlaceOrderAction();
+                              } else {
+                                setStateModal(() {
+                                  isLoading = false;
+                                  errorMsg = ref.read(authControllerProvider).errorMessage ?? 'Sign in failed. Please try again.';
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: isLoading
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Sign In & Place Order', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.push('/login');
+                      },
+                      child: const Text("Don't have an account? Register / Sign Up", style: TextStyle(color: Color(0xFF4F46E5), fontSize: 13, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
