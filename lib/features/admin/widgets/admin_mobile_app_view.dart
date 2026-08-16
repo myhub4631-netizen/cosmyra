@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/utils/web_image_picker.dart';
 import '../controllers/mobile_app_settings_controller.dart';
 
 class AdminMobileAppView extends ConsumerStatefulWidget {
@@ -345,34 +346,19 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
   Future<void> _pickImage(TextEditingController targetCtrl, String label) async {
     try {
-      FilePickerResult? result;
-      try {
-        result = await FilePicker.pickFiles(
-          type: FileType.image,
-          withData: true,
-        );
-      } catch (_) {
-        result = await FilePicker.pickFiles(
-          type: FileType.any,
-          withData: true,
-        );
-      }
-      if (result != null && result.files.isNotEmpty) {
-        final bytes = result.files.first.bytes;
-        if (bytes != null) {
-          final String base64Result = 'data:image/png;base64,${base64Encode(bytes)}';
-          setState(() {
-            targetCtrl.text = base64Result;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Custom Mobile $label uploaded! 🖼️'),
-                backgroundColor: const Color(0xFF10B981),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
+      final base64Result = await pickImageWebSafe();
+      if (base64Result != null && base64Result.isNotEmpty) {
+        setState(() {
+          targetCtrl.text = base64Result;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Custom Mobile $label uploaded! 🖼️'),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       }
     } catch (e) {

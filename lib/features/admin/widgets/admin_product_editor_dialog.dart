@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/utils/web_image_picker.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../catalog/models/product_model.dart';
 import '../../catalog/repositories/product_repository.dart';
@@ -116,48 +117,19 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
 
   Future<void> _pickLocalComputerImage() async {
     try {
-      FilePickerResult? result;
-      try {
-        result = await FilePicker.pickFiles(
-          type: FileType.image,
-          withData: true,
-        );
-      } catch (_) {
-        result = await FilePicker.pickFiles(
-          type: FileType.any,
-          withData: true,
-        );
-      }
+      final base64Result = await pickImageWebSafe();
+      if (base64Result != null && base64Result.isNotEmpty) {
+        setState(() {
+          _imageUrls.add(base64Result);
+        });
 
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.first;
-        final bytes = file.bytes;
-        if (bytes != null) {
-          final extension = file.extension?.toLowerCase() ?? 'jpg';
-          final mimeType = extension == 'png'
-              ? 'image/png'
-              : extension == 'webp'
-                  ? 'image/webp'
-                  : extension == 'gif'
-                      ? 'image/gif'
-                      : extension == 'bmp'
-                          ? 'image/bmp'
-                          : 'image/jpeg';
-          final base64String = base64Encode(bytes);
-          final dataUrl = 'data:$mimeType;base64,$base64String';
-
-          setState(() {
-            _imageUrls.add(dataUrl);
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('✓ Custom image "${file.name}" added successfully!'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✓ Custom image added successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
         }
       }
     } catch (e) {
@@ -165,7 +137,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error selecting image: $e'),
-            backgroundColor: AppColors.error,
+            backgroundColor: Colors.red,
           ),
         );
       }

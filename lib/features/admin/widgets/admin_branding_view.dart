@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../shared/utils/web_image_picker.dart';
 import '../controllers/brand_settings_controller.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 
@@ -48,36 +49,29 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
 
   Future<void> _pickImageFile(TextEditingController targetCtrl, String label) async {
     try {
-      FilePickerResult? result;
-      try {
-        result = await FilePicker.pickFiles(
-          type: FileType.image,
-          withData: true,
-        );
-      } catch (_) {
-        result = await FilePicker.pickFiles(
-          type: FileType.any,
-          withData: true,
-        );
-      }
-      if (result != null && result.files.isNotEmpty) {
-        final bytes = result.files.first.bytes;
-        if (bytes != null) {
-          final String base64Result = 'data:image/png;base64,${base64Encode(bytes)}';
-          setState(() {
-            targetCtrl.text = base64Result;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Custom $label loaded successfully! 🖼️')),
-            );
-          }
+      final base64Result = await pickImageWebSafe();
+      if (base64Result != null && base64Result.isNotEmpty) {
+        setState(() {
+          targetCtrl.text = base64Result;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$label uploaded successfully! 🖼️'),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(
+            content: Text('Image selection failed: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
