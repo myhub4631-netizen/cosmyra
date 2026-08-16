@@ -88,7 +88,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                 onPressed: widget.onPlaceOrder,
                 icon: const Icon(Icons.lock_outline_rounded, size: 18, color: Colors.white),
                 label: const Text(
-                  'Place Order Now 🔒',
+                  'Proceed to Pay 🔒',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
