@@ -7,6 +7,7 @@ import '../../../shared/widgets/center_action_toast.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
+import '../widgets/vaidyam_mobile_category_screen_widget.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
@@ -87,6 +88,16 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
+
+    if (screenWidth <= 768 && _selectedCategory == null) {
+      return VaidyamMobileCategoryScreenWidget(
+        onSelectCategory: (catId) {
+          setState(() {
+            _selectedCategory = catId;
+          });
+        },
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
