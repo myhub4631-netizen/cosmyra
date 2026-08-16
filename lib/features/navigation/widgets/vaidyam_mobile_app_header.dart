@@ -25,7 +25,9 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
     final cartState = ref.watch(cartProvider);
     final int cartCount = cartState.totalItemCount;
 
-    final String logoUrl = mobileSettings.mobileLogoUrl.isNotEmpty ? mobileSettings.mobileLogoUrl : brandSettings.headerLogoUrl;
+    final String logoUrl = brandSettings.headerLogoUrl.isNotEmpty
+        ? brandSettings.headerLogoUrl
+        : (mobileSettings.mobileLogoUrl.isNotEmpty ? mobileSettings.mobileLogoUrl : '');
     final String brandName = mobileSettings.mobileAppName.isNotEmpty ? mobileSettings.mobileAppName : (brandSettings.brandName.isNotEmpty ? brandSettings.brandName : 'Vaidyam');
     final String brandTagline = brandSettings.brandTagline.isNotEmpty ? brandSettings.brandTagline : 'Botanicals';
 

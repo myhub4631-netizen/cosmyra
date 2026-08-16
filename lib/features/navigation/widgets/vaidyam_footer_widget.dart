@@ -19,7 +19,9 @@ class VaidyamFooterWidget extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
 
-    final String logoUrl = brandSettings.headerLogoUrl;
+    final String logoUrl = brandSettings.footerLogoUrl.isNotEmpty
+        ? brandSettings.footerLogoUrl
+        : brandSettings.headerLogoUrl;
 
     return Container(
       decoration: const BoxDecoration(

@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/web_image_picker.dart';
+import '../controllers/brand_settings_controller.dart';
 import '../controllers/mobile_app_settings_controller.dart';
 
 class AdminMobileAppView extends ConsumerStatefulWidget {
@@ -22,7 +23,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
   // Controllers for general mobile settings
   late TextEditingController _appNameCtrl;
-  late TextEditingController _logoCtrl;
+  late TextEditingController _appIconCtrl;
+  late TextEditingController _headerLogoCtrl;
+  late TextEditingController _footerLogoCtrl;
   late TextEditingController _announcementCtrl;
   late TextEditingController _searchHintCtrl;
   late TextEditingController _bannerTitleCtrl;
@@ -300,8 +303,11 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     });
 
     final settings = ref.read(mobileAppSettingsProvider);
+    final brandSettings = ref.read(brandSettingsProvider);
     _appNameCtrl = TextEditingController(text: settings.mobileAppName);
-    _logoCtrl = TextEditingController(text: settings.mobileLogoUrl);
+    _appIconCtrl = TextEditingController(text: settings.mobileLogoUrl.isNotEmpty ? settings.mobileLogoUrl : brandSettings.appIconUrl);
+    _headerLogoCtrl = TextEditingController(text: brandSettings.headerLogoUrl);
+    _footerLogoCtrl = TextEditingController(text: brandSettings.footerLogoUrl);
     _announcementCtrl = TextEditingController(text: settings.announcementBarText);
     _searchHintCtrl = TextEditingController(text: settings.searchPlaceholder);
     _bannerTitleCtrl = TextEditingController(text: settings.bannerTitle);
@@ -325,7 +331,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   void dispose() {
     _tabController.dispose();
     _appNameCtrl.dispose();
-    _logoCtrl.dispose();
+    _appIconCtrl.dispose();
+    _headerLogoCtrl.dispose();
+    _footerLogoCtrl.dispose();
     _announcementCtrl.dispose();
     _searchHintCtrl.dispose();
     _bannerTitleCtrl.dispose();
@@ -378,7 +386,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     final settings = ref.read(mobileAppSettingsProvider);
     final updated = settings.copyWith(
       mobileAppName: _appNameCtrl.text.trim(),
-      mobileLogoUrl: _logoCtrl.text.trim(),
+      mobileLogoUrl: _appIconCtrl.text.trim(),
       announcementBarText: _announcementCtrl.text.trim(),
       showAnnouncementBar: _showAnnouncement,
       searchPlaceholder: _searchHintCtrl.text.trim(),
@@ -394,10 +402,18 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
     await ref.read(mobileAppSettingsProvider.notifier).updateSettings(updated);
 
+    // ALSO update brandSettingsProvider so App Header, App Footer & Website update instantly!
+    await ref.read(brandSettingsProvider.notifier).updateSettings(
+      headerLogoUrl: _headerLogoCtrl.text.trim(),
+      footerLogoUrl: _footerLogoCtrl.text.trim(),
+      appIconUrl: _appIconCtrl.text.trim(),
+      brandName: _appNameCtrl.text.trim(),
+    );
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ App Content Manager settings saved successfully!'),
+          content: Text('✅ App Content & Logos saved successfully! App Header & Footer updated.'),
           backgroundColor: Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
         ),
@@ -2425,7 +2441,12 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(16)),
-                            child: const Center(child: Icon(Icons.eco_rounded, color: Colors.white, size: 36)),
+                            clipBehavior: Clip.antiAlias,
+                            child: _appIconCtrl.text.isNotEmpty
+                                ? (_appIconCtrl.text.startsWith('data:image')
+                                    ? Image.memory(base64Decode(_appIconCtrl.text.split(',').last), fit: BoxFit.cover)
+                                    : Image.network(_appIconCtrl.text, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.eco_rounded, color: Colors.white, size: 36))))
+                                : const Center(child: Icon(Icons.eco_rounded, color: Colors.white, size: 36)),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -2433,13 +2454,17 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             OutlinedButton.icon(
-                              onPressed: () => _pickImage(_logoCtrl, 'App Icon'),
+                              onPressed: () => _pickImage(_appIconCtrl, 'App Icon'),
                               icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
                               label: const Text('Change Icon', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
                               style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
                             ),
                             const SizedBox(width: 6),
-                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
+                              onPressed: () => setState(() => _appIconCtrl.clear()),
+                              tooltip: 'Remove App Icon',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -2462,27 +2487,38 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                         const Text('This logo will appear in the top header of the app.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
                         const SizedBox(height: 12),
                         Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.local_florist, color: Color(0xFF10B981), size: 24),
-                              SizedBox(width: 8),
-                              Text('Vaidyam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
-                            ],
-                          ),
+                          child: _headerLogoCtrl.text.isNotEmpty
+                              ? ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 40, maxWidth: 160),
+                                  child: _headerLogoCtrl.text.startsWith('data:image')
+                                      ? Image.memory(base64Decode(_headerLogoCtrl.text.split(',').last), fit: BoxFit.contain)
+                                      : Image.network(_headerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.local_florist, color: Color(0xFF10B981), size: 28)),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.local_florist, color: Color(0xFF10B981), size: 24),
+                                    SizedBox(width: 8),
+                                    Text('Vaidyam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
+                                  ],
+                                ),
                         ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             OutlinedButton.icon(
-                              onPressed: () => _pickImage(_logoCtrl, 'Header Logo'),
+                              onPressed: () => _pickImage(_headerLogoCtrl, 'Header Logo'),
                               icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
                               label: const Text('Change Logo', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
                               style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
                             ),
                             const SizedBox(width: 6),
-                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
+                              onPressed: () => setState(() => _headerLogoCtrl.clear()),
+                              tooltip: 'Remove Header Logo',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -2505,27 +2541,38 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                         const Text('This logo will appear in the footer of the app.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
                         const SizedBox(height: 12),
                         Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 20),
-                              SizedBox(width: 6),
-                              Text('Vaidyam Botanicals', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
-                            ],
-                          ),
+                          child: _footerLogoCtrl.text.isNotEmpty
+                              ? ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 40, maxWidth: 160),
+                                  child: _footerLogoCtrl.text.startsWith('data:image')
+                                      ? Image.memory(base64Decode(_footerLogoCtrl.text.split(',').last), fit: BoxFit.contain)
+                                      : Image.network(_footerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 24)),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 20),
+                                    SizedBox(width: 6),
+                                    Text('Vaidyam Botanicals', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                  ],
+                                ),
                         ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             OutlinedButton.icon(
-                              onPressed: () => _pickImage(_logoCtrl, 'Footer Logo'),
+                              onPressed: () => _pickImage(_footerLogoCtrl, 'Footer Logo'),
                               icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
                               label: const Text('Change Logo', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
                               style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
                             ),
                             const SizedBox(width: 6),
-                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
+                              onPressed: () => setState(() => _footerLogoCtrl.clear()),
+                              tooltip: 'Remove Footer Logo',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 4),
