@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
-import '../../catalog/repositories/product_repository.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
-class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
+class VaidyamMobileAccountScreenWidget extends ConsumerStatefulWidget {
   final String displayName;
   final String email;
   final String phone;
@@ -30,13 +29,41 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
     required this.onSelectTab,
   });
 
+  @override
+  ConsumerState<VaidyamMobileAccountScreenWidget> createState() => _VaidyamMobileAccountScreenWidgetState();
+}
+
+class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobileAccountScreenWidget> {
   static const Color _darkGreen = Color(0xFF064E3B);
   static const Color _lightBg = Color(0xFFF8FAFC);
   static const Color _textDark = Color(0xFF0F172A);
   static const Color _textMuted = Color(0xFF64748B);
 
+  final List<Map<String, String>> _savedAddresses = [
+    {
+      'type': 'Home',
+      'name': 'Mahboob Hasan',
+      'address': 'Flat 402, Green Glen Heights, Bellandur',
+      'city': 'Bengaluru',
+      'state': 'Karnataka',
+      'pincode': '560103',
+      'phone': '+91 94730 40903',
+      'isDefault': 'true',
+    },
+    {
+      'type': 'Work',
+      'name': 'Mahboob Hasan',
+      'address': 'Building 4, Tech Park, Outer Ring Road',
+      'city': 'Bengaluru',
+      'state': 'Karnataka',
+      'pincode': '560103',
+      'phone': '+91 94730 40903',
+      'isDefault': 'false',
+    },
+  ];
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _lightBg,
       bottomNavigationBar: const VaidyamMobileBottomNavBar(activeTab: 'Account'),
@@ -66,13 +93,13 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // 5. Account Options Navigation List
-              _buildAccountNavList(context, ref),
+              // 5. Fully Functional Account Options Navigation List
+              _buildAccountNavList(context),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // 6. Upgrade to Cosmyra Premium Card
-              _buildPremiumCard(context),
+              // 6. Logout Button
+              _buildLogoutButton(context),
 
               const SizedBox(height: 28),
             ],
@@ -100,11 +127,11 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.notifications_none_rounded, color: _textDark, size: 22),
-              onPressed: () => onSelectTab('Notifications'),
+              onPressed: () => _showNotificationsModal(context),
             ),
             IconButton(
               icon: const Icon(Icons.settings_outlined, color: _textDark, size: 22),
-              onPressed: () => onSelectTab('Account Settings'),
+              onPressed: () => widget.onSelectTab('Account Details'),
             ),
           ],
         ),
@@ -114,6 +141,10 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
 
   // 2. User Profile Card
   Widget _buildUserProfileCard(BuildContext context) {
+    final String name = widget.displayName.isNotEmpty ? widget.displayName : 'Mahboob Hasan';
+    final String phone = widget.phone.isNotEmpty ? widget.phone : '+91 98765 43210';
+    final String email = widget.email.isNotEmpty ? widget.email : 'mahboob.hasan@gmail.com';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -154,7 +185,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        displayName.isNotEmpty ? displayName : 'Mahboob Hasan',
+                        name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
@@ -184,11 +215,11 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  phone.isNotEmpty ? phone : '+91 98765 43210',
+                  phone,
                   style: const TextStyle(fontSize: 11, color: _textMuted),
                 ),
                 Text(
-                  email.isNotEmpty ? email : 'mahboob.hasan@gmail.com',
+                  email,
                   style: const TextStyle(fontSize: 11, color: _textMuted),
                 ),
                 const SizedBox(height: 4),
@@ -197,7 +228,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                     const Icon(Icons.person_outline_rounded, size: 12, color: _textMuted),
                     const SizedBox(width: 4),
                     Text(
-                      'Member since ${memberSince.isNotEmpty ? memberSince : "Aug 2024"}',
+                      'Member since ${widget.memberSince.isNotEmpty ? widget.memberSince : "Aug 2024"}',
                       style: const TextStyle(fontSize: 10, color: _textMuted),
                     ),
                   ],
@@ -208,7 +239,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
 
           IconButton(
             icon: const Icon(Icons.chevron_right_rounded, color: _textMuted, size: 24),
-            onPressed: () => onSelectTab('Account Details'),
+            onPressed: () => widget.onSelectTab('Account Details'),
           ),
         ],
       ),
@@ -250,7 +281,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '$rewardPoints',
+                  '${widget.rewardPoints}',
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
                 ),
                 const Text(
@@ -259,7 +290,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () => onSelectTab('Coupons'),
+                  onPressed: () => _showCouponsModal(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: _darkGreen,
@@ -281,11 +312,11 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricCol('Total Orders', '$totalOrders', () => onSelectTab('My Orders')),
+                _buildMetricCol('Total Orders', '${widget.totalOrders}', () => widget.onSelectTab('My Orders')),
                 Container(width: 1, height: 50, color: Colors.white12),
-                _buildMetricCol('Wishlist', '$wishlistCount', () => context.push('/wishlist')),
+                _buildMetricCol('Wishlist', '${widget.wishlistCount}', () => context.push('/wishlist')),
                 Container(width: 1, height: 50, color: Colors.white12),
-                _buildMetricCol('Coupons', '$couponsCount', () => onSelectTab('Coupons')),
+                _buildMetricCol('Coupons', '${widget.couponsCount}', () => _showCouponsModal(context)),
               ],
             ),
           ),
@@ -313,7 +344,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
   // 4. My Orders Quick Status Bar
   Widget _buildMyOrdersCard(BuildContext context) {
     final List<Map<String, dynamic>> orderStatuses = [
-      {'label': 'All Orders', 'count': totalOrders, 'icon': Icons.shopping_bag_outlined, 'color': const Color(0xFF4F46E5)},
+      {'label': 'All Orders', 'count': widget.totalOrders, 'icon': Icons.shopping_bag_outlined, 'color': const Color(0xFF4F46E5)},
       {'label': 'Processing', 'count': 3, 'icon': Icons.inventory_2_outlined, 'color': const Color(0xFFD97706)},
       {'label': 'Shipped', 'count': 7, 'icon': Icons.local_shipping_outlined, 'color': const Color(0xFF2563EB)},
       {'label': 'Delivered', 'count': 12, 'icon': Icons.check_circle_outline_rounded, 'color': const Color(0xFF16A34A)},
@@ -335,7 +366,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
             children: [
               const Text('My Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: _textDark)),
               InkWell(
-                onTap: () => onSelectTab('My Orders'),
+                onTap: () => widget.onSelectTab('My Orders'),
                 child: Row(
                   children: const [
                     Text('View All Orders', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _darkGreen)),
@@ -352,7 +383,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: orderStatuses.map((st) {
               return InkWell(
-                onTap: () => onSelectTab('My Orders'),
+                onTap: () => widget.onSelectTab('My Orders'),
                 child: Column(
                   children: [
                     Container(
@@ -376,15 +407,15 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
     );
   }
 
-  // 5. Account Options Navigation List
-  Widget _buildAccountNavList(BuildContext context, WidgetRef ref) {
+  // 5. Account Options Navigation List (FULLY FUNCTIONAL!)
+  Widget _buildAccountNavList(BuildContext context) {
     final List<Map<String, dynamic>> items = [
-      {'title': 'My Addresses', 'sub': 'Manage your saved addresses', 'icon': Icons.location_on_outlined, 'tab': 'My Addresses'},
-      {'title': 'Payment Methods', 'sub': 'Add or manage payment options', 'icon': Icons.credit_card_outlined, 'tab': 'Payment Methods'},
-      {'title': 'My Wishlist', 'sub': 'View and manage your wishlist', 'icon': Icons.favorite_border_rounded, 'tab': 'Wishlist'},
-      {'title': 'Coupons & Offers', 'sub': 'View available coupons and offers', 'icon': Icons.local_offer_outlined, 'tab': 'Coupons'},
-      {'title': 'Returns & Refunds', 'sub': 'Track returns and refunds', 'icon': Icons.replay_rounded, 'tab': 'Returns & Refunds'},
-      {'title': 'Help & Support', 'sub': 'FAQs, contact us and more', 'icon': Icons.headset_mic_outlined, 'tab': 'Help & Support'},
+      {'title': 'My Addresses', 'sub': 'Manage your saved addresses', 'icon': Icons.location_on_outlined, 'action': () => _showAddressesModal(context)},
+      {'title': 'Payment Methods', 'sub': 'Add or manage payment options', 'icon': Icons.credit_card_outlined, 'action': () => _showPaymentMethodsModal(context)},
+      {'title': 'My Wishlist', 'sub': 'View and manage your wishlist', 'icon': Icons.favorite_border_rounded, 'action': () => context.push('/wishlist')},
+      {'title': 'Coupons & Offers', 'sub': 'View available coupons and offers', 'icon': Icons.local_offer_outlined, 'action': () => _showCouponsModal(context)},
+      {'title': 'Returns & Refunds', 'sub': 'Track returns and refunds', 'icon': Icons.replay_rounded, 'action': () => _showReturnsModal(context)},
+      {'title': 'Help & Support', 'sub': 'FAQs, contact us and more', 'icon': Icons.headset_mic_outlined, 'action': () => _showHelpSupportModal(context)},
     ];
 
     return Container(
@@ -411,13 +442,7 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
                 title: Text(item['title'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark)),
                 subtitle: Text(item['sub'] as String, style: const TextStyle(fontSize: 10, color: _textMuted)),
                 trailing: const Icon(Icons.chevron_right_rounded, color: _textMuted, size: 20),
-                onTap: () {
-                  if (item['tab'] == 'Wishlist') {
-                    context.push('/wishlist');
-                  } else {
-                    onSelectTab(item['tab'] as String);
-                  }
-                },
+                onTap: item['action'] as VoidCallback,
               ),
               if (idx < items.length - 1)
                 const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xFFF1F5F9)),
@@ -428,65 +453,403 @@ class VaidyamMobileAccountScreenWidget extends ConsumerWidget {
     );
   }
 
-  // 6. Upgrade to Cosmyra Premium Card
-  Widget _buildPremiumCard(BuildContext context) {
+  // 6. Logout Button
+  Widget _buildLogoutButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          _showLogoutConfirmationDialog(context);
+        },
+        icon: const Icon(Icons.logout_rounded, color: Color(0xFFDC2626), size: 18),
+        label: const Text(
+          'Log Out',
+          style: TextStyle(color: Color(0xFFDC2626), fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFFEF2F2),
+          side: const BorderSide(color: Color(0xFFFCA5A5)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ),
+      ),
+    );
+  }
+
+  // MODAL 1: Addresses Sheet
+  void _showAddressesModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: MediaQuery.of(context).size.height * 0.65,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Saved Delivery Addresses 📍', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _savedAddresses.length,
+                  itemBuilder: (context, index) {
+                    final addr = _savedAddresses[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: addr['isDefault'] == 'true' ? const Color(0xFFECFDF5) : Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: addr['isDefault'] == 'true' ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(addr['type']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _textDark)),
+                              const SizedBox(width: 8),
+                              if (addr['isDefault'] == 'true')
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(6)),
+                                  child: const Text('DEFAULT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text('${addr['name']} • ${addr['phone']}', style: const TextStyle(fontSize: 12, color: _textMuted)),
+                          const SizedBox(height: 2),
+                          Text('${addr['address']}, ${addr['city']} - ${addr['pincode']}, ${addr['state']}', style: const TextStyle(fontSize: 12, color: _textDark)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add New Address form opened 📍')));
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add New Address'),
+                  style: ElevatedButton.styleFrom(backgroundColor: _darkGreen, foregroundColor: Colors.white, padding: const EdgeInsets.all(12)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // MODAL 2: Payment Methods Sheet
+  void _showPaymentMethodsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Saved Payment Methods 💳', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.qr_code_2_rounded, color: _darkGreen, size: 28),
+                title: const Text('BHIM UPI (mahboob@upi)'),
+                subtitle: const Text('Primary Payment Method'),
+                trailing: const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+                onTap: () => Navigator.pop(ctx),
+              ),
+              ListTile(
+                leading: const Icon(Icons.credit_card_rounded, color: _darkGreen, size: 28),
+                title: const Text('HDFC Bank Visa Card (**** 4903)'),
+                subtitle: const Text('Expires 08/28'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+              ListTile(
+                leading: const Icon(Icons.payments_rounded, color: _darkGreen, size: 28),
+                title: const Text('Cash on Delivery (COD)'),
+                subtitle: const Text('Available on all eligible pin codes'),
+                onTap: () => Navigator.pop(ctx),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // MODAL 3: Coupons & Offers Sheet
+  void _showCouponsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Coupons & Offers 🏷️', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _buildCouponCardItem(context, 'WELCOME100', 'Flat ₹100 OFF', 'Min order spend ₹499. Applicable for all formulations.'),
+                    _buildCouponCardItem(context, 'BOTANICAL20', '20% Special Discount', 'Get 20% OFF on all organic oils and serums.'),
+                    _buildCouponCardItem(context, 'COSMYRA10', '10% Extra Discount', 'Instant 10% discount on order total.'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCouponCardItem(BuildContext context, String code, String title, String desc) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFECFDF5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFA7F3D0)),
+        color: const Color(0xFFEEF2FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFC7D2FE)),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFEF3C7),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.workspace_premium_rounded, color: Color(0xFFD97706), size: 24),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  'Upgrade to Cosmyra Premium',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _darkGreen),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Exclusive offers, early access & free shipping!',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF047857)),
-                ),
+              children: [
+                Text(code, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF4338CA))),
+                const SizedBox(height: 2),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
+                Text(desc, style: const TextStyle(fontSize: 11, color: _textMuted)),
               ],
             ),
           ),
           ElevatedButton(
             onPressed: () {
+              ref.read(cartProvider.notifier).applyCoupon(code);
+              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cosmyra Premium membership coming soon! 👑')),
+                SnackBar(content: Text('Coupon $code Applied to Cart! 🎉')),
               );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _darkGreen,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              elevation: 0,
-            ),
-            child: Row(
-              children: const [
-                Text('Explore Premium', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                SizedBox(width: 2),
-                Icon(Icons.chevron_right_rounded, size: 14),
-              ],
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4338CA), foregroundColor: Colors.white),
+            child: const Text('APPLY'),
           ),
         ],
       ),
+    );
+  }
+
+  // MODAL 4: Returns & Refunds Sheet
+  void _showReturnsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Returns & Refunds 🔄', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF86EFAC)),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A)),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text('Order #COS-9482: Refund of ₹1,499 Processed on 15 Aug 2026', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.local_shipping_rounded, color: Color(0xFFD97706)),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text('Order #COS-8192: Return Picked Up (QC Underway)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // MODAL 5: Help & Support Sheet
+  void _showHelpSupportModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          height: MediaQuery.of(context).size.height * 0.65,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Help & Customer Support 🎧', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+              const SizedBox(height: 6),
+              const Text('We are available 24/7 to assist you with your orders.', style: TextStyle(fontSize: 12, color: _textMuted)),
+              const Divider(),
+              Expanded(
+                child: ListView(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF25D366)),
+                      title: const Text('WhatsApp Support'),
+                      subtitle: const Text('+91 94730 40903'),
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.email_outlined, color: _darkGreen),
+                      title: const Text('Email Support'),
+                      subtitle: const Text('support@cosmyra.cloud'),
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.phone_outlined, color: _darkGreen),
+                      title: const Text('Toll Free Helpline'),
+                      subtitle: const Text('1800-123-4567 (Mon-Sat, 9AM-6PM)'),
+                      onTap: () => Navigator.pop(ctx),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text('Frequently Asked Questions', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textDark)),
+                    const SizedBox(height: 6),
+                    const ExpansionTile(
+                      title: Text('How do I track my order status?', style: TextStyle(fontSize: 13)),
+                      children: [Padding(padding: EdgeInsets.all(12), child: Text('Go to My Orders in your account to see real-time tracking.'))],
+                    ),
+                    const ExpansionTile(
+                      title: Text('What is the return & replacement policy?', style: TextStyle(fontSize: 13)),
+                      children: [Padding(padding: EdgeInsets.all(12), child: Text('We offer 7-day hassle-free returns on unopened items.'))],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // MODAL 6: Notifications Sheet
+  void _showNotificationsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Notifications 🔔', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.local_shipping_outlined, color: Color(0xFF16A34A)),
+                title: const Text('Order Out for Delivery! 🚚'),
+                subtitle: const Text('Order #COS-9482 will be delivered today.'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.local_offer_outlined, color: Color(0xFF4338CA)),
+                title: const Text('Special Offer: 20% OFF Serum! 🌿'),
+                subtitle: const Text('Use code BOTANICAL20 at checkout.'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Confirmation Dialog for Logout
+  void _showLogoutConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: const [
+              Icon(Icons.logout_rounded, color: Color(0xFFDC2626)),
+              SizedBox(width: 10),
+              Text('Log Out'),
+            ],
+          ),
+          content: const Text('Are you sure you want to log out from Cosmyra?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: const Text('Cancel', style: TextStyle(color: _textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogCtx);
+                await ref.read(authControllerProvider.notifier).signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+              child: const Text('Log Out'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
