@@ -728,7 +728,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 12,
-              childAspectRatio: 0.64,
+              childAspectRatio: 0.57,
             ),
             itemBuilder: (context, index) {
               final product = featuredProducts[index];
@@ -820,13 +820,15 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                                 ),
                                 const SizedBox(height: 8),
 
-                                // Price & Cart Add Button
+                                // Price & Action Buttons Row
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
+                                    // Price & MRP
                                     Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
                                           '₹${variant.price.toStringAsFixed(0)}',
@@ -845,73 +847,76 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                                               decoration: TextDecoration.lineThrough,
                                             ),
                                           ),
-                                        Row(
-                                          children: [
-                                            // ADD +
-                                            InkWell(
-                                              onTap: () {
-                                                ref.read(cartProvider.notifier).addItem(
-                                                      product: product,
-                                                      variant: variant,
-                                                      quantity: 1,
-                                                    );
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text('✨ ${product.name} added to cart!'),
-                                                    backgroundColor: const Color(0xFF10B981),
-                                                    behavior: SnackBarBehavior.floating,
-                                                    duration: const Duration(seconds: 2),
-                                                  ),
-                                                );
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xFFEEF2FF),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(color: const Color(0xFFC7D2FE)),
-                                                ),
-                                                child: const Text(
-                                                  'ADD +',
-                                                  style: TextStyle(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF4F46E5),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
+                                      ],
+                                    ),
 
-                                            // Buy ⚡ 1-Click Checkout Button
-                                            InkWell(
-                                              onTap: () {
-                                                ref.read(cartProvider.notifier).addItem(
-                                                      product: product,
-                                                      variant: variant,
-                                                      quantity: 1,
-                                                    );
-                                                context.push('/checkout');
-                                              },
-                                              child: Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-                                                decoration: BoxDecoration(
-                                                  gradient: const LinearGradient(
-                                                    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                                                  ),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                ),
-                                                child: const Text(
-                                                  'Buy ⚡',
-                                                  style: TextStyle(
-                                                    fontSize: 9,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
+                                    // Action Buttons Row (ADD + and Buy ⚡)
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // ADD + Button
+                                        InkWell(
+                                          onTap: () {
+                                            ref.read(cartProvider.notifier).addItem(
+                                                  product: product,
+                                                  variant: variant,
+                                                  quantity: 1,
+                                                );
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('✨ ${product.name} added to cart!'),
+                                                backgroundColor: const Color(0xFF10B981),
+                                                behavior: SnackBarBehavior.floating,
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFEEF2FF),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: const Color(0xFFC7D2FE)),
+                                            ),
+                                            child: const Text(
+                                              'ADD +',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF4F46E5),
                                               ),
                                             ),
-                                          ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+
+                                        // Buy ⚡ Button
+                                        InkWell(
+                                          onTap: () {
+                                            ref.read(cartProvider.notifier).addItem(
+                                                  product: product,
+                                                  variant: variant,
+                                                  quantity: 1,
+                                                );
+                                            context.push('/checkout');
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                                              ),
+                                              borderRadius: BorderRadius.circular(6),
+                                            ),
+                                            child: const Text(
+                                              'Buy ⚡',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
