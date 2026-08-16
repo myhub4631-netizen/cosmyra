@@ -81,6 +81,54 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   String _newBadgeColor = '#1890FF';
   String _bestBadgeColor = '#52C41A';
 
+  // ── SPLASH & ONBOARDING SECTION STATE (MATCHING SCREENSHOT 1-TO-1) ──
+  String _innerSplashSubTab = 'App Icon & Logos'; // Splash Screen, Onboarding Screens (4), App Icon & Logos
+  final TextEditingController _skipBtnTextCtrl = TextEditingController(text: 'Skip');
+
+  bool _skipOnboarding = true;
+  bool _showSkipButton = true;
+  bool _showDotsIndicator = true;
+  bool _showProgressBar = true;
+  bool _autoPlayOnboarding = false;
+  int _autoPlayIntervalSec = 3;
+  String _animationEffect = 'Fade In';
+  int _transitionDurationMs = 500;
+
+  List<Map<String, dynamic>> _onboardingSlides = [
+    {
+      'id': 'slide-1',
+      'title': '1. Natural & Pure',
+      'desc': 'Pure ingredients for healthy living',
+      'status': 'Active',
+      'icon': Icons.eco_rounded,
+      'color': const Color(0xFFDCFCE7),
+    },
+    {
+      'id': 'slide-2',
+      'title': '2. Ayurvedic Goodness',
+      'desc': 'The power of Ayurveda in every product',
+      'status': 'Active',
+      'icon': Icons.spa_rounded,
+      'color': const Color(0xFFFEF3C7),
+    },
+    {
+      'id': 'slide-3',
+      'title': '3. Trusted & Safe',
+      'desc': 'Safe, tested & trusted by thousands',
+      'status': 'Active',
+      'icon': Icons.verified_rounded,
+      'color': const Color(0xFFE0F2FE),
+    },
+    {
+      'id': 'slide-4',
+      'title': '4. Fast Delivery',
+      'desc': 'Delivered to your doorstep with care',
+      'status': 'Active',
+      'icon': Icons.local_shipping_rounded,
+      'color': const Color(0xFFFEE2E2),
+    },
+  ];
+
   List<Map<String, dynamic>> _categoriesList = [
     {
       'id': 'cat-1',
@@ -291,6 +339,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     _searchCategoriesCtrl.dispose();
     _deepLinkCtrl.dispose();
     _sectionTitleCtrl.dispose();
+    _skipBtnTextCtrl.dispose();
     super.dispose();
   }
 
@@ -353,6 +402,74 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
         ),
       );
     }
+  }
+
+  void _showAddSlideModal([Map<String, dynamic>? existingSlide]) {
+    final titleCtrl = TextEditingController(text: existingSlide?['title'] ?? '');
+    final descCtrl = TextEditingController(text: existingSlide?['desc'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.slideshow_rounded, color: Color(0xFF10B981)),
+              const SizedBox(width: 10),
+              Text(existingSlide != null ? 'Edit Onboarding Slide' : 'Add Onboarding Slide', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content: SizedBox(
+            width: 460,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Slide Title', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 6),
+                TextField(controller: titleCtrl, decoration: InputDecoration(hintText: 'e.g. 5. Exclusive Discounts', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                const SizedBox(height: 14),
+                const Text('Slide Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 6),
+                TextField(controller: descCtrl, maxLines: 2, decoration: InputDecoration(hintText: 'e.g. Get daily deals & promo codes', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton.icon(
+              onPressed: () {
+                final t = titleCtrl.text.trim();
+                if (t.isEmpty) return;
+                setState(() {
+                  if (existingSlide != null) {
+                    existingSlide['title'] = t;
+                    existingSlide['desc'] = descCtrl.text.trim();
+                  } else {
+                    _onboardingSlides.add({
+                      'id': 'slide-${DateTime.now().millisecondsSinceEpoch}',
+                      'title': t,
+                      'desc': descCtrl.text.trim(),
+                      'status': 'Active',
+                      'icon': Icons.auto_awesome_rounded,
+                      'color': const Color(0xFFECFDF5),
+                    });
+                  }
+                });
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(existingSlide != null ? 'Slide updated!' : 'Slide added! 🎉'), backgroundColor: const Color(0xFF10B981)),
+                );
+              },
+              icon: const Icon(Icons.check, size: 18),
+              label: Text(existingSlide != null ? 'Update Slide' : 'Add Slide'),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showAddCategoryModal([Map<String, dynamic>? existingCategory]) {
@@ -656,20 +773,22 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                   ? _buildAdvancedAppPagesPage()
                   : _tabController.index == 2
                       ? _buildAdvancedAppCategoriesPage()
-                      : IndexedStack(
-                          index: _tabController.index,
-                          children: [
-                            const SizedBox.shrink(),
-                            const SizedBox.shrink(),
-                            const SizedBox.shrink(),
-                            _buildAppCollectionsTab(),
-                            _buildAppConfigurationsTab(),
-                            _buildBottomNavTab(),
-                            _buildPushNotificationsTab(),
-                            _buildAppVersionTab(),
-                            _buildSplashOnboardingTab(),
-                          ],
-                        ),
+                      : _tabController.index == 8
+                          ? _buildAdvancedSplashOnboardingPage()
+                          : IndexedStack(
+                              index: _tabController.index,
+                              children: [
+                                const SizedBox.shrink(),
+                                const SizedBox.shrink(),
+                                const SizedBox.shrink(),
+                                _buildAppCollectionsTab(),
+                                _buildAppConfigurationsTab(),
+                                _buildBottomNavTab(),
+                                _buildPushNotificationsTab(),
+                                _buildAppVersionTab(),
+                                const SizedBox.shrink(),
+                              ],
+                            ),
         ],
       ),
     );
@@ -683,7 +802,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. 6 TOP ANALYTICS METRIC CARDS (KPI ROW)
         LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
@@ -710,7 +828,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 24),
 
-        // 2. MANAGE APP BANNERS DATA TABLE & ACTION BAR CARD
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -1661,7 +1778,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
-  // ── ADVANCED APP CATEGORIES PAGE (MATCHING SCREENSHOT 1-TO-1) ──
+  // ── ADVANCED APP CATEGORIES PAGE ──
   Widget _buildAdvancedAppCategoriesPage() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 1100;
@@ -1669,7 +1786,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Title & Top Action Bar Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -1715,7 +1831,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 20),
 
-        // 4 KPI SUMMARY METRIC CARDS (ROW)
         LayoutBuilder(
           builder: (context, constraints) {
             final width = constraints.maxWidth;
@@ -1736,11 +1851,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 24),
 
-        // MAIN CONTENT AREA: TABLE (LEFT) + RIGHT SIDEBAR
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // LEFT PANEL: "ALL CATEGORIES" DATA TABLE
             Expanded(
               flex: 7,
               child: Container(
@@ -1757,7 +1870,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     const Text('All Categories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                     const SizedBox(height: 16),
 
-                    // Search & Filter Action Bar
                     Row(
                       children: [
                         Expanded(
@@ -1819,7 +1931,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 16),
 
-                    // Data Table
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
@@ -1850,7 +1961,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                           return DataRow(
                             cells: [
-                              // Icon & Category Name + Slug
                               DataCell(
                                 Row(
                                   children: [
@@ -1872,7 +1982,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   ],
                                 ),
                               ),
-                              // Type Badge
                               DataCell(
                                 type != '-'
                                     ? Container(
@@ -1882,9 +1991,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                       )
                                     : const Text('-', style: TextStyle(color: Color(0xFF94A3B8))),
                               ),
-                              // Products Count
                               DataCell(Text('${cat['products']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155)))),
-                              // Status Badge
                               DataCell(
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1892,7 +1999,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   child: Text(cat['status'] as String, style: TextStyle(color: isActive ? const Color(0xFF10B981) : const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ),
-                              // Visibility
                               DataCell(
                                 Row(
                                   children: [
@@ -1902,7 +2008,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   ],
                                 ),
                               ),
-                              // Order Box
                               DataCell(
                                 Container(
                                   width: 28,
@@ -1912,9 +2017,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   child: Text('${cat['order']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                 ),
                               ),
-                              // Updated On Date
                               DataCell(Text(cat['updated'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
-                              // Actions Icons
                               DataCell(
                                 Row(
                                   children: [
@@ -1934,7 +2037,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     const Divider(height: 1),
                     const SizedBox(height: 16),
 
-                    // Pagination Footer Bar
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1973,12 +2075,10 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             if (isWide) ...[
               const SizedBox(width: 20),
-              // RIGHT SIDEBAR: QUICK STATS + TIPS + VISIBILITY GUIDE
               SizedBox(
                 width: 280,
                 child: Column(
                   children: [
-                    // Category Quick Stats Donut Card
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -2023,7 +2123,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 14),
 
-                    // Tips Card (Light green tint)
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -2055,7 +2154,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 14),
 
-                    // Category Visibility Guide Card
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -2085,11 +2183,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 28),
 
-        // BOTTOM 3-COLUMN SETTINGS SECTION (GLOBAL SETTINGS, BADGE MANAGEMENT, DEFAULT IMAGE)
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // COLUMN 1: CATEGORY SETTINGS
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -2166,7 +2262,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             const SizedBox(width: 16),
 
-            // COLUMN 2: BADGE MANAGEMENT
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -2189,7 +2284,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             const SizedBox(width: 16),
 
-            // COLUMN 3: DEFAULT CATEGORY IMAGE
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -2229,6 +2323,619 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
               ),
             ),
           ],
+        ),
+
+        const SizedBox(height: 36),
+
+        const Center(
+          child: Text('© 2024 Vaidyam Botanicals. All rights reserved.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+        ),
+      ],
+    );
+  }
+
+  // ── ADVANCED SPLASH & ONBOARDING PAGE (MATCHING SCREENSHOT 1-TO-1) ──
+  Widget _buildAdvancedSplashOnboardingPage() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth > 1100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title & Top Action Bar Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Splash & Onboarding Management', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                SizedBox(height: 4),
+                Text('Configure splash screen, onboarding slides, app icon and header/footer logos.', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+              ],
+            ),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _showAddSlideModal(),
+                  icon: const Icon(Icons.file_upload_outlined, size: 18),
+                  label: const Text('Upload New', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  child: const Text('··· More ∨', style: TextStyle(color: Color(0xFF475569), fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // 3 INNER SUB-TABS BAR
+        Row(
+          children: ['Splash Screen', 'Onboarding Screens (4)', 'App Icon & Logos'].map((t) {
+            final isSel = _innerSplashSubTab == t;
+            return GestureDetector(
+              onTap: () => setState(() => _innerSplashSubTab = t),
+              child: Container(
+                margin: const EdgeInsets.only(right: 24),
+                padding: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isSel ? const Color(0xFF10B981) : Colors.transparent, width: 3))),
+                child: Text(t, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isSel ? const Color(0xFF10B981) : const Color(0xFF64748B))),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 20),
+
+        // MAIN CONTENT 3-PANEL ROW
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // COLUMN 1: LOGOS & APP ICON CARDS (LEFT PANEL)
+            SizedBox(
+              width: 280,
+              child: Column(
+                children: [
+                  // App Icon Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('App Icon', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 2),
+                        const Text('This icon will appear on the user\'s device home screen.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(16)),
+                            child: const Center(child: Icon(Icons.eco_rounded, color: Colors.white, size: 36)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _pickImage(_logoCtrl, 'App Icon'),
+                              icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
+                              label: const Text('Change Icon', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
+                              style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+                            ),
+                            const SizedBox(width: 6),
+                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Center(child: Text('Recommended: 1024x1024px (PNG)', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8)))),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Header Logo Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Header Logo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 2),
+                        const Text('This logo will appear in the top header of the app.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.local_florist, color: Color(0xFF10B981), size: 24),
+                              SizedBox(width: 8),
+                              Text('Vaidyam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _pickImage(_logoCtrl, 'Header Logo'),
+                              icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
+                              label: const Text('Change Logo', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
+                              style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+                            ),
+                            const SizedBox(width: 6),
+                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Center(child: Text('Recommended: 512x512px (PNG or SVG)', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8)))),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Footer Logo Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Footer Logo', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 2),
+                        const Text('This logo will appear in the footer of the app.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 20),
+                              SizedBox(width: 6),
+                              Text('Vaidyam Botanicals', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () => _pickImage(_logoCtrl, 'Footer Logo'),
+                              icon: const Icon(Icons.cloud_upload_outlined, size: 14, color: Color(0xFF334155)),
+                              label: const Text('Change Logo', style: TextStyle(fontSize: 11, color: Color(0xFF334155))),
+                              style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+                            ),
+                            const SizedBox(width: 6),
+                            IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Center(child: Text('Recommended: 512x512px (PNG or SVG)', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8)))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // COLUMN 2: ONBOARDING SLIDES & SETTINGS (MIDDLE PANEL)
+            Expanded(
+              child: Column(
+                children: [
+                  // Onboarding Slides Manager Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text('Onboarding Slides', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                                SizedBox(height: 2),
+                                Text('Create, manage and reorder onboarding slides for new users.', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                              ],
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () => _showAddSlideModal(),
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Add Slide', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10B981),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Reorderable Onboarding Slides List
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _onboardingSlides.length,
+                          itemBuilder: (context, index) {
+                            final slide = _onboardingSlides[index];
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.drag_indicator_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(color: slide['color'] as Color, borderRadius: BorderRadius.circular(10)),
+                                    child: Icon(slide['icon'] as IconData, size: 20, color: const Color(0xFF10B981)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(slide['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                                        const SizedBox(height: 2),
+                                        Text(slide['desc'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(10)),
+                                    child: const Text('Active', style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold)),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _showAddSlideModal(slide)),
+                                  IconButton(icon: const Icon(Icons.content_copy_rounded, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                                  IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () => setState(() => _onboardingSlides.removeAt(index))),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Drag and drop slides to reorder', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                            Text('Total Slides: ${_onboardingSlides.length}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Onboarding Settings Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Onboarding Settings', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 2),
+                        const Text('Configure onboarding behavior and controls.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const SizedBox(height: 14),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Skip Onboarding', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Switch(value: _skipOnboarding, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _skipOnboarding = v)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Show Progress Bar', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Switch(value: _showProgressBar, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _showProgressBar = v)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Show Skip Button', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Switch(value: _showSkipButton, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _showSkipButton = v)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Auto Play', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Switch(value: _autoPlayOnboarding, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _autoPlayOnboarding = v)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Text('Skip Button Text ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 70,
+                                    height: 30,
+                                    child: TextField(
+                                      controller: _skipBtnTextCtrl,
+                                      style: const TextStyle(fontSize: 11),
+                                      decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)), contentPadding: const EdgeInsets.symmetric(horizontal: 8)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Auto Play Interval', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<int>(
+                                        value: _autoPlayIntervalSec,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                                        items: [2, 3, 5, 10].map((s) => DropdownMenuItem(value: s, child: Text('$s sec'))).toList(),
+                                        onChanged: (v) => setState(() => _autoPlayIntervalSec = v!),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Show Dots Indicator ⓘ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Switch(value: _showDotsIndicator, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _showDotsIndicator = v)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Animation Effect', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _animationEffect,
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                                        items: ['Fade In', 'Slide Left', 'Zoom In'].map((a) => DropdownMenuItem(value: a, child: Text(a))).toList(),
+                                        onChanged: (v) => setState(() => _animationEffect = v!),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            if (isWide) ...[
+              const SizedBox(width: 16),
+
+              // COLUMN 3: LIVE PREVIEW & QUICK ACTIONS (RIGHT PANEL)
+              SizedBox(
+                width: 260,
+                child: Column(
+                  children: [
+                    // Live Mobile Phone Screen Simulator Preview
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Preview', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                          const SizedBox(height: 2),
+                          const Text('See how it will look in the app.', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                          const SizedBox(height: 14),
+
+                          // Phone Frame Simulator Box
+                          Container(
+                            height: 280,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFCBD5E1), width: 3),
+                              boxShadow: const [BoxShadow(color: Color(0x0F000000), blurRadius: 10, offset: Offset(0, 4))],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(12)),
+                                  child: const Center(child: Icon(Icons.eco_rounded, color: Color(0xFF10B981), size: 30)),
+                                ),
+                                const SizedBox(height: 12),
+                                const Text('Vaidyam', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
+                                const Text('BOTANICALS', style: TextStyle(fontSize: 9, letterSpacing: 2, fontWeight: FontWeight.bold, color: Color(0xFF047857))),
+                                const SizedBox(height: 30),
+                                const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF10B981)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Quick Actions Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Quick Actions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                          const SizedBox(height: 10),
+                          _buildQuickActionTile('Reset to Default', Icons.refresh_rounded, () {}),
+                          _buildQuickActionTile('Preview All Screens', Icons.visibility_outlined, () {}),
+                          _buildQuickActionTile('Export Assets', Icons.download_rounded, () {}),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Tips Box (Light green tint)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Row(
+                            children: [
+                              Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFF10B981)),
+                              SizedBox(width: 6),
+                              Text('Tips', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF065F46))),
+                            ],
+                          ),
+                          SizedBox(height: 6),
+                          Text('✓ Use high resolution images for better quality', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('✓ Keep logo background transparent', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('✓ Onboarding slides should be simple & clear', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('✓ Changes reflect instantly in the app', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // BOTTOM ACTION BAR
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.arrow_back, size: 16, color: Color(0xFF475569)),
+                label: const Text('Back to Sections', style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.bold, fontSize: 13)),
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFCBD5E1)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              ),
+              const Spacer(),
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.visibility_outlined, size: 16, color: Color(0xFF4F46E5)),
+                label: const Text('Preview Changes', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13)),
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF818CF8)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _saveSettings,
+                icon: const Icon(Icons.save_rounded, size: 16),
+                label: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 36),
@@ -2597,7 +3304,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
           ),
         ),
         const SizedBox(height: 14),
-        // Tip Box (Light purple background)
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -2650,7 +3356,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
-  // ── SUB-TABS 3 TO 8 IMPLEMENTATION ──
+  // ── SUB-TABS 3 TO 7 IMPLEMENTATION ──
   Widget _buildAppCollectionsTab() {
     final collections = [
       {'name': 'Botanical Combos & Gift Bundles', 'route': 'Featured', 'status': 'Active'},
@@ -2730,21 +3436,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
           Text('App Version & Release Control', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           SizedBox(height: 12),
           Text('Current Release: v2.4.0 (Build 104) • Status: Published'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSplashOnboardingTab() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('Splash & Onboarding Screens', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          SizedBox(height: 12),
-          Text('Configure App Splash Screen Logo & Onboarding slides.'),
         ],
       ),
     );
