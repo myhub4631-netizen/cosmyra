@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/utils/web_helper.dart';
 
 class BrandSettings {
   final String headerLogoUrl;
@@ -121,17 +121,7 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
 
   void _updateDomFavicon(String url) {
     if (!kIsWeb) return;
-    try {
-      final String targetUrl = url.isNotEmpty ? url : 'favicon.png?v=${DateTime.now().millisecondsSinceEpoch}';
-      final links = html.document.querySelectorAll("link[rel*='icon']");
-      for (final link in links) {
-        link.setAttribute('href', targetUrl);
-      }
-      final element = html.document.getElementById('app-favicon');
-      if (element != null) {
-        element.setAttribute('href', targetUrl);
-      }
-    } catch (_) {}
+    updateDomFavicon(url);
   }
 }
 

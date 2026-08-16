@@ -1,8 +1,8 @@
-import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../core/utils/web_helper.dart';
 import '../../orders/models/order_model.dart';
 import '../../orders/repositories/order_repository.dart';
 import '../../cart/models/cart_item_model.dart';
@@ -544,12 +544,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
 ''';
 
     if (kIsWeb) {
-      final blob = html.Blob([htmlContent], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'Invoice_${orderId}.html')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      downloadTextFile('Invoice_${orderId}.html', htmlContent);
     }
   }
 

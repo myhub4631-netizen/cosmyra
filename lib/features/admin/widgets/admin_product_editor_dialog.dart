@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -116,52 +115,6 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
   }
 
   Future<void> _pickLocalComputerImage() async {
-    if (kIsWeb) {
-      try {
-        final uploadInput = html.FileUploadInputElement();
-        uploadInput.accept = '.jpg,.jpeg,.png,.webp,.gif,.bmp,image/*';
-        uploadInput.multiple = false;
-        uploadInput.click();
-
-        uploadInput.onChange.listen((event) {
-          final files = uploadInput.files;
-          if (files != null && files.isNotEmpty) {
-            final file = files[0];
-            final reader = html.FileReader();
-
-            reader.onLoadEnd.listen((e) {
-              final result = reader.result;
-              if (result != null && result is String) {
-                setState(() {
-                  _imageUrls.add(result);
-                });
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('✓ Custom image "${file.name}" uploaded successfully!'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                }
-              }
-            });
-
-            reader.readAsDataUrl(file);
-          }
-        });
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error selecting image: $e'),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      }
-      return;
-    }
-
     try {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../controllers/brand_settings_controller.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 
@@ -46,26 +46,33 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
     super.dispose();
   }
 
-  void _pickImageFile(TextEditingController targetCtrl, String label) {
-    if (kIsWeb) {
-      final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-      uploadInput.click();
-      uploadInput.onChange.listen((e) {
-        final files = uploadInput.files;
-        if (files != null && files.isNotEmpty) {
-          final reader = html.FileReader();
-          reader.readAsDataUrl(files[0]!);
-          reader.onLoadEnd.listen((e) {
-            final String base64Result = reader.result.toString();
-            setState(() {
-              targetCtrl.text = base64Result;
-            });
+  Future<void> _pickImageFile(TextEditingController targetCtrl, String label) async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
+        withData: true,
+      );
+      if (result != null && result.files.isNotEmpty) {
+        final bytes = result.files.first.bytes;
+        if (bytes != null) {
+          final String base64Result = 'data:image/png;base64,${base64Encode(bytes)}';
+          setState(() {
+            targetCtrl.text = base64Result;
+          });
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Custom $label loaded successfully! 🖼️')),
             );
-          });
+          }
         }
-      });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
     }
   }
 
