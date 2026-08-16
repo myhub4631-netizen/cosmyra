@@ -9,6 +9,7 @@ import '../../catalog/repositories/product_repository.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 import '../repositories/order_repository.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
+import '../widgets/vaidyam_mobile_orders_screen_widget.dart';
 
 class VaidyamOrdersScreen extends ConsumerStatefulWidget {
   const VaidyamOrdersScreen({super.key});
@@ -41,6 +42,10 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 950;
+
+    if (screenWidth <= 768) {
+      return const VaidyamMobileOrdersScreenWidget();
+    }
 
     // Combine real Riverpod orders + demo fallback orders
     final List<Map<String, dynamic>> allOrders = [];
