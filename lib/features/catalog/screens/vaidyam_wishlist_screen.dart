@@ -11,6 +11,7 @@ import '../widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
+import '../widgets/vaidyam_mobile_wishlist_screen_widget.dart';
 
 class VaidyamWishlistScreen extends ConsumerStatefulWidget {
   const VaidyamWishlistScreen({super.key});
@@ -99,6 +100,16 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
     final cartState = ref.watch(cartProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
+
+    if (screenWidth <= 768) {
+      final allProducts = productsAsync.value ?? [];
+      final wishlistedProducts = allProducts.where((p) => wishlistIds.contains(p.id)).toList();
+
+      return VaidyamMobileWishlistScreenWidget(
+        wishlistProducts: wishlistedProducts,
+        onRefresh: () => setState(() {}),
+      );
+    }
 
     return Scaffold(
       backgroundColor: _lightBg,
