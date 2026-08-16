@@ -8,6 +8,7 @@ import '../../cart/controllers/cart_controller.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
+import '../widgets/product_image_widget.dart';
 
 class VaidyamShopScreen extends ConsumerStatefulWidget {
   const VaidyamShopScreen({super.key});
@@ -425,125 +426,7 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
   }
 
   Widget _buildProductCard(BuildContext context, ProductModel p) {
-    final v = p.defaultVariant;
-    final discountPct = v.mrp > v.price ? (((v.mrp - v.price) / v.mrp) * 100).round() : 0;
-
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Stack with Discount Badge
-            Expanded(
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(8),
-                      image: DecorationImage(
-                        image: p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('data:')
-                            ? MemoryImage(base64Decode(p.imageUrls.first.split(',').last)) as ImageProvider
-                            : ((p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('http'))
-                                ? NetworkImage(p.imageUrls.first) as ImageProvider
-                                : AssetImage(p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg')),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  if (discountPct > 0)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '-$discountPct%',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Product Title
-            Text(
-              p.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-
-            // Rating Stars
-            Row(
-              children: const [
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Icon(Icons.star, size: 14, color: Colors.amber),
-                Icon(Icons.star_half, size: 14, color: Colors.amber),
-                SizedBox(width: 4),
-                Text('(4.3)', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280), fontWeight: FontWeight.w500)),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            // Price & Add to Cart Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('₹${v.price.toInt()}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
-                    if (v.mrp > v.price)
-                      Text('₹${v.mrp.toInt()}', style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough)),
-                  ],
-                ),
-                InkWell(
-                  onTap: () {
-                    ref.read(cartProvider.notifier).addItem(product: p, variant: v);
-                    showCenterActionToast(
-                      context,
-                      title: 'Added to Shopping Bag! 🛍️',
-                      message: p.name,
-                      icon: Icons.shopping_bag_outlined,
-                      iconColor: const Color(0xFF4F46E5),
-                      primaryActionLabel: 'VIEW CART',
-                      onPrimaryAction: () => context.push('/cart'),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: const Icon(Icons.shopping_cart_outlined, size: 18, color: Color(0xFF374151)),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    return _ShopGridCardStateful(product: p);
   }
 
   Widget _buildProductListTile(BuildContext context, ProductModel p) {
@@ -596,6 +479,213 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6366F1), foregroundColor: Colors.white),
               icon: const Icon(Icons.add_shopping_cart, size: 16),
               label: const Text('Add'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShopGridCardStateful extends ConsumerStatefulWidget {
+  final ProductModel product;
+
+  const _ShopGridCardStateful({required this.product});
+
+  @override
+  ConsumerState<_ShopGridCardStateful> createState() => _ShopGridCardStatefulState();
+}
+
+class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.product;
+    final v = p.defaultVariant;
+    final discountPct = v.mrp > v.price ? (((v.mrp - v.price) / v.mrp) * 100).round() : 0;
+    final String imageUrl = p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg';
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isHovered ? const Color(0xFF6366F1) : const Color(0xFFE5E7EB),
+            width: _isHovered ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered ? const Color(0xFF6366F1).withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.03),
+              blurRadius: _isHovered ? 12 : 6,
+              offset: Offset(0, _isHovered ? 5 : 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Image Stack with Contain Fit & 1.08x Scale
+            Expanded(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedScale(
+                        scale: _isHovered ? 1.08 : 1.0,
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        child: ProductImageWidget(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
+                          width: double.infinity,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Floating Quick Overview Badge Overlay on Hover
+                  if (_isHovered)
+                    Positioned(
+                      bottom: 6,
+                      left: 6,
+                      right: 6,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        opacity: _isHovered ? 1.0 : 0.0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1B4B).withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text(
+                                'Quick Overview • Pure Botanical',
+                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Discount Badge (Top-Left)
+                  if (discountPct > 0)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444),
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                        ),
+                        child: Text(
+                          '-$discountPct%',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Product Title
+            Text(
+              p.name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+
+            // Rating Stars
+            Row(
+              children: const [
+                Icon(Icons.star, size: 13, color: Colors.amber),
+                Icon(Icons.star, size: 13, color: Colors.amber),
+                Icon(Icons.star, size: 13, color: Colors.amber),
+                Icon(Icons.star, size: 13, color: Colors.amber),
+                Icon(Icons.star_half, size: 13, color: Colors.amber),
+                SizedBox(width: 4),
+                Text('(4.8)', style: TextStyle(fontSize: 10, color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
+              ],
+            ),
+
+            const SizedBox(height: 8),
+
+            // Price & Original MRP & Add to Cart Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '₹${v.price.toInt()}',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                    ),
+                    if (v.mrp > v.price)
+                      Text(
+                        '₹${v.mrp.toInt()}',
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough),
+                      ),
+                  ],
+                ),
+                InkWell(
+                  onTap: () {
+                    ref.read(cartProvider.notifier).addItem(product: p, variant: v);
+                    showCenterActionToast(
+                      context,
+                      title: 'Added to Shopping Bag! 🛍️',
+                      message: p.name,
+                      icon: Icons.shopping_bag_outlined,
+                      iconColor: const Color(0xFF4F46E5),
+                      primaryActionLabel: 'VIEW CART',
+                      onPrimaryAction: () => context.push('/cart'),
+                    );
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _isHovered ? const Color(0xFF4F46E5) : const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _isHovered ? const Color(0xFF4338CA) : const Color(0xFFE5E7EB)),
+                    ),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 18,
+                      color: _isHovered ? Colors.white : const Color(0xFF374151),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

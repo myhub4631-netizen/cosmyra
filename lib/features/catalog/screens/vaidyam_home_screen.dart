@@ -1290,153 +1290,17 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   // --- REUSABLE SHOWCASE PRODUCT CARD ---
   Widget _buildShowcaseProductCard(Map<String, dynamic> prod) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Top Image Stack
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: ProductImageWidget(
-                  imageUrl: prod['image'] as String? ?? '',
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              // Discount Tag Badge (Top-Left)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDC2626),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    prod['discount'] as String,
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              // Heart Wishlist Button (Top-Right)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
-                    onPressed: () {
-                      ref.read(wishlistProvider.notifier).toggleWishlist(prod['id'] as String);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  prod['name'] as String,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  prod['category'] as String,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
-                ),
-                const SizedBox(height: 4),
-
-                // Rating Row
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 13),
-                    const SizedBox(width: 3),
-                    Text('${prod['rating']} (${prod['reviews'] ?? "12345"})', style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                // Price Row Left & Right (Right-aligned price tag)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text('₹${prod['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                        const SizedBox(width: 6),
-                        Text('₹${prod['originalPrice'] ?? "2549"}', style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough)),
-                      ],
-                    ),
-                    Text('₹${prod['price']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                // Larger Add to Cart & Buy Now Action Buttons Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _addDealToCart(prod, isBuyNow: false),
-                        icon: const Icon(Icons.shopping_cart_outlined, size: 13, color: Color(0xFF4F46E5)),
-                        label: const Text('Add to Cart', style: TextStyle(color: Color(0xFF4F46E5), fontSize: 11, fontWeight: FontWeight.bold)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          side: const BorderSide(color: Color(0xFF4F46E5)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          minimumSize: const Size(0, 38),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _addDealToCart(prod, isBuyNow: true),
-                        icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
-                        label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4F46E5),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          elevation: 0,
-                          minimumSize: const Size(0, 38),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return _DealProductCardWidget(
+      deal: prod,
+      onAddToCart: _addDealToCart,
+      onToggleWishlist: () {
+        ref.read(wishlistProvider.notifier).toggleWishlist(
+          prod['id']?.toString() ?? prod['name']?.toString() ?? '',
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
+        );
+      },
     );
   }
 
