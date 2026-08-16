@@ -12,6 +12,7 @@ import 'admin_dashboard_screen.dart';
 import '../widgets/admin_branding_view.dart';
 import '../widgets/admin_coupons_view.dart';
 import '../widgets/admin_mobile_app_view.dart';
+import '../widgets/admin_website_content_manager_view.dart';
 
 class AdminMasterScreen extends ConsumerStatefulWidget {
   const AdminMasterScreen({super.key});
@@ -21,7 +22,8 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website (Homepage), 8: Website (Footer), 9: Logo & Branding, 10: Mobile App Panel
+  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website Content Manager, 8: Website Footer, 9: Logo & Branding, 10: Mobile App Panel
+  int _websiteSubTab = 0;
   int _mobileAppSubTab = 0;
 
   // Expanded parent menus
@@ -80,7 +82,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminCouponsView(),
       const Center(child: Text('Analytics View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
       const Center(child: Text('Reports View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
-      const AdminHomepageCmsView(),
+      AdminWebsiteContentManagerView(key: ValueKey('website_tab_$_websiteSubTab'), initialSubTab: _websiteSubTab),
       const AdminFooterCmsView(),
       const AdminBrandingView(),
       AdminMobileAppView(key: ValueKey('mobile_app_tab_$_mobileAppSubTab'), initialSubTab: _mobileAppSubTab),
@@ -369,14 +371,14 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 _groupHeader('CONTENT MANAGEMENT ⓘ'),
                 _navItem('Website', Icons.language_rounded, 7, hasChildren: true),
                 if (_expandedParentMenus.contains('Website')) ...[
-                  _subNavItem('Banners', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('Pages', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('Collections', 1, () => setState(() => _activeViewIndex = 1)),
-                  _subNavItem('Blog', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('FAQ', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('Menus', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('Testimonials', 7, () => setState(() => _activeViewIndex = 7)),
-                  _subNavItem('SEO Settings', 9, () => setState(() => _activeViewIndex = 9)),
+                  _subNavItem('Banners', 7, () => setState(() { _websiteSubTab = 0; _activeViewIndex = 7; })),
+                  _subNavItem('Pages', 7, () => setState(() { _websiteSubTab = 1; _activeViewIndex = 7; })),
+                  _subNavItem('Collections', 7, () => setState(() { _websiteSubTab = 2; _activeViewIndex = 7; })),
+                  _subNavItem('Blog', 7, () => setState(() { _websiteSubTab = 3; _activeViewIndex = 7; })),
+                  _subNavItem('Menus', 7, () => setState(() { _websiteSubTab = 4; _activeViewIndex = 7; })),
+                  _subNavItem('Testimonials', 7, () => setState(() { _websiteSubTab = 5; _activeViewIndex = 7; })),
+                  _subNavItem('FAQ', 7, () => setState(() { _websiteSubTab = 6; _activeViewIndex = 7; })),
+                  _subNavItem('SEO Settings', 7, () => setState(() { _websiteSubTab = 7; _activeViewIndex = 7; })),
                 ],
 
                 _navItem('Mobile App', Icons.phone_iphone_rounded, 10, hasChildren: true),
