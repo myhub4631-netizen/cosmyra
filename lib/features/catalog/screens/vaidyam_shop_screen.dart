@@ -506,6 +506,10 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
     final discountPct = v.mrp > v.price ? (((v.mrp - v.price) / v.mrp) * 100).round() : 0;
     final String imageUrl = p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg';
 
+    void openDetails() {
+      context.push('/product/${p.id}', extra: p);
+    }
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -530,96 +534,107 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Image Stack with Contain Fit & 1.08x Scale
+            // Top Image Stack with Contain Fit & 1.08x Scale & Click Navigation
             Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: AnimatedScale(
-                        scale: _isHovered ? 1.08 : 1.0,
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        child: ProductImageWidget(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
-                          width: double.infinity,
+              child: GestureDetector(
+                onTap: openDetails,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: AnimatedScale(
+                          scale: _isHovered ? 1.08 : 1.0,
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          child: ProductImageWidget(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
+                            width: double.infinity,
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Floating Quick Overview Badge Overlay on Hover
-                  if (_isHovered)
-                    Positioned(
-                      bottom: 6,
-                      left: 6,
-                      right: 6,
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 180),
-                        opacity: _isHovered ? 1.0 : 0.0,
+                    // Floating Quick Overview Badge Overlay on Hover
+                    if (_isHovered)
+                      Positioned(
+                        bottom: 6,
+                        left: 6,
+                        right: 6,
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          opacity: _isHovered ? 1.0 : 0.0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E1B4B).withValues(alpha: 0.92),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Quick Overview • Pure Botanical',
+                                  style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Discount Badge (Top-Left)
+                    if (discountPct > 0)
+                      Positioned(
+                        top: 8,
+                        left: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E1B4B).withValues(alpha: 0.92),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-                            ],
+                            color: const Color(0xFFEF4444),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
-                              SizedBox(width: 4),
-                              Text(
-                                'Quick Overview • Pure Botanical',
-                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                              ),
-                            ],
+                          child: Text(
+                            '-$discountPct%',
+                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
-                    ),
-
-                  // Discount Badge (Top-Left)
-                  if (discountPct > 0)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEF4444),
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                        ),
-                        child: Text(
-                          '-$discountPct%',
-                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
 
             const SizedBox(height: 10),
 
-            // Product Title
-            Text(
-              p.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            // Product Title - Clickable to open details!
+            InkWell(
+              onTap: openDetails,
+              child: Text(
+                p.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: _isHovered ? const Color(0xFF4F46E5) : const Color(0xFF111827),
+                  decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(height: 4),
 

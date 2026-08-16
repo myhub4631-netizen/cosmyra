@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/center_action_toast.dart';
 import '../../admin/controllers/homepage_cms_controller.dart';
+import '../../admin/controllers/countdown_timer_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
@@ -2078,6 +2079,42 @@ class _DealProductCardWidget extends StatefulWidget {
 class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
   bool _isHovered = false;
 
+  void _openProductDetails() {
+    final deal = widget.deal;
+    final String id = deal['id']?.toString() ?? (deal['name']?.toString().toLowerCase().replaceAll(' ', '-') ?? 'prod-1');
+    final ProductModel product = deal['rawModel'] is ProductModel
+        ? deal['rawModel'] as ProductModel
+        : ProductModel(
+            id: id,
+            brandId: 'brand-vaidyam',
+            categoryId: deal['categoryId']?.toString() ?? 'cat-skincare',
+            name: deal['name']?.toString() ?? 'Botanical Formulation',
+            slug: id,
+            tagline: 'Pure Botanical Ayurvedic Formulation',
+            description: deal['description']?.toString() ??
+                'Handcrafted with organic botanical extracts according to ancient Ayurvedic principles. Free from parabens, sulfates, and synthetic additives.',
+            ingredients: deal['ingredients']?.toString() ?? 'Turmeric, Kojic Acid, Aloe Vera, Saffron, Sesame Oil',
+            howToUse: 'Apply generously on clean skin. Massage gently in circular motions for 2-3 minutes. Rinse with lukewarm water.',
+            freeFromClaims: ['100% Organic', 'Sulfate-Free', 'Paraben-Free', 'Cruelty-Free'],
+            variants: [
+              ProductVariant(
+                id: 'v-$id',
+                productId: id,
+                sku: 'SKU-$id',
+                sizeLabel: '100g Standard',
+                price: (double.tryParse(deal['price']?.toString().replaceAll('₹', '').replaceAll(',', '').trim() ?? '399') ?? 399.0),
+                mrp: (double.tryParse(deal['mrp']?.toString().replaceAll('₹', '').replaceAll(',', '').trim() ?? '499') ?? 499.0),
+                stock: 50,
+                isDefault: true,
+              ),
+            ],
+            imageUrls: deal['image'] != null ? [deal['image'].toString()] : ['assets/images/shampoo.jpg'],
+            isFeatured: true,
+          );
+
+    context.push('/product/$id', extra: product);
+  }
+
   @override
   Widget build(BuildContext context) {
     final deal = widget.deal;
@@ -2119,99 +2156,102 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Top Image Container with Smooth Scale Effect & Contain Fit
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  height: 145,
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: AnimatedScale(
-                      scale: _isHovered ? 1.08 : 1.0,
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      child: ProductImageWidget(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
-                        height: 145,
-                        width: double.infinity,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Quick Overview Floating Badge Overlay on Hover!
-                if (_isHovered)
-                  Positioned(
-                    bottom: 6,
-                    left: 6,
-                    right: 6,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 180),
-                      opacity: _isHovered ? 1.0 : 0.0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E1B4B).withValues(alpha: 0.94),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text(
-                              'Quick Overview • Pure Botanical',
-                              style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Discount Tag Badge (Top-Left)
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            GestureDetector(
+              onTap: _openProductDetails,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    height: 145,
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFDC2626),
-                      borderRadius: BorderRadius.circular(6),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      '$discountPct% OFF',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedScale(
+                        scale: _isHovered ? 1.08 : 1.0,
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        child: ProductImageWidget(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain, // FULL IMAGE VISIBLE WITHOUT CROPPING
+                          height: 145,
+                          width: double.infinity,
+                        ),
+                      ),
                     ),
                   ),
-                ),
 
-                // Wishlist Heart Button (Top-Right)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
-                      onPressed: widget.onToggleWishlist,
+                  // Quick Overview Floating Badge Overlay on Hover!
+                  if (_isHovered)
+                    Positioned(
+                      bottom: 6,
+                      left: 6,
+                      right: 6,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        opacity: _isHovered ? 1.0 : 0.0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1B4B).withValues(alpha: 0.94),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.remove_red_eye_outlined, size: 11, color: Colors.white),
+                              SizedBox(width: 4),
+                              Text(
+                                'Quick Overview • Pure Botanical',
+                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Discount Tag Badge (Top-Left)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626),
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      ),
+                      child: Text(
+                        '$discountPct% OFF',
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                ),
-              ],
+
+                  // Wishlist Heart Button (Top-Right)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: CircleAvatar(
+                      radius: 14,
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
+                        onPressed: widget.onToggleWishlist,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 10),
 
@@ -2244,12 +2284,21 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
             ),
             const SizedBox(height: 6),
 
-            // Title
-            Text(
-              deal['name']?.toString() ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            // Title - Clickable to open product details!
+            InkWell(
+              onTap: _openProductDetails,
+              hoverColor: Colors.transparent,
+              child: Text(
+                deal['name']?.toString() ?? '',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: _isHovered ? const Color(0xFF4F46E5) : const Color(0xFF111827),
+                  decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(height: 8),
 

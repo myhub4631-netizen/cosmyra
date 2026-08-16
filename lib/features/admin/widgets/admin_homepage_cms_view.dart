@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/homepage_cms_controller.dart';
+import '../controllers/countdown_timer_controller.dart';
 
 class AdminHomepageCmsView extends ConsumerStatefulWidget {
   const AdminHomepageCmsView({super.key});
@@ -767,6 +768,8 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                   _buildNavTab(2, 'Theme Settings', Icons.palette_outlined),
                   const SizedBox(width: 8),
                   _buildNavTab(3, 'Custom CSS/JS', Icons.code_outlined),
+                  const SizedBox(width: 8),
+                  _buildNavTab(4, 'Sale Timer Control ⏱️', Icons.timer_outlined),
                 ],
               ),
 
@@ -810,6 +813,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
           if (_selectedTab == 1) _buildSeoTabBody(),
           if (_selectedTab == 2) _buildThemeTabBody(),
           if (_selectedTab == 3) _buildCustomCssJsTabBody(),
+          if (_selectedTab == 4) _buildSaleTimerTabBody(),
         ],
       ),
     );
@@ -1308,6 +1312,233 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
           TextField(controller: _customJsCtrl, maxLines: 6, style: const TextStyle(fontFamily: 'monospace', fontSize: 12), decoration: const InputDecoration(border: OutlineInputBorder())),
         ],
       ),
+    );
+  }
+
+  // ---------------- TAB 4: SALE TIMER CONTROL ----------------
+  Widget _buildSaleTimerTabBody() {
+    final timerState = ref.watch(countdownTimerProvider);
+    final timerNotifier = ref.read(countdownTimerProvider.notifier);
+
+    final hoursCtrl = TextEditingController(text: (timerState.remainingSeconds ~/ 3600).toString().padLeft(2, '0'));
+    final minsCtrl = TextEditingController(text: ((timerState.remainingSeconds % 3600) ~/ 60).toString().padLeft(2, '0'));
+    final secsCtrl = TextEditingController(text: (timerState.remainingSeconds % 60).toString().padLeft(2, '0'));
+    final labelCtrl = TextEditingController(text: timerState.labelText);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: const [
+                        Icon(Icons.timer_outlined, color: Color(0xFFDC2626), size: 24),
+                        SizedBox(width: 10),
+                        Text(
+                          'Homepage Sale Countdown Timer Manager',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Text('Timer Active', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        Switch(
+                          value: timerState.isActive,
+                          onChanged: (val) => timerNotifier.toggleActive(val),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Set custom sale duration, reset countdown timers, and manage banner ticker text live on the homepage.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+                const Divider(height: 32),
+
+                // Live Preview Box
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCA5A5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.remove_red_eye_outlined, color: Color(0xFFDC2626), size: 20),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Live Storefront Banner Preview:  ',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF991B1B)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFFCA5A5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.timer_outlined, size: 14, color: Color(0xFFDC2626)),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${timerState.labelText} ',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB91C1C)),
+                            ),
+                            Text(
+                              '${(timerState.remainingSeconds ~/ 3600).toString().padLeft(2, '0')}h ${((timerState.remainingSeconds % 3600) ~/ 60).toString().padLeft(2, '0')}m ${(timerState.remainingSeconds % 60).toString().padLeft(2, '0')}s',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFDC2626)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Quick Preset Buttons Row
+                const Text('Quick Timer Reset Presets:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF374151))),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        timerNotifier.resetTimer(hours: 24, minutes: 0, seconds: 0);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset countdown timer to 24 Hours!')));
+                      },
+                      icon: const Icon(Icons.replay_outlined, size: 16),
+                      label: const Text('Reset to 24 Hours 🔄'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        timerNotifier.resetTimer(hours: 12, minutes: 0, seconds: 0);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset countdown timer to 12 Hours!')));
+                      },
+                      icon: const Icon(Icons.timer, size: 16),
+                      label: const Text('Reset to 12 Hours ⏱️'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF059669), foregroundColor: Colors.white),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        timerNotifier.resetTimer(hours: 6, minutes: 0, seconds: 0);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset countdown timer to 6 Hours!')));
+                      },
+                      icon: const Icon(Icons.local_fire_department, size: 16),
+                      label: const Text('Reset to 6 Hours 🔥'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD97706), foregroundColor: Colors.white),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        timerNotifier.resetTimer(hours: 1, minutes: 0, seconds: 0);
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reset countdown timer to 1 Hour Flash Sale!')));
+                      },
+                      icon: const Icon(Icons.bolt, size: 16),
+                      label: const Text('Flash Sale (1 Hour) ⚡'),
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                // Custom Timer Duration Form Inputs
+                const Text('Set Custom Timer Duration & Banner Text:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF374151))),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: hoursCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Hours',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.hourglass_top),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: minsCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Minutes',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.access_time),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: secsCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Seconds',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.timer),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: labelCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Timer Label Banner Text',
+                    hintText: 'e.g. 🔥 Sale Ends In: or ⚡ Monsoon Special Ends:',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.subtitles),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final h = int.tryParse(hoursCtrl.text) ?? 5;
+                    final m = int.tryParse(minsCtrl.text) ?? 42;
+                    final s = int.tryParse(secsCtrl.text) ?? 18;
+                    timerNotifier.resetTimer(hours: h, minutes: m, seconds: s, labelText: labelCtrl.text);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Updated Sale Timer to ${h}h ${m}m ${s}s with label "${labelCtrl.text}"!')),
+                    );
+                  },
+                  icon: const Icon(Icons.save, size: 18),
+                  label: const Text('Apply & Save Custom Timer', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
