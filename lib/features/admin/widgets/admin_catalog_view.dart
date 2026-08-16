@@ -663,7 +663,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                         child: Row(
                           children: [
                             SizedBox(
-                              width: 30,
+                              width: 40,
                               child: InkWell(
                                 onTap: () {
                                   setState(() {
@@ -681,14 +681,13 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                 ),
                               ),
                             ),
-                            const Expanded(flex: 4, child: Text('Product Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const Expanded(flex: 3, child: Text('SKU / Product ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const Expanded(flex: 2, child: Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const Expanded(flex: 2, child: Text('Price', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const Expanded(flex: 2, child: Text('Stock', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const Expanded(flex: 2, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 50, child: Text('Visibility', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.center)),
-                            const SizedBox(width: 170, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
+                            const SizedBox(width: 260, child: Text('Product Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 160, child: Text('SKU / Product ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 130, child: Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 120, child: Text('Price', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 130, child: Text('Stock', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 90, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            const SizedBox(width: 180, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
                           ],
                         ),
                       ),
@@ -733,7 +732,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                   child: Row(
                                     children: [
                                       SizedBox(
-                                        width: 30,
+                                        width: 40,
                                         child: InkWell(
                                           onTap: () {
                                             setState(() {
@@ -752,14 +751,14 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // Product Image & Name & Variant
-                                      Expanded(
-                                        flex: 4,
+                                      // Product Image & Name & Variant (Width: 260)
+                                      SizedBox(
+                                        width: 260,
                                         child: Row(
                                           children: [
                                             Container(
-                                              width: 48,
-                                              height: 48,
+                                              width: 44,
+                                              height: 44,
                                               decoration: BoxDecoration(
                                                 color: const Color(0xFFF3F4F6),
                                                 borderRadius: BorderRadius.circular(8),
@@ -770,9 +769,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                       )
                                                     : null,
                                               ),
-                                              child: imageUrl.isEmpty ? const Icon(Icons.spa, color: Color(0xFF059669), size: 24) : null,
+                                              child: imageUrl.isEmpty ? const Icon(Icons.spa, color: Color(0xFF059669), size: 22) : null,
                                             ),
-                                            const SizedBox(width: 12),
+                                            const SizedBox(width: 10),
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -780,7 +779,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                   Text(
                                                     prod.name,
                                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-                                                    maxLines: 2,
+                                                    maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
                                                   const SizedBox(height: 3),
@@ -790,7 +789,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                       if (prod.isFeatured) ...[
                                                         const SizedBox(width: 6),
                                                         Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                                           decoration: BoxDecoration(
                                                             color: const Color(0xFFD1FAE5),
                                                             borderRadius: BorderRadius.circular(4),
@@ -807,22 +806,32 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // SKU / ID
-                                      Expanded(
-                                        flex: 3,
+                                      // SKU / ID (Width: 160)
+                                      SizedBox(
+                                        width: 160,
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(v.sku, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF374151))),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF3F4F6),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                v.sku,
+                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151), fontFamily: 'monospace'),
+                                              ),
+                                            ),
                                             const SizedBox(height: 2),
-                                            Text(prod.id, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                                            Text(prod.id, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), overflow: TextOverflow.ellipsis),
                                           ],
                                         ),
                                       ),
 
-                                      // Category Pill
-                                      Expanded(
-                                        flex: 2,
+                                      // Category Pill (Width: 130)
+                                      SizedBox(
+                                        width: 130,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Container(
@@ -833,15 +842,15 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                             ),
                                             child: Text(
                                               prod.categoryId.replaceAll('cat-', '').toUpperCase(),
-                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getCategoryPillTextColor(prod.categoryId)),
+                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _getCategoryPillTextColor(prod.categoryId)),
                                             ),
                                           ),
                                         ),
                                       ),
 
-                                      // Price & MRP
-                                      Expanded(
-                                        flex: 2,
+                                      // Price & MRP (Width: 120)
+                                      SizedBox(
+                                        width: 120,
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
@@ -865,15 +874,15 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // Stock Units & Restock CTA
-                                      Expanded(
-                                        flex: 2,
+                                      // Stock Units & Restock CTA (Width: 130)
+                                      SizedBox(
+                                        width: 130,
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
                                               children: [
-                                                Text('${v.stock} Units', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                                                Text('${v.stock} Units', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
                                                 const SizedBox(width: 4),
                                                 InkWell(
                                                   onTap: () => _showQuickRestockDialog(context, prod),
@@ -885,7 +894,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                             Text(
                                               v.stock > 0 ? 'In Stock' : 'Out of Stock',
                                               style: TextStyle(
-                                                fontSize: 11,
+                                                fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                                 color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFFDC2626),
                                               ),
@@ -894,9 +903,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // Status Badge
-                                      Expanded(
-                                        flex: 2,
+                                      // Status Badge (Width: 90)
+                                      SizedBox(
+                                        width: 90,
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Container(
@@ -908,7 +917,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                             child: Text(
                                               v.stock > 0 ? 'Active' : 'Inactive',
                                               style: TextStyle(
-                                                fontSize: 11,
+                                                fontSize: 10,
                                                 fontWeight: FontWeight.bold,
                                                 color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFF6B7280),
                                               ),
@@ -917,24 +926,31 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         ),
                                       ),
 
-                                      // Visibility Toggle Column (Eye Icon)
+                                      // Actions (Eye, Edit, Delete & 3-dot Menu) (Width: 180)
                                       SizedBox(
-                                        width: 50,
-                                        child: Center(
-                                          child: IconButton(
-                                            icon: const Icon(Icons.remove_red_eye_outlined, size: 18, color: Color(0xFF6B7280)),
-                                            tooltip: 'View Product Page',
-                                            onPressed: () => context.push('/product/${prod.id}', extra: prod),
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Actions (Edit, Delete & 3-dot More Options)
-                                      SizedBox(
-                                        width: 170,
+                                        width: 180,
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [
+                                            // View icon
+                                            Tooltip(
+                                              message: 'View Product Page',
+                                              child: InkWell(
+                                                onTap: () => context.push('/product/${prod.id}', extra: prod),
+                                                borderRadius: BorderRadius.circular(6),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(5),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFFF3F4F6),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                                                  ),
+                                                  child: const Icon(Icons.remove_red_eye_outlined, size: 14, color: Color(0xFF6B7280)),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            // Edit button
                                             Tooltip(
                                               message: 'Edit Product',
                                               child: InkWell(
@@ -958,7 +974,8 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(width: 5),
+                                            const SizedBox(width: 4),
+                                            // Delete button
                                             Tooltip(
                                               message: 'Delete Product',
                                               child: InkWell(
@@ -982,7 +999,8 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(width: 5),
+                                            const SizedBox(width: 4),
+                                            // 3-dots menu
                                             PopupMenuButton<String>(
                                               padding: EdgeInsets.zero,
                                               icon: Container(
