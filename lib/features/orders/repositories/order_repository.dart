@@ -123,7 +123,9 @@ class OrderRepository {
             });
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        print('Error inserting order into Supabase: $e');
+      }
     }
 
     final placedOrder = OrderModel(
@@ -213,7 +215,9 @@ class OrderRepository {
             (response as List).map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json as Map))),
           );
         }
-      } catch (_) {}
+      } catch (e) {
+        print('Supabase getAllOrdersForAdmin error: $e');
+      }
     }
 
     final Map<String, OrderModel> mergedMap = {};
@@ -226,7 +230,59 @@ class OrderRepository {
 
     final mergedList = mergedMap.values.toList();
     mergedList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    // Auto-sync local orders to Supabase if missing remotely
+    if (SupabaseConfig.isConfigured && remoteOrders.length < mergedList.length) {
+      for (final order in _localOrders) {
+        final bool isAlreadyRemote = remoteOrders.any((r) => r.orderNumber == order.orderNumber);
+        if (!isAlreadyRemote) {
+          _syncOrderToSupabase(order);
+        }
+      }
+    }
+
     return mergedList;
+  }
+
+  Future<void> _syncOrderToSupabase(OrderModel order) async {
+    if (!SupabaseConfig.isConfigured) return;
+    try {
+      final orderData = {
+        'order_number': order.orderNumber,
+        'user_id': order.userId,
+        'is_guest': order.isGuest,
+        'customer_name': order.customerName,
+        'customer_email': order.customerEmail,
+        'customer_phone': order.customerPhone,
+        'shipping_address': order.shippingAddress,
+        'subtotal_inr': order.subtotal,
+        'discount_inr': order.discount,
+        'shipping_fee_inr': order.shippingFee,
+        'total_amount_inr': order.totalAmount,
+        'payment_method': order.paymentMethod,
+        'payment_status': order.paymentStatus,
+        'fulfillment_status': order.fulfillmentStatus,
+      };
+
+      final orderRes = await supabase.from('orders').insert(orderData).select().single();
+      final String genId = orderRes['id'];
+
+      if (order.items.isNotEmpty) {
+        final itemsData = order.items.map((item) => {
+              'order_id': genId,
+              'product_variant_id': item.productVariantId,
+              'product_name': item.productName,
+              'variant_name': item.variantName,
+              'unit_price_inr': item.unitPrice,
+              'quantity': item.quantity,
+              'total_price_inr': item.totalPrice,
+            }).toList();
+
+        await supabase.from('order_items').insert(itemsData);
+      }
+    } catch (e) {
+      print('Sync order to Supabase error: $e');
+    }
   }
 
   /// Update order courier and status (Admin feature)
