@@ -33,6 +33,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   late TextEditingController _pushTitleCtrl;
   late TextEditingController _pushBodyCtrl;
   late TextEditingController _searchBannersCtrl;
+  late TextEditingController _searchCategoriesCtrl;
   late TextEditingController _deepLinkCtrl;
 
   late bool _showAnnouncement;
@@ -49,11 +50,11 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   int _rotateSeconds = 4;
   int _placementLimit = 5;
 
-  // ── APP PAGES EDITOR STATE (MATCHING SCREENSHOT 1-TO-1) ──
+  // ── APP PAGES EDITOR STATE ──
   String _selectedPageName = 'Home Screen';
   int _selectedSectionIndex = 0;
-  String _sectionEditorTab = 'Content'; // Content, Settings, Style, Visibility, Targeting
-  String _sliderType = 'Image Slider'; // Image Slider, Single Banner, Auto Rotating
+  String _sectionEditorTab = 'Content';
+  String _sliderType = 'Image Slider';
   final TextEditingController _sectionTitleCtrl = TextEditingController(text: 'Top Banner Slider');
   bool _sliderAutoPlay = true;
   int _sliderInterval = 3;
@@ -66,6 +67,100 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   bool _sectionIOS = true;
   String _sectionPlacement = 'Top of Page';
   int _sectionPriority = 1;
+
+  // ── APP CATEGORIES SECTION STATE ──
+  String _categoryStatusFilter = 'All Status';
+  String _categoryTypeFilter = 'All Type';
+  bool _showCategoryIcons = true;
+  bool _enableCategoryBadges = true;
+  bool _showProductCount = false;
+  String _categoryImageRatio = '1:1 (Square)';
+
+  String _hotBadgeColor = '#FF4D4F';
+  String _popularBadgeColor = '#FA8C16';
+  String _newBadgeColor = '#1890FF';
+  String _bestBadgeColor = '#52C41A';
+
+  List<Map<String, dynamic>> _categoriesList = [
+    {
+      'id': 'cat-1',
+      'name': 'Haircare & Oils',
+      'slug': '/haircare-oils',
+      'type': 'Hot',
+      'products': 86,
+      'status': 'Active',
+      'visibility': 'Visible',
+      'order': 1,
+      'updated': '16 May 2024 10:28 AM',
+      'icon': Icons.face_retouching_natural_rounded,
+      'color': const Color(0xFFFEF3C7),
+    },
+    {
+      'id': 'cat-2',
+      'name': 'Skincare & Serums',
+      'slug': '/skincare-serums',
+      'type': 'Popular',
+      'products': 72,
+      'status': 'Active',
+      'visibility': 'Visible',
+      'order': 2,
+      'updated': '16 May 2024 09:15 AM',
+      'icon': Icons.auto_awesome_rounded,
+      'color': const Color(0xFFFEE2E2),
+    },
+    {
+      'id': 'cat-3',
+      'name': 'Organic Soaps',
+      'slug': '/organic-soaps',
+      'type': 'New',
+      'products': 45,
+      'status': 'Active',
+      'visibility': 'Visible',
+      'order': 3,
+      'updated': '15 May 2024 04:45 PM',
+      'icon': Icons.soap_rounded,
+      'color': const Color(0xFFE0F2FE),
+    },
+    {
+      'id': 'cat-4',
+      'name': 'Wellness Oils',
+      'slug': '/wellness-oils',
+      'type': 'Best',
+      'products': 28,
+      'status': 'Active',
+      'visibility': 'Visible',
+      'order': 4,
+      'updated': '15 May 2024 02:30 PM',
+      'icon': Icons.spa_rounded,
+      'color': const Color(0xFFDCFCE7),
+    },
+    {
+      'id': 'cat-5',
+      'name': 'Ayurvedic Supplements',
+      'slug': '/ayurvedic-supplements',
+      'type': '-',
+      'products': 12,
+      'status': 'Active',
+      'visibility': 'Hidden',
+      'order': 5,
+      'updated': '14 May 2024 11:20 AM',
+      'icon': Icons.medication_rounded,
+      'color': const Color(0xFFF3E8FF),
+    },
+    {
+      'id': 'cat-6',
+      'name': 'Gift Sets & Combos',
+      'slug': '/gift-sets-combos',
+      'type': '-',
+      'products': 5,
+      'status': 'Inactive',
+      'visibility': 'Hidden',
+      'order': 6,
+      'updated': '14 May 2024 09:05 AM',
+      'icon': Icons.card_giftcard_rounded,
+      'color': const Color(0xFFFCE7F3),
+    },
+  ];
 
   List<Map<String, dynamic>> _homePageSections = [
     {'id': 'banner_slider', 'title': 'Top Banner Slider', 'icon': Icons.view_carousel_rounded, 'enabled': true},
@@ -84,7 +179,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     {'title': 'New Arrivals This Week', 'route': '/collections/new-arrivals', 'color': 0xFF0284C7},
   ];
 
-  // Sample App Banners Data matching user's screenshot 1-to-1
   List<Map<String, dynamic>> _bannersList = [
     {
       'id': 'b-1',
@@ -170,6 +264,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     _pushTitleCtrl = TextEditingController(text: '🌿 Special Weekend Offer!');
     _pushBodyCtrl = TextEditingController(text: 'Get flat 30% off on all Ayurvedic Hair Oils today!');
     _searchBannersCtrl = TextEditingController();
+    _searchCategoriesCtrl = TextEditingController();
     _deepLinkCtrl = TextEditingController();
 
     _showAnnouncement = settings.showAnnouncementBar;
@@ -193,6 +288,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     _pushTitleCtrl.dispose();
     _pushBodyCtrl.dispose();
     _searchBannersCtrl.dispose();
+    _searchCategoriesCtrl.dispose();
     _deepLinkCtrl.dispose();
     _sectionTitleCtrl.dispose();
     super.dispose();
@@ -257,6 +353,132 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
         ),
       );
     }
+  }
+
+  void _showAddCategoryModal([Map<String, dynamic>? existingCategory]) {
+    final nameCtrl = TextEditingController(text: existingCategory?['name'] ?? '');
+    final slugCtrl = TextEditingController(text: existingCategory?['slug'] ?? '/');
+    String type = existingCategory?['type'] ?? 'Hot';
+    String status = existingCategory?['status'] ?? 'Active';
+    String visibility = existingCategory?['visibility'] ?? 'Visible';
+    int order = existingCategory?['order'] ?? (_categoriesList.length + 1);
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setStateModal) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  const Icon(Icons.grid_view_rounded, color: Color(0xFF10B981)),
+                  const SizedBox(width: 10),
+                  Text(existingCategory != null ? 'Edit App Category' : 'Add New App Category', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              content: SizedBox(
+                width: 480,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Category Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 6),
+                      TextField(controller: nameCtrl, decoration: InputDecoration(hintText: 'e.g. Haircare & Oils', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                      const SizedBox(height: 14),
+                      const Text('URL Slug / Route', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 6),
+                      TextField(controller: slugCtrl, decoration: InputDecoration(hintText: 'e.g. /haircare-oils', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Badge Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                const SizedBox(height: 6),
+                                DropdownButtonFormField<String>(
+                                  value: type,
+                                  decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                                  items: ['Hot', 'Popular', 'New', 'Best', '-']
+                                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                      .toList(),
+                                  onChanged: (val) => setStateModal(() => type = val!),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Visibility', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                const SizedBox(height: 6),
+                                DropdownButtonFormField<String>(
+                                  value: visibility,
+                                  decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                                  items: ['Visible', 'Hidden']
+                                      .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                                      .toList(),
+                                  onChanged: (val) => setStateModal(() => visibility = val!),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    final name = nameCtrl.text.trim();
+                    if (name.isEmpty) return;
+
+                    setState(() {
+                      if (existingCategory != null) {
+                        existingCategory['name'] = name;
+                        existingCategory['slug'] = slugCtrl.text.trim();
+                        existingCategory['type'] = type;
+                        existingCategory['visibility'] = visibility;
+                      } else {
+                        _categoriesList.add({
+                          'id': 'cat-${DateTime.now().millisecondsSinceEpoch}',
+                          'name': name,
+                          'slug': slugCtrl.text.trim(),
+                          'type': type,
+                          'products': 10,
+                          'status': status,
+                          'visibility': visibility,
+                          'order': order,
+                          'updated': 'Just now',
+                          'icon': Icons.category_rounded,
+                          'color': const Color(0xFFECFDF5),
+                        });
+                      }
+                    });
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(existingCategory != null ? 'Category updated!' : 'New App Category added! 🎉'), backgroundColor: const Color(0xFF10B981)),
+                    );
+                  },
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(existingCategory != null ? 'Update Category' : 'Add Category'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showAddBannerModal([Map<String, dynamic>? existingBanner]) {
@@ -432,26 +654,28 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
               ? _buildAdvancedAppBannersPage()
               : _tabController.index == 1
                   ? _buildAdvancedAppPagesPage()
-                  : IndexedStack(
-                      index: _tabController.index,
-                      children: [
-                        const SizedBox.shrink(),
-                        const SizedBox.shrink(),
-                        _buildAppCategoriesTab(),
-                        _buildAppCollectionsTab(),
-                        _buildAppConfigurationsTab(),
-                        _buildBottomNavTab(),
-                        _buildPushNotificationsTab(),
-                        _buildAppVersionTab(),
-                        _buildSplashOnboardingTab(),
-                      ],
-                    ),
+                  : _tabController.index == 2
+                      ? _buildAdvancedAppCategoriesPage()
+                      : IndexedStack(
+                          index: _tabController.index,
+                          children: [
+                            const SizedBox.shrink(),
+                            const SizedBox.shrink(),
+                            const SizedBox.shrink(),
+                            _buildAppCollectionsTab(),
+                            _buildAppConfigurationsTab(),
+                            _buildBottomNavTab(),
+                            _buildPushNotificationsTab(),
+                            _buildAppVersionTab(),
+                            _buildSplashOnboardingTab(),
+                          ],
+                        ),
         ],
       ),
     );
   }
 
-  // ── ADVANCED APP BANNERS PAGE (MATCHING SCREENSHOT 1-TO-1) ──
+  // ── ADVANCED APP BANNERS PAGE ──
   Widget _buildAdvancedAppBannersPage() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 1100;
@@ -499,7 +723,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row with Title & "Add New Banner" Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -544,10 +767,8 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
               const SizedBox(height: 20),
 
-              // Search & Filter Action Bar
               Row(
                 children: [
-                  // Search Banners Input
                   Expanded(
                     flex: 3,
                     child: Container(
@@ -568,7 +789,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Status Filter Dropdown
                   Container(
                     height: 40,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -583,7 +803,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Placement Filter Dropdown
                   Container(
                     height: 40,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -598,7 +817,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Filter Button
                   OutlinedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.filter_list_rounded, size: 16, color: Color(0xFF334155)),
@@ -610,7 +828,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
               const SizedBox(height: 20),
 
-              // Banners Data Table
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
@@ -634,7 +851,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     return DataRow(
                       cells: [
-                        // Banner Thumbnail
                         DataCell(
                           Container(
                             width: 80,
@@ -652,7 +868,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             ),
                           ),
                         ),
-                        // Title & Details
                         DataCell(
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -664,9 +879,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             ],
                           ),
                         ),
-                        // Placement
                         DataCell(Text(banner['placement'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF334155)))),
-                        // Status Badge
                         DataCell(
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -674,7 +887,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             child: Text(status, style: TextStyle(color: statusFg, fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                         ),
-                        // Priority Badge
                         DataCell(
                           Container(
                             width: 24,
@@ -683,9 +895,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             child: Center(child: Text('${banner['priority']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF475569)))),
                           ),
                         ),
-                        // Schedule Date Range
                         DataCell(Text(banner['schedule'] as String, style: const TextStyle(fontSize: 12, color: Color(0xFF475569)))),
-                        // Performance Metrics
                         DataCell(
                           Row(
                             children: [
@@ -704,7 +914,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             ],
                           ),
                         ),
-                        // Action Icon Buttons: View, Edit, Duplicate, Options
                         DataCell(
                           Row(
                             children: [
@@ -732,7 +941,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
               const Divider(height: 1),
               const SizedBox(height: 16),
 
-              // Table Pagination Footer Bar
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -770,7 +978,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 28),
 
-        // 3. BOTTOM 3 COLUMNS: ADVANCED SETTINGS, PERFORMANCE OVERVIEW, QUICK ACTIONS
         if (isWide)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,7 +999,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 36),
 
-        // Footer Copyright Notice
         const Center(
           child: Text('© 2024 Vaidyam Botanicals. All rights reserved.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
         ),
@@ -800,14 +1006,13 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
-  // ── ADVANCED APP PAGES PAGE (MATCHING REFERENCE SCREENSHOT 1-TO-1) ──
+  // ── ADVANCED APP PAGES PAGE ──
   Widget _buildAdvancedAppPagesPage() {
     final activeSection = _homePageSections[_selectedSectionIndex];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Breadcrumb & Page Sub-Header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -879,11 +1084,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 20),
 
-        // 4-PANEL MAIN CONTENT ROW
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // PANE 1: PAGE SECTIONS REORDERABLE LIST (LEFT PANEL)
             SizedBox(
               width: 250,
               child: Container(
@@ -973,7 +1176,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             const SizedBox(width: 16),
 
-            // PANE 2: EDIT SECTION DETAILS (CENTER EDITOR)
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -985,7 +1187,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section Title Header Bar
                     Row(
                       children: [
                         Text('Edit Section: ${activeSection['title']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
@@ -1005,7 +1206,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 14),
 
-                    // Inner Sub-Tabs (Content, Settings, Style, Visibility, Targeting)
                     Row(
                       children: ['Content', 'Settings', 'Style', 'Visibility', 'Targeting'].map((t) {
                         final isSel = _sectionEditorTab == t;
@@ -1025,7 +1225,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                     const Divider(height: 1),
                     const SizedBox(height: 16),
 
-                    // Section Title (Internal)
                     const Text('Section Title (Internal)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                     const SizedBox(height: 6),
                     TextField(
@@ -1037,7 +1236,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 16),
 
-                    // Slider Type Selector Cards
                     const Text('Slider Type', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                     const SizedBox(height: 8),
                     Row(
@@ -1052,7 +1250,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 18),
 
-                    // Slider Images List
                     const Text('Slider Images', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                     const SizedBox(height: 8),
                     ListView.builder(
@@ -1110,7 +1307,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                     const SizedBox(height: 18),
 
-                    // Slider Settings Controls Grid
                     const Text('Slider Settings', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
                     const SizedBox(height: 10),
                     Row(
@@ -1177,12 +1373,10 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             const SizedBox(width: 16),
 
-            // PANE 3: SECTION STATUS & TARGETING (RIGHT INNER PANEL)
             SizedBox(
               width: 240,
               child: Column(
                 children: [
-                  // Section Status Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -1280,7 +1474,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                   const SizedBox(height: 14),
 
-                  // Performance (Last 7 Days) Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -1328,7 +1521,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                   const SizedBox(height: 14),
 
-                  // Section ID Card
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -1359,12 +1551,10 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
             const SizedBox(width: 16),
 
-            // PANE 4: QUICK ACTIONS & TIPS (FAR RIGHT PANEL)
             SizedBox(
               width: 200,
               child: Column(
                 children: [
-                  // Quick Actions Card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -1388,7 +1578,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
                   const SizedBox(height: 14),
 
-                  // Tips Card (Light blue tint)
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
@@ -1425,7 +1614,6 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 24),
 
-        // BOTTOM ACTION BAR (BACK TO PAGES / PREVIEW / SAVE CHANGES)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           decoration: BoxDecoration(
@@ -1466,11 +1654,628 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
 
         const SizedBox(height: 36),
 
+        const Center(
+          child: Text('© 2024 Vaidyam Botanicals. All rights reserved.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+        ),
+      ],
+    );
+  }
+
+  // ── ADVANCED APP CATEGORIES PAGE (MATCHING SCREENSHOT 1-TO-1) ──
+  Widget _buildAdvancedAppCategoriesPage() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth > 1100;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Title & Top Action Bar Row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text('Category Section Manager', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                SizedBox(height: 4),
+                Text('Create, organize and manage app categories to display in the app', style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
+              ],
+            ),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () => _showAddCategoryModal(),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add New Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.download_rounded, size: 16, color: Color(0xFF334155)),
+                  label: const Text('Import Categories', style: TextStyle(color: Color(0xFF334155), fontWeight: FontWeight.bold, fontSize: 13)),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  child: const Text('··· More ∨', style: TextStyle(color: Color(0xFF475569), fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // 4 KPI SUMMARY METRIC CARDS (ROW)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            final cardWidth = width > 900 ? (width - 36) / 4 : (width - 12) / 2;
+
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildKpiCard('Total Categories', '12', 'Active', Icons.grid_view_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), cardWidth),
+                _buildKpiCard('Visible on App', '10', '80% of total', Icons.visibility_outlined, const Color(0xFFECFDF5), const Color(0xFF10B981), cardWidth),
+                _buildKpiCard('Total Products', '248', 'Across all categories', Icons.inventory_2_outlined, const Color(0xFFECFDF5), const Color(0xFF10B981), cardWidth),
+                _buildKpiCard('Last Updated', '16 May 2024', '10:28 AM', Icons.calendar_today_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), cardWidth),
+              ],
+            );
+          },
+        ),
+
+        const SizedBox(height: 24),
+
+        // MAIN CONTENT AREA: TABLE (LEFT) + RIGHT SIDEBAR
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // LEFT PANEL: "ALL CATEGORIES" DATA TABLE
+            Expanded(
+              flex: 7,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: const [BoxShadow(color: Color(0x06000000), blurRadius: 10, offset: Offset(0, 2))],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('All Categories', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 16),
+
+                    // Search & Filter Action Bar
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Container(
+                            height: 40,
+                            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
+                            child: Row(
+                              children: [
+                                const Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Icon(Icons.search, size: 16, color: Color(0xFF94A3B8))),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchCategoriesCtrl,
+                                    decoration: const InputDecoration(hintText: 'Search categories...', hintStyle: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)), border: InputBorder.none, isDense: true),
+                                    onChanged: (_) => setState(() {}),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _categoryStatusFilter,
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w600),
+                              items: ['All Status', 'Active', 'Inactive'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                              onChanged: (val) => setState(() => _categoryStatusFilter = val!),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _categoryTypeFilter,
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w600),
+                              items: ['All Type', 'Hot', 'Popular', 'New', 'Best'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                              onChanged: (val) => setState(() => _categoryTypeFilter = val!),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.filter_list_rounded, size: 16, color: Color(0xFF334155)),
+                          label: const Text('Filter', style: TextStyle(color: Color(0xFF334155), fontWeight: FontWeight.bold, fontSize: 12)),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Data Table
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columnSpacing: 20,
+                        horizontalMargin: 0,
+                        headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                        columns: const [
+                          DataColumn(label: Text('Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Type', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Products', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Visibility', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Order', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Updated On', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                          DataColumn(label: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF64748B)))),
+                        ],
+                        rows: _categoriesList.map((cat) {
+                          final type = cat['type'] as String;
+                          Color badgeBg = Colors.transparent;
+                          Color badgeFg = Colors.transparent;
+                          if (type == 'Hot') { badgeBg = const Color(0xFFFFF1F0); badgeFg = const Color(0xFFFF4D4F); }
+                          else if (type == 'Popular') { badgeBg = const Color(0xFFFFF7E6); badgeFg = const Color(0xFFFA8C16); }
+                          else if (type == 'New') { badgeBg = const Color(0xFFE6F7FF); badgeFg = const Color(0xFF1890FF); }
+                          else if (type == 'Best') { badgeBg = const Color(0xFFF6FFED); badgeFg = const Color(0xFF52C41A); }
+
+                          final isVisible = cat['visibility'] == 'Visible';
+                          final isActive = cat['status'] == 'Active';
+
+                          return DataRow(
+                            cells: [
+                              // Icon & Category Name + Slug
+                              DataCell(
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(color: cat['color'] as Color, borderRadius: BorderRadius.circular(10)),
+                                      child: Icon(cat['icon'] as IconData, size: 18, color: const Color(0xFF334155)),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(cat['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                                        Text(cat['slug'] as String, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Type Badge
+                              DataCell(
+                                type != '-'
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(10)),
+                                        child: Text(type, style: TextStyle(color: badgeFg, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      )
+                                    : const Text('-', style: TextStyle(color: Color(0xFF94A3B8))),
+                              ),
+                              // Products Count
+                              DataCell(Text('${cat['products']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155)))),
+                              // Status Badge
+                              DataCell(
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(color: isActive ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(10)),
+                                  child: Text(cat['status'] as String, style: TextStyle(color: isActive ? const Color(0xFF10B981) : const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                              // Visibility
+                              DataCell(
+                                Row(
+                                  children: [
+                                    Icon(isVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined, size: 14, color: isVisible ? const Color(0xFF10B981) : const Color(0xFFEF4444)),
+                                    const SizedBox(width: 4),
+                                    Text(cat['visibility'] as String, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isVisible ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
+                                  ],
+                                ),
+                              ),
+                              // Order Box
+                              DataCell(
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                                  child: Text('${cat['order']}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                              // Updated On Date
+                              DataCell(Text(cat['updated'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)))),
+                              // Actions Icons
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () => _showAddCategoryModal(cat)),
+                                    IconButton(icon: const Icon(Icons.link_rounded, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                                    IconButton(icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+
+                    // Pagination Footer Bar
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Showing 1 to ${_categoriesList.length} of 12 categories', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                              child: Row(
+                                children: const [
+                                  Text('10 / page', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.keyboard_arrow_down, size: 14, color: Color(0xFF64748B)),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Row(
+                              children: [
+                                _buildPageBtn('<', false),
+                                _buildPageBtn('1', true),
+                                _buildPageBtn('2', false),
+                                _buildPageBtn('3', false),
+                                _buildPageBtn('>', false),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (isWide) ...[
+              const SizedBox(width: 20),
+              // RIGHT SIDEBAR: QUICK STATS + TIPS + VISIBILITY GUIDE
+              SizedBox(
+                width: 280,
+                child: Column(
+                  children: [
+                    // Category Quick Stats Donut Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Category Quick Stats', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0xFF10B981), width: 8)),
+                                child: const Center(child: Icon(Icons.pie_chart_rounded, size: 24, color: Color(0xFF10B981))),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildLegendRow('Hot', '3 (25%)', const Color(0xFFFF4D4F)),
+                                    _buildLegendRow('Popular', '3 (25%)', const Color(0xFFFA8C16)),
+                                    _buildLegendRow('New', '2 (17%)', const Color(0xFF1890FF)),
+                                    _buildLegendRow('Best', '2 (17%)', const Color(0xFF52C41A)),
+                                    _buildLegendRow('Others', '2 (16%)', const Color(0xFF94A3B8)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Divider(height: 1),
+                          const SizedBox(height: 8),
+                          const Center(child: Text('Total 12 Categories', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B)))),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Tips Card (Light green tint)
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Row(
+                            children: [
+                              Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFF10B981)),
+                              SizedBox(width: 6),
+                              Text('Tips', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF065F46))),
+                            ],
+                          ),
+                          SizedBox(height: 6),
+                          Text('• Drag & drop to reorder categories', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('• Mark category as Hot/Popular/New to highlight in app', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('• Hide categories without deleting them', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                          SizedBox(height: 3),
+                          Text('• Changes reflect instantly in the app', style: TextStyle(fontSize: 10, color: Color(0xFF047857))),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Category Visibility Guide Card
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('Category Visibility Guide', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                          SizedBox(height: 8),
+                          Text('🟢 Visible: Category shown in app', style: TextStyle(fontSize: 10, color: Color(0xFF334155))),
+                          SizedBox(height: 3),
+                          Text('🔵 Hidden: Category hidden from users', style: TextStyle(fontSize: 10, color: Color(0xFF334155))),
+                          SizedBox(height: 3),
+                          Text('🔴 Inactive: Category disabled (not used)', style: TextStyle(fontSize: 10, color: Color(0xFF334155))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+
+        const SizedBox(height: 28),
+
+        // BOTTOM 3-COLUMN SETTINGS SECTION (GLOBAL SETTINGS, BADGE MANAGEMENT, DEFAULT IMAGE)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // COLUMN 1: CATEGORY SETTINGS
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Category Settings', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    const Text('Global Category Settings', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('Show Category Icons', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text('Display icons with category names', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Switch(value: _showCategoryIcons, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _showCategoryIcons = v)),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('Enable Category Badges', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text('Show Hot, Popular, New, Best badges', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Switch(value: _enableCategoryBadges, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _enableCategoryBadges = v)),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('Show Product Count', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text('Display product count on category', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Switch(value: _showProductCount, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _showProductCount = v)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Category Image Ratio', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _categoryImageRatio,
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                              items: ['1:1 (Square)', '4:3 (Landscape)', '16:9 (Wide)'].map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                              onChanged: (val) => setState(() => _categoryImageRatio = val!),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // COLUMN 2: BADGE MANAGEMENT
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Badge Management', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    const Text('Manage category badges and colors', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                    const SizedBox(height: 14),
+                    _buildBadgeRow('Hot', _hotBadgeColor, const Color(0xFFFF4D4F)),
+                    _buildBadgeRow('Popular', _popularBadgeColor, const Color(0xFFFA8C16)),
+                    _buildBadgeRow('New', _newBadgeColor, const Color(0xFF1890FF)),
+                    _buildBadgeRow('Best', _bestBadgeColor, const Color(0xFF52C41A)),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // COLUMN 3: DEFAULT CATEGORY IMAGE
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Default Category Image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    const Text('Upload default image for categories without custom image', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                    const SizedBox(height: 14),
+                    Container(
+                      height: 110,
+                      width: double.infinity,
+                      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.upload_file_rounded, size: 24, color: Color(0xFF94A3B8)),
+                          SizedBox(height: 4),
+                          Text('Upload Image', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                          SizedBox(height: 2),
+                          Text('Recommended: 512x512px | PNG, JPG up to 2MB', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6))),
+                        child: const Text('Remove Image', style: TextStyle(fontSize: 11, color: Color(0xFF475569))),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 36),
+
         // Copyright Notice
         const Center(
           child: Text('© 2024 Vaidyam Botanicals. All rights reserved.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
         ),
       ],
+    );
+  }
+
+  Widget _buildLegendRow(String label, String value, Color color) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          CircleAvatar(radius: 3.5, backgroundColor: color),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+          const Spacer(),
+          Text(value, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgeRow(String badgeName, String hexCode, Color swatchColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          CircleAvatar(radius: 4, backgroundColor: swatchColor),
+          const SizedBox(width: 6),
+          SizedBox(width: 50, child: Text(badgeName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
+            child: Text(hexCode, style: const TextStyle(fontSize: 10, fontFamily: 'monospace')),
+          ),
+          const SizedBox(width: 6),
+          Container(width: 14, height: 14, decoration: BoxDecoration(color: swatchColor, borderRadius: BorderRadius.circular(3))),
+          const SizedBox(width: 6),
+          const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF94A3B8)),
+        ],
+      ),
     );
   }
 
@@ -1845,17 +2650,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
-  // ── SUB-TABS 2 TO 8 IMPLEMENTATION ──
-  Widget _buildAppCategoriesTab() {
-    final categories = [
-      {'name': 'Haircare & Oils', 'route': '💇', 'status': 'Hot'},
-      {'name': 'Skincare & Serums', 'route': '✨', 'status': 'Popular'},
-      {'name': 'Organic Soaps', 'route': '🧴', 'status': 'New'},
-      {'name': 'Wellness Oils', 'route': '🌿', 'status': 'Best'},
-    ];
-    return _buildTabContainer('App Categories Grid Manager', Icons.grid_view_rounded, categories);
-  }
-
+  // ── SUB-TABS 3 TO 8 IMPLEMENTATION ──
   Widget _buildAppCollectionsTab() {
     final collections = [
       {'name': 'Botanical Combos & Gift Bundles', 'route': 'Featured', 'status': 'Active'},
