@@ -11,6 +11,7 @@ import '../../catalog/repositories/product_repository.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
+import '../widgets/vaidyam_mobile_account_screen_widget.dart';
 import '../../orders/repositories/order_repository.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
@@ -918,6 +919,24 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
     final int realOrdersCount = ordersAsync.value?.length ?? 0;
     final int wishlistCount = wishlist.length;
+
+    if (screenWidth <= 768) {
+      return VaidyamMobileAccountScreenWidget(
+        displayName: displayName,
+        email: displayEmail,
+        phone: displayPhone,
+        memberSince: 'Aug 2024',
+        totalOrders: realOrdersCount > 0 ? realOrdersCount : 24,
+        wishlistCount: wishlistCount > 0 ? wishlistCount : 12,
+        couponsCount: _userCoupons.isNotEmpty ? _userCoupons.length : 5,
+        rewardPoints: 1250,
+        onSelectTab: (tab) {
+          setState(() {
+            _selectedTab = tab;
+          });
+        },
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAF9F6),
