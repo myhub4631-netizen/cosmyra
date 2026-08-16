@@ -40,13 +40,17 @@ class ProductImageWidget extends StatelessWidget {
           fit: fit,
           errorBuilder: (context, error, stackTrace) => Container(
             color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
-            child: const Center(child: Icon(Icons.spa, color: AppColors.sageMuted)),
+            child: Center(
+              child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+            ),
           ),
         );
       } catch (_) {
         return Container(
           color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
-          child: const Center(child: Icon(Icons.spa, color: AppColors.sageMuted)),
+          child: Center(
+            child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+          ),
         );
       }
     }
@@ -59,7 +63,9 @@ class ProductImageWidget extends StatelessWidget {
         fit: fit,
         errorBuilder: (context, error, stackTrace) => Container(
           color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
-          child: const Center(child: Icon(Icons.spa, color: AppColors.sageMuted)),
+          child: Center(
+            child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+          ),
         ),
       );
     }
@@ -77,7 +83,9 @@ class ProductImageWidget extends StatelessWidget {
       ),
       errorWidget: (context, url, error) => Container(
         color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
-        child: const Center(child: Icon(Icons.spa, color: AppColors.sageMuted)),
+        child: Center(
+          child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+        ),
       ),
     );
   }

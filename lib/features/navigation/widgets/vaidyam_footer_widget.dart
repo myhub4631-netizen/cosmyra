@@ -225,17 +225,9 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
                   ),
                 )
               : Image.asset(
-                  'favicon.png',
+                  'assets/images/cosmyra_logo.png',
                   height: 44,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _primaryPurple,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
-                  ),
                 ),
         ),
         const SizedBox(height: 14),

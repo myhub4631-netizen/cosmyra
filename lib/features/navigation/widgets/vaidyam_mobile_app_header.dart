@@ -48,7 +48,7 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (logoUrl.isNotEmpty)
+                if (logoUrl.isNotEmpty) ...[
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 36, maxWidth: 140),
                     child: logoUrl.startsWith('data:image')
@@ -65,14 +65,19 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                               fit: BoxFit.contain,
                             ),
                           ),
-                  )
-                else
+                  ),
+                  if (!brandSettings.hideBrandTextWithLogo) ...[
+                    const SizedBox(width: 6),
+                    _buildBrandText(brandName, brandTagline),
+                  ],
+                ] else ...[
                   Image.asset(
                     'assets/images/cosmyra_logo.png',
                     height: 32,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
                   ),
+                ],
               ],
             ),
           ),
@@ -187,18 +192,12 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
     );
   }
 
-  // Default Purple Circular Emblem with Lotus
+  // Default Logo Widget using cosmyra_logo.png
   Widget _buildDefaultPurpleEmblem() {
-    return Container(
-      width: 36,
-      height: 36,
-      decoration: const BoxDecoration(
-        color: _primaryPurple,
-        shape: BoxShape.circle,
-      ),
-      child: const Center(
-        child: Icon(Icons.local_florist_rounded, color: Colors.white, size: 20),
-      ),
+    return Image.asset(
+      'assets/images/cosmyra_logo.png',
+      height: 32,
+      fit: BoxFit.contain,
     );
   }
 

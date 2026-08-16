@@ -314,27 +314,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           // Brand Logo
           InkWell(
             onTap: () => context.go('/'),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _primaryPurple,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.local_florist, color: Colors.white, size: 22),
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  'Cosmyra',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: _primaryPurple,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ],
+            child: Image.asset(
+              'assets/images/cosmyra_logo.png',
+              height: 40,
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(width: 32),
