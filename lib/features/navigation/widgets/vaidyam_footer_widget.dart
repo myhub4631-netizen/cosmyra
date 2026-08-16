@@ -112,6 +112,11 @@ class VaidyamFooterWidget extends ConsumerWidget {
                       ? Image.memory(
                           base64Decode(logoUrl.split(',').last),
                           fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/cosmyra_logo.png',
+                            height: 36,
+                            fit: BoxFit.contain,
+                          ),
                         )
                       : Image.network(
                           logoUrl,
@@ -123,10 +128,21 @@ class VaidyamFooterWidget extends ConsumerWidget {
                           ),
                         ),
                 )
-              : Image.asset(
-                  'assets/images/cosmyra_logo.png',
-                  height: 36,
-                  fit: BoxFit.contain,
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/cosmyra_logo.png',
+                      height: 38,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 28),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Vaidyam Botanicals',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
                 ),
         ),
 

@@ -59,6 +59,11 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                         ? Image.memory(
                             base64Decode(logoUrl.split(',').last),
                             fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => Image.asset(
+                              'assets/images/cosmyra_logo.png',
+                              height: 32,
+                              fit: BoxFit.contain,
+                            ),
                           )
                         : Image.network(
                             logoUrl,
@@ -77,10 +82,12 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                 ] else ...[
                   Image.asset(
                     'assets/images/cosmyra_logo.png',
-                    height: 32,
+                    height: 34,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
                   ),
+                  const SizedBox(width: 8),
+                  _buildBrandText(brandName, brandTagline),
                 ],
               ],
             ),

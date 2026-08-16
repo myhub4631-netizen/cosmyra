@@ -382,6 +382,24 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     }
   }
 
+  Future<void> _resetLogosToOfficialDefault() async {
+    setState(() {
+      _headerLogoCtrl.clear();
+      _footerLogoCtrl.clear();
+      _appIconCtrl.clear();
+    });
+    await _saveSettings();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✨ Header & Footer Logo reset to official Vaidyam Botanicals emblem!'),
+          backgroundColor: Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   Future<void> _saveSettings() async {
     final settings = ref.read(mobileAppSettingsProvider);
     final updated = settings.copyWith(
@@ -2515,8 +2533,13 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             ),
                             const SizedBox(width: 6),
                             IconButton(
+                              icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF10B981)),
+                              onPressed: _resetLogosToOfficialDefault,
+                              tooltip: 'Reset to Official Default Logo',
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
-                              onPressed: () => setState(() => _headerLogoCtrl.clear()),
+                              onPressed: _resetLogosToOfficialDefault,
                               tooltip: 'Remove Header Logo',
                             ),
                           ],
@@ -2569,8 +2592,13 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                             ),
                             const SizedBox(width: 6),
                             IconButton(
+                              icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF10B981)),
+                              onPressed: _resetLogosToOfficialDefault,
+                              tooltip: 'Reset to Official Default Logo',
+                            ),
+                            IconButton(
                               icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)),
-                              onPressed: () => setState(() => _footerLogoCtrl.clear()),
+                              onPressed: _resetLogosToOfficialDefault,
                               tooltip: 'Remove Footer Logo',
                             ),
                           ],
