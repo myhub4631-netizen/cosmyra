@@ -62,11 +62,18 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
 
   Future<void> _pickImage(TextEditingController targetCtrl, String label) async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-        withData: true,
-      );
+      FilePickerResult? result;
+      try {
+        result = await FilePicker.pickFiles(
+          type: FileType.image,
+          withData: true,
+        );
+      } catch (_) {
+        result = await FilePicker.pickFiles(
+          type: FileType.any,
+          withData: true,
+        );
+      }
       if (result != null && result.files.isNotEmpty) {
         final bytes = result.files.first.bytes;
         if (bytes != null) {
@@ -76,7 +83,11 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
           });
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Website $label uploaded! 🖼️')),
+              SnackBar(
+                content: Text('Website $label uploaded! 🖼️'),
+                backgroundColor: const Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
         }
@@ -84,7 +95,11 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Image selection failed: $e')),
+          SnackBar(
+            content: Text('Image selection failed: $e'),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }

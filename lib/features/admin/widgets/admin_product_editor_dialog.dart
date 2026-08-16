@@ -116,11 +116,18 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
 
   Future<void> _pickLocalComputerImage() async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
-        withData: true,
-      );
+      FilePickerResult? result;
+      try {
+        result = await FilePicker.pickFiles(
+          type: FileType.image,
+          withData: true,
+        );
+      } catch (_) {
+        result = await FilePicker.pickFiles(
+          type: FileType.any,
+          withData: true,
+        );
+      }
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;

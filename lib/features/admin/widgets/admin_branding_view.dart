@@ -48,11 +48,18 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
 
   Future<void> _pickImageFile(TextEditingController targetCtrl, String label) async {
     try {
-      final result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'],
-        withData: true,
-      );
+      FilePickerResult? result;
+      try {
+        result = await FilePicker.pickFiles(
+          type: FileType.image,
+          withData: true,
+        );
+      } catch (_) {
+        result = await FilePicker.pickFiles(
+          type: FileType.any,
+          withData: true,
+        );
+      }
       if (result != null && result.files.isNotEmpty) {
         final bytes = result.files.first.bytes;
         if (bytes != null) {
