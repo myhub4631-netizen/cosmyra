@@ -144,11 +144,8 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
               // Brand Logo
               InkWell(
                 onTap: () => context.go('/'),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (brandSettings.headerLogoUrl.isNotEmpty)
-                      ConstrainedBox(
+                child: brandSettings.headerLogoUrl.isNotEmpty
+                    ? ConstrainedBox(
                         constraints: const BoxConstraints(maxHeight: 56, maxWidth: 280),
                         child: ProductImageWidget(
                           imageUrl: brandSettings.headerLogoUrl,
@@ -156,43 +153,19 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                           fit: BoxFit.contain,
                         ),
                       )
-                    else ...[
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _purpleTheme,
-                          borderRadius: BorderRadius.circular(14),
+                    : Image.asset(
+                        'favicon.png',
+                        height: 48,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _purpleTheme,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
                         ),
-                        child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            brandSettings.brandName.isEmpty ? 'Cosmyra' : brandSettings.brandName,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: _textDark,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            brandSettings.brandTagline.isEmpty ? 'Pure Ayurveda. Real Results.' : brandSettings.brandTagline,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: _textMuted,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
               ),
 
               if (isWide) const SizedBox(width: 36),

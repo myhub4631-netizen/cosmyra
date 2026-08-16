@@ -213,39 +213,30 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Brand Logo
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (customLogo.isNotEmpty)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 48, maxWidth: 220),
-                child: ProductImageWidget(
-                  imageUrl: customLogo,
-                  height: 48,
+        InkWell(
+          onTap: () => context.go('/'),
+          child: customLogo.isNotEmpty
+              ? ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 52, maxWidth: 240),
+                  child: ProductImageWidget(
+                    imageUrl: customLogo,
+                    height: 52,
+                    fit: BoxFit.contain,
+                  ),
+                )
+              : Image.asset(
+                  'favicon.png',
+                  height: 44,
                   fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _primaryPurple,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
+                  ),
                 ),
-              )
-            else ...[
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _primaryPurple,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                brandSettings.brandName.isNotEmpty ? brandSettings.brandName : footerState.brandName,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ],
         ),
         const SizedBox(height: 14),
         Text(
