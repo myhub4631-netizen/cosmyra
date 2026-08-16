@@ -6,6 +6,7 @@ import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 import '../repositories/order_repository.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 
@@ -881,17 +882,12 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
                   color: const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => const Icon(
-                            Icons.shopping_bag_outlined,
-                            size: 28,
-                            color: Color(0xFF9CA3AF)),
-                      )
-                    : const Icon(Icons.shopping_bag_outlined,
-                        size: 28, color: Color(0xFF9CA3AF)),
+                child: ProductImageWidget(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  width: 76,
+                  height: 76,
+                ),
               ),
 
               const SizedBox(width: 16),
