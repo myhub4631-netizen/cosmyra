@@ -42,74 +42,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     {'title': 'Body Thailams', 'icon': '🍃', 'asset': 'assets/images/soap.jpg'},
   ];
 
-  final List<Map<String, dynamic>> _dealProducts = [
-    {
-      'id': 'prod-1',
-      'name': 'Kumkumadi Radiance Elixir',
-      'category': 'Skincare & Serums',
-      'price': 1799,
-      'originalPrice': 2549,
-      'discount': '29% OFF',
-      'rating': 4.8,
-      'reviews': 12345,
-      'image': 'assets/images/facewash.jpg',
-    },
-    {
-      'id': 'prod-2',
-      'name': 'Bhringraj Hair Defense Oil',
-      'category': 'Haircare & Scalp',
-      'price': 1299,
-      'originalPrice': 1699,
-      'discount': '23% OFF',
-      'rating': 4.7,
-      'reviews': 8986,
-      'image': 'assets/images/shampoo.jpg',
-    },
-    {
-      'id': 'prod-3',
-      'name': 'Nalpamaradi Body Thailam',
-      'category': 'Body Care & Glow',
-      'price': 999,
-      'originalPrice': 1399,
-      'discount': '28% OFF',
-      'rating': 4.9,
-      'reviews': 2134,
-      'image': 'assets/images/soap.jpg',
-    },
-    {
-      'id': 'prod-4',
-      'name': 'Shata Dhauta Ghrita Cream',
-      'category': 'Skin Moisturization',
-      'price': 1499,
-      'originalPrice': 1999,
-      'discount': '25% OFF',
-      'rating': 4.6,
-      'reviews': 2210,
-      'image': 'assets/images/facewash.jpg',
-    },
-    {
-      'id': 'prod-5',
-      'name': 'Chandan & Rose Face Wash',
-      'category': 'Daily Cleanser',
-      'price': 699,
-      'originalPrice': 949,
-      'discount': '26% OFF',
-      'rating': 4.8,
-      'reviews': 4321,
-      'image': 'assets/images/facewash.jpg',
-    },
-    {
-      'id': 'prod-6',
-      'name': 'Triphala Hair Shampoo',
-      'category': 'Herbal Cleansing',
-      'price': 899,
-      'originalPrice': 1199,
-      'discount': '25% OFF',
-      'rating': 4.7,
-      'reviews': 1234,
-      'image': 'assets/images/shampoo.jpg',
-    },
-  ];
+  final List<Map<String, dynamic>> _dealProducts = [];
 
   final List<Map<String, String>> _topBrands = [
     {'name': 'VAIDYAM', 'tag': 'Organic Botanicals'},
@@ -135,29 +68,31 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         ? (deal['originalPrice'] as num).toDouble()
         : (double.tryParse(deal['originalPrice']?.toString().replaceAll('₹', '').replaceAll(',', '') ?? '699') ?? (itemPrice * 1.2));
 
-    final product = ProductModel(
-      id: deal['id']?.toString() ?? 'p-${DateTime.now().millisecondsSinceEpoch}',
-      brandId: 'brand-vaidyam',
-      categoryId: deal['category']?.toString() ?? 'Botanical Care',
-      name: deal['name']?.toString() ?? 'Ayurvedic Product',
-      slug: deal['id']?.toString() ?? 'p-slug',
-      description: 'Organic botanical formulation handcrafted for daily wellness.',
-      ingredients: 'Organic Ayurvedic herbs & cold-pressed oils',
-      freeFromClaims: const ['Paraben Free', 'Sulfate Free'],
-      imageUrls: [deal['image']?.toString() ?? 'assets/images/shampoo.jpg'],
-      variants: [
-        ProductVariant(
-          id: '${deal['id']}-v1',
-          productId: deal['id']?.toString() ?? 'p-id',
-          sku: '${deal['id']}-SKU',
-          sizeLabel: 'Standard Pack',
-          price: itemPrice,
-          mrp: itemMrp,
-          stock: 25,
-          isDefault: true,
-        ),
-      ],
-    );
+    final ProductModel product = deal['rawModel'] is ProductModel
+        ? deal['rawModel'] as ProductModel
+        : ProductModel(
+            id: deal['id']?.toString() ?? 'p-${DateTime.now().millisecondsSinceEpoch}',
+            brandId: 'brand-vaidyam',
+            categoryId: deal['category']?.toString() ?? 'Botanical Care',
+            name: deal['name']?.toString() ?? 'Ayurvedic Product',
+            slug: deal['id']?.toString() ?? 'p-slug',
+            description: 'Organic botanical formulation handcrafted for daily wellness.',
+            ingredients: 'Organic Ayurvedic herbs & cold-pressed oils',
+            freeFromClaims: const ['Paraben Free', 'Sulfate Free'],
+            imageUrls: [deal['image']?.toString() ?? 'assets/images/shampoo.jpg'],
+            variants: [
+              ProductVariant(
+                id: '${deal['id']}-v1',
+                productId: deal['id']?.toString() ?? 'p-id',
+                sku: '${deal['id']}-SKU',
+                sizeLabel: 'Standard Pack',
+                price: itemPrice,
+                mrp: itemMrp,
+                stock: 25,
+                isDefault: true,
+              ),
+            ],
+          );
 
     ref.read(cartProvider.notifier).addItem(product: product, variant: product.defaultVariant);
 
@@ -177,11 +112,29 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
+    final allProducts = ref.watch(adminProductsProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1024;
+
+    final List<Map<String, dynamic>> activeProducts = allProducts.map((p) {
+      final v = p.defaultVariant;
+      return {
+        'id': p.id,
+        'name': p.name,
+        'category': p.categoryId.replaceAll('cat-', '').toUpperCase(),
+        'price': '₹${v.price.toInt()}',
+        'originalPrice': '₹${v.mrp.toInt()}',
+        'discount': v.discountPercent > 0 ? '${v.discountPercent.toInt()}% OFF' : 'SPECIAL',
+        'rating': 4.8,
+        'reviews': '124',
+        'image': p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg',
+        'rawModel': p,
+      };
+    }).toList();
 
     return Scaffold(
       backgroundColor: _lightBg,
@@ -222,7 +175,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 horizontal: isDesktop ? 48.0 : 16.0,
                 vertical: 32.0,
               ),
-              child: _buildTodayDealsSection(isDesktop),
+              child: _buildTodayDealsSection(isDesktop, activeProducts),
             ),
 
             // 8. 🔥 Trending & Popular Formulations Showcase
@@ -231,7 +184,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 horizontal: isDesktop ? 48.0 : 16.0,
                 vertical: 24.0,
               ),
-              child: _buildTrendingSection(isDesktop),
+              child: _buildTrendingSection(isDesktop, activeProducts),
             ),
 
             // 9. 🌱 Fresh Botanical New Arrivals
@@ -240,7 +193,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 horizontal: isDesktop ? 48.0 : 16.0,
                 vertical: 24.0,
               ),
-              child: _buildNewArrivalsSection(isDesktop),
+              child: _buildNewArrivalsSection(isDesktop, activeProducts),
             ),
 
             // 10. 👑 Customer Classics & Best Sellers
@@ -908,7 +861,11 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   // --- 7. TODAY'S BEST DEALS ---
-  Widget _buildTodayDealsSection(bool isDesktop) {
+  Widget _buildTodayDealsSection(bool isDesktop, List<Map<String, dynamic>> activeProducts) {
+    if (activeProducts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -964,10 +921,10 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
               height: 365,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _dealProducts.length,
+                itemCount: activeProducts.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 16),
                 itemBuilder: (context, index) {
-                  final deal = _dealProducts[index];
+                  final deal = activeProducts[index];
                   return _buildDealProductCard(deal);
                 },
               ),
@@ -997,6 +954,9 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   Widget _buildDealProductCard(Map<String, dynamic> deal) {
+    final String imageUrl = deal['image'] as String? ?? '';
+    final bool isHttp = imageUrl.startsWith('http');
+
     return Container(
       width: 220,
       padding: const EdgeInsets.all(12),
@@ -1023,29 +983,36 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    deal['image'],
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 48, color: Color(0xFF4F46E5)),
-                  ),
+                  child: isHttp
+                      ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 48, color: Color(0xFF4F46E5)),
+                        )
+                      : Image.asset(
+                          imageUrl.isNotEmpty ? imageUrl : 'assets/images/shampoo.jpg',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 48, color: Color(0xFF4F46E5)),
+                        ),
                 ),
               ),
               // Discount Tag Badge (Top-Left)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDC2626),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    deal['discount'],
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              if (deal['discount'] != null)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDC2626),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      deal['discount'].toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-              ),
               // Wishlist Heart Button (Top-Right)
               Positioned(
                 top: 8,
@@ -1057,7 +1024,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     padding: EdgeInsets.zero,
                     icon: const Icon(Icons.favorite_border, size: 14, color: Color(0xFF4B5563)),
                     onPressed: () {
-                      ref.read(wishlistProvider.notifier).toggleWishlist(deal['id'] ?? deal['name']);
+                      ref.read(wishlistProvider.notifier).toggleWishlist(deal['id']?.toString() ?? deal['name']?.toString() ?? '');
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Added to Wishlist!'), duration: Duration(seconds: 1)),
                       );
@@ -1069,46 +1036,41 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Title & Category
+          // Category Pill & Rating Badge Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3E8FF),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  deal['category']?.toString() ?? 'BOTANICAL',
+                  style: const TextStyle(color: Color(0xFF6B21A8), fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 12, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 2),
+                  Text(
+                    '${deal['rating'] ?? 4.8}',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF374151)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Title
           Text(
-            deal['name'],
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
-            maxLines: 1,
+            deal['name']?.toString() ?? '',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            deal['category'],
-            style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
-          ),
-          const SizedBox(height: 6),
-
-          // Rating Row
-          Row(
-            children: [
-              const Icon(Icons.star, color: Colors.amber, size: 13),
-              const SizedBox(width: 4),
-              Text(
-                '${deal['rating']} (${deal['reviews']})',
-                style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Price Row
-          Row(
-            children: [
-              Text(
-                '₹${deal['price']}',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '₹${deal['originalPrice']}',
-                style: const TextStyle(fontSize: 11, decoration: TextDecoration.lineThrough, color: Color(0xFF9CA3AF)),
-              ),
-            ],
           ),
           const Spacer(),
 
@@ -1250,10 +1212,11 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   // --- 8. 🔥 TRENDING & POPULAR FORMULATIONS SHOWCASE ---
-  Widget _buildTrendingSection(bool isDesktop) {
+  Widget _buildTrendingSection(bool isDesktop, List<Map<String, dynamic>> activeProducts) {
+    if (activeProducts.isEmpty) return const SizedBox.shrink();
     final trendingFilters = ['All', 'Skincare', 'Haircare', 'Wellness', 'Elixirs'];
 
-    final trendingProducts = _dealProducts.where((p) {
+    final trendingProducts = activeProducts.where((p) {
       if (_activeTrendingFilter == 'All') return true;
       return p['category'].toString().toLowerCase().contains(_activeTrendingFilter.toLowerCase());
     }).toList();
@@ -1408,13 +1371,21 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Image.asset(
-                  prod['image'] as String,
-                  height: 140,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
-                ),
+                child: (prod['image'] as String? ?? '').startsWith('http')
+                    ? Image.network(
+                        prod['image'] as String,
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
+                      )
+                    : Image.asset(
+                        (prod['image'] as String? ?? '').isNotEmpty ? (prod['image'] as String) : 'assets/images/shampoo.jpg',
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
+                      ),
               ),
               // Discount Tag Badge (Top-Left)
               Positioned(
@@ -1542,8 +1513,9 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   // --- 9. 🌱 FRESH BOTANICAL NEW ARRIVALS ---
-  Widget _buildNewArrivalsSection(bool isDesktop) {
-    final newProducts = _dealProducts.sublist(2, 5);
+  Widget _buildNewArrivalsSection(bool isDesktop, List<Map<String, dynamic>> activeProducts) {
+    if (activeProducts.isEmpty) return const SizedBox.shrink();
+    final newProducts = activeProducts.take(4).toList();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -1663,47 +1635,27 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   // --- 10. 👑 HALL OF FAME BEST SELLERS ---
   Widget _buildBestSellersSection(bool isDesktop) {
-    final bestSellers = [
-      {
-        'rank': '#1 BEST SELLER',
-        'title': 'Bhringraj Hair Defense Oil',
-        'badgeColor': const Color(0xFFD97706),
-        'ingredients': 'Neem • Bhringraj • Amla',
-        'price': '₹1,299',
-        'originalPrice': '₹1,699',
-        'discount': '23% OFF',
+    final allProducts = ref.watch(adminProductsProvider);
+    if (allProducts.isEmpty) return const SizedBox.shrink();
+
+    final bestSellers = allProducts.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final p = entry.value;
+      return {
+        'rank': '#${idx + 1} BEST SELLER',
+        'title': p.name,
+        'badgeColor': idx == 0 ? const Color(0xFFD97706) : (idx == 1 ? const Color(0xFF4338CA) : const Color(0xFF059669)),
+        'ingredients': p.ingredients.isNotEmpty ? p.ingredients : 'Pure Botanical Formula',
+        'price': '₹${p.defaultVariant.price.toInt()}',
+        'originalPrice': '₹${p.defaultVariant.mrp.toInt()}',
+        'discount': p.defaultVariant.discountPercent > 0 ? '${p.defaultVariant.discountPercent.toInt()}% OFF' : 'SPECIAL',
         'rating': 4.9,
-        'reviewCount': '14,230 Reviews',
-        'quote': '"Restored my hair volume within 3 weeks of daily ritual!"',
-        'image': 'assets/images/shampoo.jpg',
-      },
-      {
-        'rank': '#2 TOP RATED',
-        'title': 'Kumkumadi Radiance Elixir',
-        'badgeColor': const Color(0xFF4338CA),
-        'ingredients': 'Kashmiri Kesar • Chandan',
-        'price': '₹1,799',
-        'originalPrice': '₹2,549',
-        'discount': '29% OFF',
-        'rating': 4.9,
-        'reviewCount': '12,980 Reviews',
-        'quote': '"My skin has never felt this hydrated and glowing naturally."',
-        'image': 'assets/images/facewash.jpg',
-      },
-      {
-        'rank': '#3 FAVORITE RITUAL',
-        'title': 'Nalpamaradi Body Thailam',
-        'badgeColor': const Color(0xFF059669),
-        'ingredients': 'Turmeric • Vetiver • Banyan Bark',
-        'price': '₹999',
-        'originalPrice': '₹1,399',
-        'discount': '28% OFF',
-        'rating': 4.8,
-        'reviewCount': '9,840 Reviews',
-        'quote': '"The herbal scent and skin brightening effect are unreal."',
-        'image': 'assets/images/soap.jpg',
-      },
-    ];
+        'reviewCount': '120 Reviews',
+        'quote': '"Authentic botanical formulation with visible skin & hair results!"',
+        'image': p.imageUrls.isNotEmpty ? p.imageUrls.first : '',
+        'rawModel': p,
+      };
+    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2054,6 +2006,9 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
 
   // --- 11. 🎁 CURATED ROUTINE COMBOS & BUNDLES ---
   Widget _buildComboBundlesSection(bool isDesktop) {
+    final allProducts = ref.watch(adminProductsProvider);
+    if (allProducts.isEmpty) return const SizedBox.shrink();
+
     final bundles = [
       {
         'title': 'Scalp & Hair Repair Ritual',

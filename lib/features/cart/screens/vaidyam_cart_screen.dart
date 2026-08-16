@@ -17,86 +17,32 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedSearchCategory = 'All Categories';
 
-  // Demo fallback state if real Riverpod cart is empty
-  List<Map<String, dynamic>>? _demoCartItems;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<Map<String, dynamic>> _getDemoItems(List<dynamic> products) {
-    return _demoCartItems ??= [
-      {
-        'id': products.isNotEmpty ? products[0].id : 'prod-1',
-        'name': 'Vaidyam Kumkumadi Radiance Serum',
-        'category': 'Skincare',
-        'variant': 'Volume: 200 ml',
-        'price': 1799.0,
-        'mrp': 2549.0,
-        'quantity': 1,
-        'image': products.isNotEmpty && products[0].imageUrls.isNotEmpty
-            ? products[0].imageUrls.first
-            : '',
-      },
-      {
-        'id': products.length > 1 ? products[1].id : 'prod-2',
-        'name': 'Vaidyam Neem & Teatree Body Wash',
-        'category': 'Bodycare',
-        'variant': 'Volume: 250 ml',
-        'price': 2499.0,
-        'mrp': 2999.0,
-        'quantity': 1,
-        'image': products.length > 1 && products[1].imageUrls.isNotEmpty
-            ? products[1].imageUrls.first
-            : '',
-      },
-      {
-        'id': products.length > 2 ? products[2].id : 'prod-3',
-        'name': 'Vaidyam Herbal Hair Growth Oil',
-        'category': 'Haircare',
-        'variant': 'Volume: 100 ml',
-        'price': 7499.0,
-        'mrp': 8995.0,
-        'quantity': 1,
-        'image': products.length > 2 && products[2].imageUrls.isNotEmpty
-            ? products[2].imageUrls.first
-            : '',
-      },
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
     final products = ref.watch(adminProductsProvider);
 
-    final bool usingRealCart = cartState.items.isNotEmpty;
-
-    // Build cart items list — use real cart or demo fallback
-    final List<Map<String, dynamic>> itemsList = usingRealCart
-        ? cartState.items.asMap().entries.map((entry) {
-            final item = entry.value;
-            return <String, dynamic>{
-              'id': item.product.id,
-              'name': item.product.name,
-              'category': item.product.categoryId,
-              'variant': item.variant.sizeLabel.isNotEmpty
-                  ? item.variant.sizeLabel
-                  : 'Default Variant',
-              'price': item.variant.price,
-              'mrp': item.variant.mrp,
-              'quantity': item.quantity,
-              'image': item.product.imageUrls.isNotEmpty
-                  ? item.product.imageUrls.first
-                  : '',
-              'rawItem': item,
-              'index': entry.key,
-            };
-          }).toList()
-        : _getDemoItems(products);
+    // Build cart items list strictly from cartState.items
+    final List<Map<String, dynamic>> itemsList = cartState.items.asMap().entries.map((entry) {
+      final item = entry.value;
+      return <String, dynamic>{
+        'id': item.product.id,
+        'name': item.product.name,
+        'category': item.product.categoryId,
+        'variant': item.variant.sizeLabel.isNotEmpty
+            ? item.variant.sizeLabel
+            : 'Default Variant',
+        'price': item.variant.price,
+        'mrp': item.variant.mrp,
+        'quantity': item.quantity,
+        'image': item.product.imageUrls.isNotEmpty
+            ? item.product.imageUrls.first
+            : '',
+        'rawItem': item,
+        'index': entry.key,
+      };
+    }).toList();
 
     // Calculate totals
     double subtotal = 0;
@@ -111,10 +57,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
       itemCount += qty;
     }
 
-    // In screenshot: Subtotal = 11,797, Discount = 1,299, Total = 10,498
-    final double discount = usingRealCart
-        ? ((totalMrp - subtotal) > 0 ? (totalMrp - subtotal) : 0.0)
-        : 1299.0;
+    final double discount = (totalMrp - subtotal) > 0 ? (totalMrp - subtotal) : 0.0;
     final double finalTotal = (subtotal - discount).clamp(0, double.infinity);
     final bool freeShipping = subtotal >= 499;
 
@@ -427,7 +370,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                             // Left: Cart Items Table
                             Expanded(
                               child: _buildCartTable(
-                                  context, itemsList, usingRealCart),
+                                  context, itemsList, true),
                             ),
                             const SizedBox(width: 28),
                             // Right: Order Summary
@@ -446,7 +389,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                         )
                       : Column(
                           children: [
-                            _buildCartTable(context, itemsList, usingRealCart),
+                            _buildCartTable(context, itemsList, true),
                             const SizedBox(height: 24),
                             _buildOrderSummary(
                               context,
@@ -767,21 +710,12 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                                       // Minus
                                       InkWell(
                                         onTap: () {
-                                          if (usingRealCart &&
-                                              item['index'] != null) {
+                                          if (item['index'] != null) {
                                             ref
                                                 .read(cartProvider.notifier)
                                                 .updateQuantity(
                                                     item['index'] as int,
                                                     quantity - 1);
-                                          } else {
-                                            setState(() {
-                                              if (quantity > 1) {
-                                                item['quantity'] = quantity - 1;
-                                              } else {
-                                                _demoCartItems?.removeAt(idx);
-                                              }
-                                            });
                                           }
                                         },
                                         child: Container(
@@ -816,17 +750,12 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                                       // Plus
                                       InkWell(
                                         onTap: () {
-                                          if (usingRealCart &&
-                                              item['index'] != null) {
+                                          if (item['index'] != null) {
                                             ref
                                                 .read(cartProvider.notifier)
                                                 .updateQuantity(
                                                     item['index'] as int,
                                                     quantity + 1);
-                                          } else {
-                                            setState(() {
-                                              item['quantity'] = quantity + 1;
-                                            });
                                           }
                                         },
                                         child: Container(
@@ -872,15 +801,10 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                               child: Center(
                                 child: InkWell(
                                   onTap: () {
-                                    if (usingRealCart &&
-                                        item['index'] != null) {
+                                    if (item['index'] != null) {
                                       ref
                                           .read(cartProvider.notifier)
                                           .removeItem(item['index'] as int);
-                                    } else {
-                                      setState(() {
-                                        _demoCartItems?.removeAt(idx);
-                                      });
                                     }
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
@@ -942,13 +866,7 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
                 // Clear Cart
                 OutlinedButton(
                   onPressed: () {
-                    if (usingRealCart) {
-                      ref.read(cartProvider.notifier).clearCart();
-                    } else {
-                      setState(() {
-                        _demoCartItems = [];
-                      });
-                    }
+                    ref.read(cartProvider.notifier).clearCart();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Cart cleared')),
                     );

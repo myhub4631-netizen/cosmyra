@@ -561,7 +561,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               children: [
                 const Text('Already have an account? ', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
                 InkWell(
-                  onTap: () => context.go('/admin'),
+                  onTap: () => context.go('/login'),
                   child: const Text('Login', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
                 ),
               ],

@@ -421,6 +421,29 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        const Text('Quick Preset Luxury Assets:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            ActionChip(
+                              avatar: const Icon(Icons.add, size: 14),
+                              label: const Text('Shampoo Bottle'),
+                              onPressed: () => setState(() => _imageUrls.add('assets/images/shampoo.jpg')),
+                            ),
+                            ActionChip(
+                              avatar: const Icon(Icons.add, size: 14),
+                              label: const Text('Handcrafted Soap'),
+                              onPressed: () => setState(() => _imageUrls.add('assets/images/soap.jpg')),
+                            ),
+                            ActionChip(
+                              avatar: const Icon(Icons.add, size: 14),
+                              label: const Text('Face Wash Gel'),
+                              onPressed: () => setState(() => _imageUrls.add('assets/images/facewash.jpg')),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 16),
                         const Text('Configured Product Gallery Assets:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                         const SizedBox(height: 12),

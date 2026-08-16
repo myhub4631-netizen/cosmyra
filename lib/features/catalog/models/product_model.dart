@@ -45,15 +45,28 @@ class ProductVariant {
   double get discountPercent => mrp > price ? (((mrp - price) / mrp) * 100).roundToDouble() : 0.0;
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
+    final double priceVal = (json['price_inr'] as num?)?.toDouble() ??
+        (json['price'] as num?)?.toDouble() ??
+        (json['priceINR'] as num?)?.toDouble() ??
+        0.0;
+    final double mrpVal = (json['mrp_inr'] as num?)?.toDouble() ??
+        (json['mrp'] as num?)?.toDouble() ??
+        (json['mrpINR'] as num?)?.toDouble() ??
+        priceVal;
+    final int stockVal = (json['stock_quantity'] as num?)?.toInt() ??
+        (json['stock'] as num?)?.toInt() ??
+        (json['stockQuantity'] as num?)?.toInt() ??
+        100;
+
     return ProductVariant(
-      id: json['id'] ?? '',
-      productId: json['product_id'] ?? '',
-      sku: json['sku'] ?? '',
-      sizeLabel: json['size_label'] ?? '',
-      price: (json['price_inr'] as num?)?.toDouble() ?? 0.0,
-      mrp: (json['mrp_inr'] as num?)?.toDouble() ?? 0.0,
-      stock: json['stock_quantity'] ?? 0,
-      isDefault: json['is_default'] ?? false,
+      id: (json['id'] ?? '').toString(),
+      productId: (json['product_id'] ?? json['productId'] ?? '').toString(),
+      sku: (json['sku'] ?? 'VDY-SKU').toString(),
+      sizeLabel: (json['size_label'] ?? json['sizeLabel'] ?? '200 ml').toString(),
+      price: priceVal,
+      mrp: mrpVal,
+      stock: stockVal,
+      isDefault: json['is_default'] ?? json['isDefault'] ?? true,
     );
   }
 
@@ -91,7 +104,7 @@ class CategoryModel {
       name: json['name'] ?? '',
       slug: json['slug'] ?? '',
       description: json['description'],
-      iconName: json['icon_name'],
+      iconName: json['icon_name'] ?? json['iconName'],
     );
   }
 }
@@ -132,39 +145,78 @@ class ProductModel {
       variants.firstWhere((v) => v.isDefault, orElse: () => variants.first);
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    final claimsList = json['free_from_claims'];
+    final claimsList = json['free_from_claims'] ?? json['freeFromClaims'];
     List<String> claims = [];
     if (claimsList is List) {
       claims = claimsList.map((e) => e.toString()).toList();
     }
 
-    final variantsList = json['product_variants'];
+    final variantsList = json['product_variants'] ?? json['variants'];
     List<ProductVariant> vars = [];
     if (variantsList is List) {
-      vars = variantsList.map((v) => ProductVariant.fromJson(v)).toList();
+      vars = variantsList
+          .map((v) => ProductVariant.fromJson(v is Map<String, dynamic> ? v : {}))
+          .toList();
     }
 
-    final imagesList = json['product_images'];
+    final imagesList = json['product_images'] ?? json['imageUrls'] ?? json['image_urls'];
     List<String> imgs = [];
     if (imagesList is List) {
-      imgs = imagesList.map((i) => (i['image_url'] ?? '').toString()).toList();
+      imgs = imagesList.map((i) {
+        if (i is Map) return (i['image_url'] ?? i['url'] ?? '').toString();
+        return i.toString();
+      }).where((img) => img.isNotEmpty).toList();
+    }
+
+    if (vars.isEmpty) {
+      final fallbackPrice = (json['price'] as num?)?.toDouble() ?? 399.0;
+      final fallbackMrp = (json['mrp'] as num?)?.toDouble() ?? 499.0;
+      vars = [
+        ProductVariant(
+          id: 'var-${json['id'] ?? DateTime.now().millisecondsSinceEpoch}',
+          productId: (json['id'] ?? '').toString(),
+          sku: (json['sku'] ?? 'VDY-SKU').toString(),
+          sizeLabel: (json['size_label'] ?? json['sizeLabel'] ?? '200 ml').toString(),
+          price: fallbackPrice,
+          mrp: fallbackMrp,
+          stock: (json['stock'] as num?)?.toInt() ?? 100,
+          isDefault: true,
+        ),
+      ];
     }
 
     return ProductModel(
-      id: json['id'] ?? '',
-      brandId: json['brand_id'] ?? '',
-      categoryId: json['category_id'] ?? '',
-      name: json['name'] ?? '',
-      slug: json['slug'] ?? '',
-      tagline: json['tagline'],
-      description: json['description'] ?? '',
-      ingredients: json['ingredients'] ?? '',
-      howToUse: json['how_to_use'],
+      id: (json['id'] ?? '').toString(),
+      brandId: (json['brand_id'] ?? json['brandId'] ?? 'brand-vaidyam').toString(),
+      categoryId: (json['category_id'] ?? json['categoryId'] ?? 'cat-skincare').toString(),
+      name: (json['name'] ?? 'Botanical Product').toString(),
+      slug: (json['slug'] ?? 'botanical-product').toString(),
+      tagline: json['tagline']?.toString(),
+      description: (json['description'] ?? 'Botanical formulation.').toString(),
+      ingredients: (json['ingredients'] ?? 'Aqua, Herbal extract.').toString(),
+      howToUse: json['how_to_use']?.toString() ?? json['howToUse']?.toString(),
       freeFromClaims: claims,
       variants: vars,
       imageUrls: imgs,
+      isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'brand_id': brandId,
+        'category_id': categoryId,
+        'name': name,
+        'slug': slug,
+        'tagline': tagline,
+        'description': description,
+        'ingredients': ingredients,
+        'how_to_use': howToUse,
+        'free_from_claims': freeFromClaims,
+        'product_variants': variants.map((v) => v.toJson()).toList(),
+        'product_images': imageUrls.map((img) => {'image_url': img}).toList(),
+        'is_featured': isFeatured,
+      };
 
   ProductModel copyWith({
     String? id,

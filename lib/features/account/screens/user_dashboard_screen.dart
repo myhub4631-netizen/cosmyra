@@ -880,9 +880,23 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     final user = ref.watch(currentUserProvider);
     final auth = ref.watch(authControllerProvider);
 
+    final bool isAuthenticated = auth.isLoggedIn || user != null;
+
+    if (!isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.go('/login');
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
+        ),
+      );
+    }
+
     final String displayName = auth.userName ??
         user?.userMetadata?['full_name'] ??
-        (auth.isGuest ? auth.guestName : null) ??
         (user?.email != null ? user!.email!.split('@').first : 'Valued Customer');
 
     final String displayEmail = auth.userEmail ??

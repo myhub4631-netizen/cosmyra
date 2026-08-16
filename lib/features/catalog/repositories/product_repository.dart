@@ -13,10 +13,177 @@ final adminProductsProvider = StateNotifierProvider<AdminProductsNotifier, List<
 });
 
 class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
-  AdminProductsNotifier() : super(ProductRepository._fallbackProducts);
+  AdminProductsNotifier() : super([]) {
+    _loadProductsFromStorage();
+  }
+
+  static final List<ProductModel> initialCatalogProducts = [
+    ProductModel(
+      id: 'prod-vaidyam-shampoo-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-haircare',
+      name: 'Vaidyam Anti-Dandruff Herbal Shampoo',
+      slug: 'anti-dandruff-herbal-shampoo',
+      tagline: 'Deep scalp cleansing with Tea Tree, Neem & Bhringraj',
+      description: 'Clears flakes, controls excess scalp sebum, and restores hair vitality with 100% organic botanicals.',
+      ingredients: 'Tea Tree Extract, Bhringraj, Neem, Aloe Vera, Purified Aqua.',
+      howToUse: 'Apply on wet hair, lather gently for 2 minutes, and rinse thoroughly.',
+      freeFromClaims: const ['100% Natural', 'Paraben Free', 'Sulfate Free'],
+      isFeatured: true,
+      variants: const [
+        ProductVariant(
+          id: 'v-shm-200ml',
+          productId: 'prod-vaidyam-shampoo-1',
+          sku: 'VDY-SHM-200',
+          sizeLabel: '200 ml Bottle',
+          price: 399,
+          mrp: 499,
+          stock: 200,
+          isDefault: true,
+        ),
+      ],
+      imageUrls: const ['assets/images/shampoo.jpg'],
+    ),
+    ProductModel(
+      id: 'prod-vaidyam-soap-2',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Vaidyam De-Tan Botanical Soap',
+      slug: 'de-tan-botanical-soap',
+      tagline: 'Pure Turmeric & Sandalwood complexion brightening bar',
+      description: 'Removes stubborn sun tan, deeply hydrates, and leaves skin smooth and glowing.',
+      ingredients: 'Wild Turmeric, Red Sandalwood, Coconut Oil, Essential Fragrance Oils.',
+      howToUse: 'Lather gently over wet body during bath and rinse with warm water.',
+      freeFromClaims: const ['Handcrafted', 'Cruelty Free', 'Chemical Free'],
+      isFeatured: true,
+      variants: const [
+        ProductVariant(
+          id: 'v-sop-125g',
+          productId: 'prod-vaidyam-soap-2',
+          sku: 'VDY-SOP-125',
+          sizeLabel: '125 g Bar',
+          price: 199,
+          mrp: 249,
+          stock: 125,
+          isDefault: true,
+        ),
+      ],
+      imageUrls: const ['assets/images/soap.jpg'],
+    ),
+    ProductModel(
+      id: 'prod-vaidyam-facewash-3',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Vaidyam Deep Clean Face Wash',
+      slug: 'deep-clean-face-wash',
+      tagline: 'Gentle clarifying wash with Neem & Chandan',
+      description: 'Removes pore impurities, prevents acne breakouts, and keeps skin soft and hydrated.',
+      ingredients: 'Neem Leaf Extract, Chandan (Sandalwood), Tulsi, Aqua.',
+      howToUse: 'Squeeze small amount on wet palm, massage over face, and wash off.',
+      freeFromClaims: const ['Paraben Free', 'Dermatologically Tested'],
+      isFeatured: true,
+      variants: const [
+        ProductVariant(
+          id: 'v-fcw-100ml',
+          productId: 'prod-vaidyam-facewash-3',
+          sku: 'VDY-FCW-100',
+          sizeLabel: '100 ml Tube',
+          price: 299,
+          mrp: 375,
+          stock: 98,
+          isDefault: true,
+        ),
+      ],
+      imageUrls: const ['assets/images/facewash.jpg'],
+    ),
+    ProductModel(
+      id: 'prod-vaidyam-hairoil-4',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-haircare',
+      name: 'Vaidyam Herbal Hair Oil',
+      slug: 'herbal-hair-oil',
+      tagline: 'Roots invigorating hair growth & scalp tonic',
+      description: 'Nourishes dry roots, prevents premature graying, and promotes thick hair growth.',
+      ingredients: 'Bhringraj, Amla, Brahmi, Sesame Seed Oil.',
+      howToUse: 'Warm oil gently and massage into scalp 1 hour before hair wash.',
+      freeFromClaims: const ['100% Herbal', 'No Artificial Color'],
+      isFeatured: false,
+      variants: const [
+        ProductVariant(
+          id: 'v-ho-100ml',
+          productId: 'prod-vaidyam-hairoil-4',
+          sku: 'VDY-HO-100',
+          sizeLabel: '100 ml Bottle',
+          price: 349,
+          mrp: 449,
+          stock: 0,
+          isDefault: true,
+        ),
+      ],
+      imageUrls: const ['assets/images/shampoo.jpg'],
+    ),
+    ProductModel(
+      id: 'prod-vaidyam-serum-5',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Vaidyam Vitamin C Serum',
+      slug: 'vitamin-c-serum',
+      tagline: 'Brightening boost with Amla & Hyaluronic Acid',
+      description: 'Fades dark spots, boosts collagen production, and gives radiant skin tone.',
+      ingredients: 'Phyllanthus Emblica (Amla Vitamin C), Hyaluronic Acid, Ferulic Acid.',
+      howToUse: 'Apply 3-5 drops in morning skincare routine before moisturizer.',
+      freeFromClaims: const ['Cruelty Free', 'Dermatologist Formulated'],
+      isFeatured: true,
+      variants: const [
+        ProductVariant(
+          id: 'v-ser-30ml',
+          productId: 'prod-vaidyam-serum-5',
+          sku: 'VDY-SER-30',
+          sizeLabel: '30 ml Dropper',
+          price: 599,
+          mrp: 749,
+          stock: 30,
+          isDefault: true,
+        ),
+      ],
+      imageUrls: const ['assets/images/facewash.jpg'],
+    ),
+  ];
+
+  Future<void> _loadProductsFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      if (jsonStr != null) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        final List<ProductModel> loaded = [];
+        for (final item in decoded) {
+          try {
+            if (item is Map<String, dynamic>) {
+              loaded.add(ProductModel.fromJson(item));
+            }
+          } catch (_) {}
+        }
+        state = loaded;
+        return;
+      }
+    } catch (_) {}
+
+    state = List.from(initialCatalogProducts);
+    _saveProductsToStorage();
+  }
+
+  Future<void> _saveProductsToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList = state.map((p) => p.toJson()).toList();
+      await prefs.setString('cosmyra_admin_products_v2', jsonEncode(jsonList));
+    } catch (_) {}
+  }
 
   void addProduct(ProductModel product) {
     state = [product, ...state];
+    _saveProductsToStorage();
   }
 
   void updateProduct(ProductModel product) {
@@ -24,10 +191,21 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       for (final p in state)
         if (p.id == product.id) product else p,
     ];
+    _saveProductsToStorage();
   }
 
   void deleteProduct(String productId) {
-    state = state.where((p) => p.id != productId).toList();
+    state = state.where((p) => p.id.trim() != productId.trim()).toList();
+    _saveProductsToStorage();
+  }
+
+  Future<void> resetToDefaultCatalog() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cosmyra_admin_products_v2');
+    } catch (_) {}
+    state = List.from(initialCatalogProducts);
+    _saveProductsToStorage();
   }
 
   void restockProduct(String productId, int addAmount) {
@@ -43,6 +221,12 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       }
       return p;
     }).toList();
+    _saveProductsToStorage();
+  }
+
+  void clearAllProducts() {
+    state = [];
+    _saveProductsToStorage();
   }
 }
 
@@ -202,121 +386,5 @@ class ProductRepository {
     ),
   ];
 
-  // Fallback initial Vaidyam 3 SKUs with local luxury asset images
-  static final List<ProductModel> _fallbackProducts = [
-    ProductModel(
-      id: 'prod-1',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-haircare',
-      name: 'Vaidyam Anti-Dandruff Herbal Shampoo',
-      slug: 'vaidyam-anti-dandruff-shampoo',
-      tagline: 'Clinically proven botanical defense against flakes & scalp itch',
-      description:
-          'Formulated with Pure Tea Tree Leaf Oil, Neem extract, and Climbazole in a gentle, sulfate-free lather. Restores scalp microbiome balance while nourishing hair roots from within.',
-      ingredients:
-          'Aqua, Tea Tree Leaf Oil, Azadirachta Indica (Neem) Leaf Extract, Climbazole, Aloe Barbadensis Leaf Juice, Decyl Glucoside, Sodium Cocoyl Isethionate, Glycerin, Hydrolyzed Wheat Protein, D-Panthenol.',
-      howToUse:
-          'Apply to wet hair and gently massage into scalp for 2 minutes. Rinse thoroughly with water. Use 3 times weekly for best results.',
-      freeFromClaims: const [
-        'Sulfate Free',
-        'Paraben Free',
-        'Silicon Free',
-        'Mineral Oil Free',
-        'Cruelty Free',
-        'Artificial Dye Free'
-      ],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'var-1-200',
-          productId: 'prod-1',
-          sku: 'VDY-SHM-200',
-          sizeLabel: '200 ml',
-          price: 399.00,
-          mrp: 499.00,
-          stock: 200,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const [
-        'assets/images/shampoo.jpg',
-      ],
-    ),
-    ProductModel(
-      id: 'prod-2',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-skincare',
-      name: 'Vaidyam De-Tan Botanical Handcrafted Soap',
-      slug: 'vaidyam-de-tan-soap',
-      tagline: 'Enriched with Turmeric, Kashmiri Saffron & Sandalwood for bright, glowing skin',
-      description:
-          'Handcrafted cold-processed soap bar infused with raw Kashmiri Saffron and Wild Turmeric. Removes stubborn sun tan, pigmentation, and gently exfoliates dead skin cells.',
-      ingredients:
-          'Cocos Nucifera (Coconut) Oil, Elaeis Guineensis (Palm) Oil, Curcuma Longa (Turmeric) Extract, Crocus Sativus (Saffron) Extract, Santalum Album (Sandalwood) Powder, Kojic Acid Dipalmitate, Vitamin E, Pure Essential Oils.',
-      howToUse:
-          'Lather between wet palms and apply all over body and face. Leave on for 60 seconds before rinsing off with cool water.',
-      freeFromClaims: const [
-        'Paraben Free',
-        'Cruelty Free',
-        '100% Vegetarian',
-        'Handcrafted',
-        'No Animal Fats',
-        'Grade 1 TFM 76%'
-      ],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'var-2-125',
-          productId: 'prod-2',
-          sku: 'VDY-SOP-125',
-          sizeLabel: '125 g',
-          price: 199.00,
-          mrp: 249.00,
-          stock: 200,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const [
-        'assets/images/soap.jpg',
-      ],
-    ),
-    ProductModel(
-      id: 'prod-3',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-skincare',
-      name: 'Vaidyam Deep Clean Clarifying Face Wash',
-      slug: 'vaidyam-deep-clean-face-wash',
-      tagline: 'Salicylic acid (2%) & Green Tea extract for active oil control & acne defense',
-      description:
-          'A gentle, pH-balanced foaming gel that deep-cleans pores without stripping natural hydration. Combines Green Tea and Niacinamide to calm redness and prevent breakouts.',
-      ingredients:
-          'Aqua, Camellia Sinensis (Green Tea) Leaf Water, Salicylic Acid (2%), Niacinamide, Cocamidopropyl Betaine, Sodium Lauroyl Sarcosinate, Allantoin, Hyaluronic Acid, Melaleuca Alternifolia (Tea Tree) Extract.',
-      howToUse:
-          'Pump a small amount onto damp palms. Work into a mild foam and massage over face in circular motions for 30 seconds. Rinse with lukewarm water.',
-      freeFromClaims: const [
-        'Soap Free',
-        'Alcohol Free',
-        'Non-Comedogenic',
-        'Fragrance Free',
-        'Paraben Free',
-        'Cruelty Free'
-      ],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'var-3-100',
-          productId: 'prod-3',
-          sku: 'VDY-FCW-100',
-          sizeLabel: '100 ml',
-          price: 299.00,
-          mrp: 375.00,
-          stock: 200,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const [
-        'assets/images/facewash.jpg',
-      ],
-    ),
-  ];
+  static final List<ProductModel> _fallbackProducts = [];
 }

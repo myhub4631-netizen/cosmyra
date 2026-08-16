@@ -64,10 +64,10 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
     final int cartCount = cartState.totalItemCount;
     final int wishlistCount = wishlist.length;
 
-    final String displayName = auth.userName ??
-        user?.userMetadata?['full_name'] ??
-        (auth.isGuest ? auth.guestName : null) ??
-        'Account';
+    final bool isLoggedIn = auth.isLoggedIn || user != null;
+    final String accountLabel = isLoggedIn
+        ? (auth.userName ?? user?.userMetadata?['full_name'] ?? 'Account')
+        : 'Login';
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
@@ -271,9 +271,15 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                   const SizedBox(width: 24),
                   _actionIconButton(
                     icon: Icons.person_outline,
-                    label: displayName.length > 10 ? '${displayName.substring(0, 8)}...' : displayName,
+                    label: accountLabel.length > 10 ? '${accountLabel.substring(0, 8)}...' : accountLabel,
                     badgeCount: 0,
-                    onTap: () => context.go('/dashboard'),
+                    onTap: () {
+                      if (isLoggedIn) {
+                        context.go('/dashboard');
+                      } else {
+                        context.go('/login');
+                      }
+                    },
                   ),
                 ],
               ),

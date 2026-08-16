@@ -88,15 +88,38 @@ class AuthController extends StateNotifier<AuthStateModel> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = prefs.getString(_profilePrefsKey);
+
+      if (SupabaseConfig.isConfigured) {
+        final currentUser = supabase.auth.currentUser;
+        if (currentUser == null) {
+          // Unauthenticated session - clear any cached legacy profiles
+          await prefs.remove(_profilePrefsKey);
+          state = const AuthStateModel();
+          return;
+        }
+      }
+
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final Map<String, dynamic> data = json.decode(jsonStr);
-        state = state.copyWith(
-          isLoggedIn: true,
-          userName: data['name']?.toString(),
-          userEmail: data['email']?.toString(),
-          userPhone: data['phone']?.toString(),
-          isAdmin: data['isAdmin'] == true,
-        );
+        final String email = data['email']?.toString() ?? '';
+        final String name = data['name']?.toString() ?? '';
+
+        // If email or name is empty or a generic demo/guest fallback, purge local profile
+        if (email.isEmpty || name.isEmpty || email.contains('guest') || name.toLowerCase().contains('valued customer') || name.toLowerCase().contains('demo')) {
+          await prefs.remove(_profilePrefsKey);
+          state = const AuthStateModel();
+        } else {
+          final bool isMasterEmail = email.toLowerCase() == '1mdollar2027@gmail.com' ||
+              email.toLowerCase() == 'admin@cosmyra.com' ||
+              email.toLowerCase() == 'admin@cosmyra.cloud';
+          state = state.copyWith(
+            isLoggedIn: true,
+            userName: name,
+            userEmail: email,
+            userPhone: data['phone']?.toString(),
+            isAdmin: isMasterEmail && data['isAdmin'] == true,
+          );
+        }
       }
     } catch (_) {}
 
@@ -164,12 +187,14 @@ class AuthController extends StateNotifier<AuthStateModel> {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
       final cleanEmail = email.trim();
+      final cleanPassword = password.trim();
       String resolvedName = cleanEmail.split('@').first;
       String resolvedPhone = '';
 
-      final isMaster = cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
-          cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
-          cleanEmail.toLowerCase() == 'admin@cosmyra.cloud';
+      final isMaster = (cleanEmail.toLowerCase() == '1mdollar2027@gmail.com' ||
+              cleanEmail.toLowerCase() == 'admin@cosmyra.com' ||
+              cleanEmail.toLowerCase() == 'admin@cosmyra.cloud') &&
+          cleanPassword.isNotEmpty;
 
       if (SupabaseConfig.isConfigured) {
         final res = await supabase.auth.signInWithPassword(email: cleanEmail, password: password);

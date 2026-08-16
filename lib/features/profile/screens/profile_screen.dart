@@ -257,25 +257,26 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // 4. Admin Portal Access
-            Card(
-              color: isDark ? const Color(0xFF1B2A22) : const Color(0xFFEBF4EE),
-              child: ListTile(
-                leading: const Icon(Icons.admin_panel_settings, color: AppColors.forestSage),
-                title: const Text(
-                  'Master Admin Web Console',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            // 4. Admin Portal Access (Only for Admin users)
+            if (auth.isAdmin) ...[
+              Card(
+                color: isDark ? const Color(0xFF1B2A22) : const Color(0xFFEBF4EE),
+                child: ListTile(
+                  leading: const Icon(Icons.admin_panel_settings, color: AppColors.forestSage),
+                  title: const Text(
+                    'Master Admin Web Console',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  subtitle: const Text(
+                    'Manage products, categories, orders & website CMS',
+                    style: TextStyle(fontSize: 11),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward, size: 18),
+                  onTap: () => context.push('/admin'),
                 ),
-                subtitle: const Text(
-                  'Manage products, categories, orders & website CMS',
-                  style: TextStyle(fontSize: 11),
-                ),
-                trailing: const Icon(Icons.arrow_forward, size: 18),
-                onTap: () => context.push('/admin'),
               ),
-            ),
-
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
 
             // 5. Sign Out / Switch Account Button
             if (isLoggedIn)
