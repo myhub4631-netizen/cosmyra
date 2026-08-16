@@ -126,12 +126,17 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
 
               const SizedBox(height: 16),
 
-              // 4. Hero Banner Carousel Slider
+              // 4. ⭐ 4 Featured Products 2x2 Grid (Right where marked in Red Box!)
+              _buildFeaturedProducts2x2Grid(context, wishlist),
+
+              const SizedBox(height: 20),
+
+              // 5. Hero Banner Carousel Slider (Shifted Below 4 Featured Products!)
               _buildHeroBannerSlider(),
 
               const SizedBox(height: 16),
 
-              // 5. Value Propositions / Trust Badge Strip
+              // 6. Value Propositions / Trust Badge Strip ("Free Delivery", "7 Days Return", etc.) (Shifted Below Slider!)
               _buildTrustBadgeStrip(),
 
               const SizedBox(height: 24),
@@ -658,6 +663,288 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
             ),
           );
         },
+      ),
+    );
+  }
+
+  // 4. ⭐ 4 Featured Products 2x2 Grid Section (Right where marked in Red Box!)
+  Widget _buildFeaturedProducts2x2Grid(BuildContext context, Set<String> wishlist) {
+    final allProducts = ref.watch(adminProductsProvider);
+    final featuredProducts = allProducts.take(4).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEF3C7),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.star_rounded, color: Color(0xFFD97706), size: 16),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Featured Products',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: _textDark,
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () => context.push('/shop'),
+                child: Row(
+                  children: const [
+                    Text(
+                      'View All',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _primaryPurple),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: _primaryPurple),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // 2x2 Grid of Product Cards
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: featuredProducts.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.64,
+            ),
+            itemBuilder: (context, index) {
+              final product = featuredProducts[index];
+              final variant = product.defaultVariant;
+              final bool isWishlisted = wishlist.contains(product.id);
+              final String imageUrl = product.imageUrls.isNotEmpty ? product.imageUrls.first : '';
+              final double discountPct = variant.mrp > variant.price
+                  ? (((variant.mrp - variant.price) / variant.mrp) * 100)
+                  : 0;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  onTap: () => context.push('/product/${product.id}'),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Stack(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Product Image
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                            child: SizedBox(
+                              height: 125,
+                              width: double.infinity,
+                              child: ProductImageWidget(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+
+                          // Product Info
+                          Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Tagline / Category
+                                Text(
+                                  product.tagline ?? 'AYURVEDA',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primaryPurple,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+
+                                // Product Title
+                                Text(
+                                  product.name,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _textDark,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+
+                                // Rating Badge
+                                Row(
+                                  children: const [
+                                    Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 13),
+                                    SizedBox(width: 3),
+                                    Text(
+                                      '4.8 (120)',
+                                      style: TextStyle(fontSize: 10, color: _textMuted, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Price & Cart Add Button
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '₹${variant.price.toStringAsFixed(0)}',
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w900,
+                                            color: _primaryPurple,
+                                          ),
+                                        ),
+                                        if (variant.mrp > variant.price)
+                                          Text(
+                                            '₹${variant.mrp.toStringAsFixed(0)}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: _textMuted,
+                                              decoration: TextDecoration.lineThrough,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+
+                                    // Add to Cart Button
+                                    InkWell(
+                                      onTap: () {
+                                        ref.read(cartProvider.notifier).addItem(
+                                              product: product,
+                                              variant: variant,
+                                              quantity: 1,
+                                            );
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('✨ ${product.name} added to cart!'),
+                                            backgroundColor: const Color(0xFF10B981),
+                                            behavior: SnackBarBehavior.floating,
+                                            duration: const Duration(seconds: 2),
+                                          ),
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Text(
+                                          'ADD +',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Top-Left Discount Badge
+                      if (discountPct > 0)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${discountPct.toStringAsFixed(0)}% OFF',
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Top-Right Wishlist Heart Button
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: InkWell(
+                          onTap: () {
+                            ref.read(wishlistProvider.notifier).toggleWishlist(product.id);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(color: Colors.black12, blurRadius: 4),
+                              ],
+                            ),
+                            child: Icon(
+                              isWishlisted ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isWishlisted ? const Color(0xFFEF4444) : _textMuted,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
