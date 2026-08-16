@@ -7,6 +7,7 @@ import '../models/product_model.dart';
 import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
+import '../../navigation/widgets/vaidyam_mobile_app_header.dart';
 
 class VaidyamMobileHomeScreenWidget extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> activeProducts;
@@ -93,13 +94,10 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Top Delivery Location & Notification Bar
-              _buildTopLocationHeader(context, cartCount),
+              // 1. App Header with Hamburger, Admin-managed Logo & Brand Text, Search Bar, Bell & Cart
+              const VaidyamMobileAppHeader(),
 
-              // 2. Main Search Bar Row with Mic & Camera
-              _buildSearchBarRow(context),
-
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
               // 3. Horizontal Category Story Bubbles
               _buildCategoryStoryBubbles(),
