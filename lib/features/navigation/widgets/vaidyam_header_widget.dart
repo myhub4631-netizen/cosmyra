@@ -145,14 +145,14 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
               InkWell(
                 onTap: () => context.go('/'),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (brandSettings.headerLogoUrl.isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 52, maxWidth: 260),
                         child: ProductImageWidget(
                           imageUrl: brandSettings.headerLogoUrl,
-                          width: 44,
-                          height: 44,
+                          height: 52,
                           fit: BoxFit.contain,
                         ),
                       )
@@ -165,31 +165,33 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                         ),
                         child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
                       ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          brandSettings.brandName.isEmpty ? 'Vaidyam Botanicals' : brandSettings.brandName,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: _textDark,
-                            letterSpacing: -0.5,
+                    if (!brandSettings.hideBrandTextWithLogo || brandSettings.headerLogoUrl.isEmpty) ...[
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            brandSettings.brandName.isEmpty ? 'Vaidyam Botanicals' : brandSettings.brandName,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: _textDark,
+                              letterSpacing: -0.5,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          brandSettings.brandTagline.isEmpty ? 'Pure Ayurveda. Real Results.' : brandSettings.brandTagline,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: _textMuted,
-                            letterSpacing: 0.2,
+                          const SizedBox(height: 2),
+                          Text(
+                            brandSettings.brandTagline.isEmpty ? 'Pure Ayurveda. Real Results.' : brandSettings.brandTagline,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: _textMuted,
+                              letterSpacing: 0.2,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

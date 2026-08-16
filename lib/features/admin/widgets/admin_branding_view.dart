@@ -20,6 +20,7 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
   late TextEditingController _footerLogoCtrl;
   late TextEditingController _faviconCtrl;
   late TextEditingController _appIconCtrl;
+  late bool _hideBrandTextWithLogo;
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
     _footerLogoCtrl = TextEditingController(text: settings.footerLogoUrl);
     _faviconCtrl = TextEditingController(text: settings.faviconUrl);
     _appIconCtrl = TextEditingController(text: settings.appIconUrl);
+    _hideBrandTextWithLogo = settings.hideBrandTextWithLogo;
   }
 
   @override
@@ -101,6 +103,7 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
                         footerLogoUrl: _footerLogoCtrl.text.trim(),
                         faviconUrl: _faviconCtrl.text.trim(),
                         appIconUrl: _appIconCtrl.text.trim(),
+                        hideBrandTextWithLogo: _hideBrandTextWithLogo,
                       );
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -162,6 +165,25 @@ class _AdminBrandingViewState extends ConsumerState<AdminBrandingView> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _hideBrandTextWithLogo,
+                  activeColor: const Color(0xFF4F46E5),
+                  title: const Text(
+                    'Hide Brand Name & Tagline Text next to Header Logo',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF111827)),
+                  ),
+                  subtitle: const Text(
+                    'Enable this if your uploaded Header Logo image already contains your store name/logo text (e.g. COSMYRA banner logo).',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _hideBrandTextWithLogo = val ?? false;
+                    });
+                  },
                 ),
               ],
             ),

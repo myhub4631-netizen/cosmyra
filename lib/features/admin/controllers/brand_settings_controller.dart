@@ -11,6 +11,7 @@ class BrandSettings {
   final String appIconUrl;
   final String brandName;
   final String brandTagline;
+  final bool hideBrandTextWithLogo;
 
   const BrandSettings({
     this.headerLogoUrl = '',
@@ -19,6 +20,7 @@ class BrandSettings {
     this.appIconUrl = '',
     this.brandName = 'Vaidyam Botanicals',
     this.brandTagline = 'Pure Ayurveda. Real Results.',
+    this.hideBrandTextWithLogo = false,
   });
 
   BrandSettings copyWith({
@@ -28,6 +30,7 @@ class BrandSettings {
     String? appIconUrl,
     String? brandName,
     String? brandTagline,
+    bool? hideBrandTextWithLogo,
   }) {
     return BrandSettings(
       headerLogoUrl: headerLogoUrl ?? this.headerLogoUrl,
@@ -36,6 +39,7 @@ class BrandSettings {
       appIconUrl: appIconUrl ?? this.appIconUrl,
       brandName: brandName ?? this.brandName,
       brandTagline: brandTagline ?? this.brandTagline,
+      hideBrandTextWithLogo: hideBrandTextWithLogo ?? this.hideBrandTextWithLogo,
     );
   }
 
@@ -47,6 +51,7 @@ class BrandSettings {
       'appIconUrl': appIconUrl,
       'brandName': brandName,
       'brandTagline': brandTagline,
+      'hideBrandTextWithLogo': hideBrandTextWithLogo,
     };
   }
 
@@ -58,6 +63,7 @@ class BrandSettings {
       appIconUrl: json['appIconUrl']?.toString() ?? '',
       brandName: json['brandName']?.toString() ?? 'Vaidyam Botanicals',
       brandTagline: json['brandTagline']?.toString() ?? 'Pure Ayurveda. Real Results.',
+      hideBrandTextWithLogo: json['hideBrandTextWithLogo'] == true,
     );
   }
 }
@@ -90,6 +96,7 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
     String? appIconUrl,
     String? brandName,
     String? brandTagline,
+    bool? hideBrandTextWithLogo,
   }) async {
     state = state.copyWith(
       headerLogoUrl: headerLogoUrl,
@@ -98,6 +105,7 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
       appIconUrl: appIconUrl,
       brandName: brandName,
       brandTagline: brandTagline,
+      hideBrandTextWithLogo: hideBrandTextWithLogo,
     );
 
     try {
