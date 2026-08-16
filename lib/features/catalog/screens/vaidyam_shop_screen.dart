@@ -354,15 +354,13 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                image: DecorationImage(
-                  image: (p.imageUrls.isNotEmpty && p.imageUrls.first.startsWith('http'))
-                      ? NetworkImage(p.imageUrls.first) as ImageProvider
-                      : AssetImage(p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg'),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 90,
+                height: 90,
+                child: ProductImageWidget(
+                  imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg',
                   fit: BoxFit.cover,
                 ),
               ),

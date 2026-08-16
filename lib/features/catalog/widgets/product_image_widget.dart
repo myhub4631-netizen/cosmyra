@@ -24,17 +24,27 @@ class ProductImageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final String trimmedUrl = imageUrl.trim();
 
-    if (imageUrl.startsWith('data:')) {
+    if (trimmedUrl.isEmpty) {
+      return Container(
+        color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
+        child: Center(
+          child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+        ),
+      );
+    }
+
+    if (trimmedUrl.startsWith('data:')) {
       try {
-        final Uint8List bytes = _base64Cache.putIfAbsent(imageUrl, () {
-          final base64Str = imageUrl.split(',').last;
+        final Uint8List bytes = _base64Cache.putIfAbsent(trimmedUrl, () {
+          final base64Str = trimmedUrl.split(',').last;
           return base64Decode(base64Str);
         });
 
         return Image.memory(
           bytes,
-          key: ValueKey(imageUrl.hashCode),
+          key: ValueKey(trimmedUrl.hashCode),
           width: width,
           height: height,
           fit: fit,
@@ -55,9 +65,9 @@ class ProductImageWidget extends StatelessWidget {
       }
     }
 
-    if (imageUrl.startsWith('assets/')) {
+    if (trimmedUrl.startsWith('assets/')) {
       return Image.asset(
-        imageUrl,
+        trimmedUrl,
         width: width,
         height: height,
         fit: fit,
@@ -71,7 +81,7 @@ class ProductImageWidget extends StatelessWidget {
     }
 
     return CachedNetworkImage(
-      imageUrl: imageUrl,
+      imageUrl: trimmedUrl,
       width: width,
       height: height,
       fit: fit,

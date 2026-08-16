@@ -120,7 +120,8 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
       final base64Result = await pickImageWebSafe();
       if (base64Result != null && base64Result.isNotEmpty) {
         setState(() {
-          _imageUrls.add(base64Result);
+          _imageUrls.insert(0, base64Result);
+          _primaryImageIndex = 0;
         });
 
         if (mounted) {
@@ -502,7 +503,8 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                               onPressed: () {
                                 if (_newImageUrlController.text.trim().isNotEmpty) {
                                   setState(() {
-                                    _imageUrls.add(_newImageUrlController.text.trim());
+                                    _imageUrls.insert(0, _newImageUrlController.text.trim());
+                                    _primaryImageIndex = 0;
                                     _newImageUrlController.clear();
                                   });
                                 }
@@ -522,17 +524,26 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                             ActionChip(
                               avatar: const Icon(Icons.add, size: 14),
                               label: const Text('Shampoo Bottle'),
-                              onPressed: () => setState(() => _imageUrls.add('assets/images/shampoo.jpg')),
+                              onPressed: () => setState(() {
+                                _imageUrls.insert(0, 'assets/images/shampoo.jpg');
+                                _primaryImageIndex = 0;
+                              }),
                             ),
                             ActionChip(
                               avatar: const Icon(Icons.add, size: 14),
                               label: const Text('Handcrafted Soap'),
-                              onPressed: () => setState(() => _imageUrls.add('assets/images/soap.jpg')),
+                              onPressed: () => setState(() {
+                                _imageUrls.insert(0, 'assets/images/soap.jpg');
+                                _primaryImageIndex = 0;
+                              }),
                             ),
                             ActionChip(
                               avatar: const Icon(Icons.add, size: 14),
                               label: const Text('Face Wash Gel'),
-                              onPressed: () => setState(() => _imageUrls.add('assets/images/facewash.jpg')),
+                              onPressed: () => setState(() {
+                                _imageUrls.insert(0, 'assets/images/facewash.jpg');
+                                _primaryImageIndex = 0;
+                              }),
                             ),
                           ],
                         ),
@@ -739,6 +750,12 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                       isDefault: true,
                     );
 
+                    final finalImageUrls = List<String>.from(_imageUrls);
+                    if (_primaryImageIndex > 0 && _primaryImageIndex < finalImageUrls.length) {
+                      final primaryUrl = finalImageUrls.removeAt(_primaryImageIndex);
+                      finalImageUrls.insert(0, primaryUrl);
+                    }
+
                     final updatedProd = ProductModel(
                       id: prodId,
                       brandId: 'brand-vaidyam',
@@ -751,7 +768,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                       howToUse: _howToUseController.text.trim(),
                       freeFromClaims: const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
                       variants: [variant],
-                      imageUrls: _imageUrls,
+                      imageUrls: finalImageUrls,
                       isFeatured: _isFeatured,
                     );
 
