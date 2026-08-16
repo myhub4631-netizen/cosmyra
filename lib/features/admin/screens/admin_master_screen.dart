@@ -9,6 +9,7 @@ import '../widgets/admin_homepage_cms_view.dart';
 import '../widgets/admin_orders_view.dart';
 import 'admin_dashboard_screen.dart';
 
+import '../widgets/admin_branding_view.dart';
 import '../widgets/admin_coupons_view.dart';
 
 class AdminMasterScreen extends ConsumerStatefulWidget {
@@ -19,7 +20,7 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website (Homepage), 8: Website (Footer)
+  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website (Homepage), 8: Website (Footer), 9: Logo & Branding
 
   // Expanded parent menus
   final Set<String> _expandedParentMenus = {'Catalog', 'Orders', 'Website'};
@@ -73,6 +74,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const Center(child: Text('Reports View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
       const AdminHomepageCmsView(),
       const AdminFooterCmsView(),
+      const AdminBrandingView(),
     ];
 
     return Scaffold(
@@ -360,6 +362,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 if (_expandedParentMenus.contains('Website')) ...[
                   _subNavItem('Homepage', 7, () => setState(() => _activeViewIndex = 7)),
                   _subNavItem('Footer Manager', 8, () => setState(() => _activeViewIndex = 8)),
+                  _subNavItem('Logo & Brand Assets 🎨', 9, () => setState(() => _activeViewIndex = 9)),
                 ],
 
                 const SizedBox(height: 16),
@@ -372,6 +375,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
 
                 const SizedBox(height: 16),
                 _groupHeader('SETTINGS'),
+                _navItem('Brand & Logo 🎨', Icons.palette_outlined, 9),
                 _navItem('Settings', Icons.settings_outlined, -1),
                 _navItem('System Logs', Icons.article_outlined, -1),
               ],

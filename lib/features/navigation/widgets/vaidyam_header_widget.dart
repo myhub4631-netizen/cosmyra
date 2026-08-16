@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../admin/controllers/brand_settings_controller.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 
 class VaidyamHeaderWidget extends ConsumerStatefulWidget {
   final String activeTab;
@@ -60,6 +62,7 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
     final wishlist = ref.watch(wishlistProvider);
     final user = ref.watch(currentUserProvider);
     final auth = ref.watch(authControllerProvider);
+    final brandSettings = ref.watch(brandSettingsProvider);
 
     final int cartCount = cartState.totalItemCount;
     final int wishlistCount = wishlist.length;
@@ -143,31 +146,42 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                 onTap: () => context.go('/'),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: _purpleTheme,
-                        borderRadius: BorderRadius.circular(14),
+                    if (brandSettings.headerLogoUrl.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: ProductImageWidget(
+                          imageUrl: brandSettings.headerLogoUrl,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _purpleTheme,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
                       ),
-                      child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
-                    ),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          'Vaidyam Botanicals',
-                          style: TextStyle(
+                          brandSettings.brandName.isEmpty ? 'Vaidyam Botanicals' : brandSettings.brandName,
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             color: _textDark,
                             letterSpacing: -0.5,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Pure Ayurveda. Real Results.',
-                          style: TextStyle(
+                          brandSettings.brandTagline.isEmpty ? 'Pure Ayurveda. Real Results.' : brandSettings.brandTagline,
+                          style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                             color: _textMuted,

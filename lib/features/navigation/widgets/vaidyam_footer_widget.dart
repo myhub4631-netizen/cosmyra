@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../admin/controllers/footer_cms_controller.dart';
+import '../../admin/controllers/brand_settings_controller.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 
 class VaidyamFooterWidget extends ConsumerStatefulWidget {
   const VaidyamFooterWidget({super.key});
@@ -204,23 +206,37 @@ class _VaidyamFooterWidgetState extends ConsumerState<VaidyamFooterWidget> {
 
   // --- BRAND INFO & NEWSLETTER COLUMN ---
   Widget _buildBrandNewsletterCol(FooterCmsState footerState) {
+    final brandSettings = ref.watch(brandSettingsProvider);
+    final String customLogo = brandSettings.footerLogoUrl.isNotEmpty ? brandSettings.footerLogoUrl : brandSettings.headerLogoUrl;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Brand Logo
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: _primaryPurple,
+            if (customLogo.isNotEmpty)
+              ClipRRect(
                 borderRadius: BorderRadius.circular(8),
+                child: ProductImageWidget(
+                  imageUrl: customLogo,
+                  width: 36,
+                  height: 36,
+                  fit: BoxFit.contain,
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _primaryPurple,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
               ),
-              child: const Icon(Icons.local_florist, color: Colors.white, size: 20),
-            ),
             const SizedBox(width: 10),
             Text(
-              footerState.brandName,
+              brandSettings.brandName.isNotEmpty ? brandSettings.brandName : footerState.brandName,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
