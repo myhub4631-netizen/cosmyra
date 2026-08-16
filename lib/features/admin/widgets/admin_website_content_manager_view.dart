@@ -35,14 +35,13 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
     _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialSubTab.clamp(0, 8));
 
     final brand = ref.read(brandSettingsProvider);
-    final cms = ref.read(homepageCmsProvider);
 
     _brandNameCtrl = TextEditingController(text: brand.brandName);
     _brandTaglineCtrl = TextEditingController(text: brand.brandTagline);
     _headerLogoCtrl = TextEditingController(text: brand.headerLogoUrl);
     _footerLogoCtrl = TextEditingController(text: brand.footerLogoUrl);
-    _heroTitleCtrl = TextEditingController(text: cms.heroHeadline);
-    _heroSubCtrl = TextEditingController(text: cms.heroSubheadline);
+    _heroTitleCtrl = TextEditingController(text: 'Pure Ayurvedic Formulations');
+    _heroSubCtrl = TextEditingController(text: '100% Certified Organic Botanicals for Radiant Glow');
     _seoTitleCtrl = TextEditingController(text: 'Vaidyam Botanicals | 100% Pure Organic Ayurvedic Skincare & Haircare');
     _seoDescCtrl = TextEditingController(text: 'Shop authentic Ayurvedic oils, face serums, herbal soaps, and wellness elixirs online. Free shipping over ₹999.');
   }
@@ -92,23 +91,11 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
   }
 
   Future<void> _saveSettings() async {
-    final brand = ref.read(brandSettingsProvider);
-    final cms = ref.read(homepageCmsProvider);
-
-    await ref.read(brandSettingsProvider.notifier).updateBrandSettings(
-          brand.copyWith(
-            brandName: _brandNameCtrl.text.trim(),
-            brandTagline: _brandTaglineCtrl.text.trim(),
-            headerLogoUrl: _headerLogoCtrl.text.trim(),
-            footerLogoUrl: _footerLogoCtrl.text.trim(),
-          ),
-        );
-
-    await ref.read(homepageCmsProvider.notifier).updateCms(
-          cms.copyWith(
-            heroHeadline: _heroTitleCtrl.text.trim(),
-            heroSubheadline: _heroSubCtrl.text.trim(),
-          ),
+    await ref.read(brandSettingsProvider.notifier).updateSettings(
+          brandName: _brandNameCtrl.text.trim(),
+          brandTagline: _brandTaglineCtrl.text.trim(),
+          headerLogoUrl: _headerLogoCtrl.text.trim(),
+          footerLogoUrl: _footerLogoCtrl.text.trim(),
         );
 
     if (mounted) {
