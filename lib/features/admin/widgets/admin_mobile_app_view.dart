@@ -49,6 +49,41 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   int _rotateSeconds = 4;
   int _placementLimit = 5;
 
+  // ── APP PAGES EDITOR STATE (MATCHING SCREENSHOT 1-TO-1) ──
+  String _selectedPageName = 'Home Screen';
+  int _selectedSectionIndex = 0;
+  String _sectionEditorTab = 'Content'; // Content, Settings, Style, Visibility, Targeting
+  String _sliderType = 'Image Slider'; // Image Slider, Single Banner, Auto Rotating
+  final TextEditingController _sectionTitleCtrl = TextEditingController(text: 'Top Banner Slider');
+  bool _sliderAutoPlay = true;
+  int _sliderInterval = 3;
+  bool _sliderShowDots = true;
+  bool _sliderShowArrows = false;
+  bool _sliderInfiniteLoop = true;
+  String _sectionStatus = 'Active';
+  String _sectionVisibleFor = 'All Users';
+  bool _sectionAndroid = true;
+  bool _sectionIOS = true;
+  String _sectionPlacement = 'Top of Page';
+  int _sectionPriority = 1;
+
+  List<Map<String, dynamic>> _homePageSections = [
+    {'id': 'banner_slider', 'title': 'Top Banner Slider', 'icon': Icons.view_carousel_rounded, 'enabled': true},
+    {'id': 'category_list', 'title': 'Category List', 'icon': Icons.grid_view_rounded, 'enabled': true},
+    {'id': 'promo_banner', 'title': 'Promo Banner', 'icon': Icons.label_important_outline_rounded, 'enabled': true},
+    {'id': 'featured_collections', 'title': 'Featured Collections', 'icon': Icons.layers_outlined, 'enabled': true},
+    {'id': 'best_selling', 'title': 'Best Selling Products', 'icon': Icons.shopping_bag_outlined, 'enabled': true},
+    {'id': 'new_arrivals', 'title': 'New Arrivals', 'icon': Icons.auto_awesome_rounded, 'enabled': true},
+    {'id': 'benefits_section', 'title': 'Benefits Section', 'icon': Icons.spa_outlined, 'enabled': false},
+    {'id': 'instagram_feed', 'title': 'Instagram Feed', 'icon': Icons.camera_alt_outlined, 'enabled': false},
+  ];
+
+  List<Map<String, dynamic>> _sliderImages = [
+    {'title': 'Up to 60% OFF - Shop Now', 'route': '/shop', 'color': 0xFF059669},
+    {'title': 'Pure & Natural Products', 'route': '/collections/natural', 'color': 0xFFF59E0B},
+    {'title': 'New Arrivals This Week', 'route': '/collections/new-arrivals', 'color': 0xFF0284C7},
+  ];
+
   // Sample App Banners Data matching user's screenshot 1-to-1
   List<Map<String, dynamic>> _bannersList = [
     {
@@ -117,6 +152,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   void initState() {
     super.initState();
     _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialSubTab.clamp(0, 8));
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
 
     final settings = ref.read(mobileAppSettingsProvider);
     _appNameCtrl = TextEditingController(text: settings.mobileAppName);
@@ -156,6 +194,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     _pushBodyCtrl.dispose();
     _searchBannersCtrl.dispose();
     _deepLinkCtrl.dispose();
+    _sectionTitleCtrl.dispose();
     super.dispose();
   }
 
@@ -391,20 +430,22 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
           // Render active tab view
           _tabController.index == 0
               ? _buildAdvancedAppBannersPage()
-              : IndexedStack(
-                  index: _tabController.index,
-                  children: [
-                    const SizedBox.shrink(),
-                    _buildAppPagesTab(),
-                    _buildAppCategoriesTab(),
-                    _buildAppCollectionsTab(),
-                    _buildAppConfigurationsTab(),
-                    _buildBottomNavTab(),
-                    _buildPushNotificationsTab(),
-                    _buildAppVersionTab(),
-                    _buildSplashOnboardingTab(),
-                  ],
-                ),
+              : _tabController.index == 1
+                  ? _buildAdvancedAppPagesPage()
+                  : IndexedStack(
+                      index: _tabController.index,
+                      children: [
+                        const SizedBox.shrink(),
+                        const SizedBox.shrink(),
+                        _buildAppCategoriesTab(),
+                        _buildAppCollectionsTab(),
+                        _buildAppConfigurationsTab(),
+                        _buildBottomNavTab(),
+                        _buildPushNotificationsTab(),
+                        _buildAppVersionTab(),
+                        _buildSplashOnboardingTab(),
+                      ],
+                    ),
         ],
       ),
     );
@@ -759,6 +800,710 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
+  // ── ADVANCED APP PAGES PAGE (MATCHING REFERENCE SCREENSHOT 1-TO-1) ──
+  Widget _buildAdvancedAppPagesPage() {
+    final activeSection = _homePageSections[_selectedSectionIndex];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Breadcrumb & Page Sub-Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('App Pages > Home Screen', style: TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text('Edit Page: $_selectedPageName', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(12)),
+                      child: const Text('Active', style: TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text('Manage and customize sections, content and layout of this page', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+              ],
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE2E8F0))),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.smartphone_rounded, size: 16, color: Color(0xFF64748B)),
+                      const SizedBox(width: 6),
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedPageName,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                          items: ['Home Screen', 'Shop Catalog', 'Explore Page', 'Wishlist Page', 'Cart Page']
+                              .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                              .toList(),
+                          onChanged: (val) => setState(() => _selectedPageName = val!),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Add Section', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), side: const BorderSide(color: Color(0xFFE2E8F0)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  child: const Text('More ···', style: TextStyle(color: Color(0xFF475569), fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // 4-PANEL MAIN CONTENT ROW
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // PANE 1: PAGE SECTIONS REORDERABLE LIST (LEFT PANEL)
+            SizedBox(
+              width: 250,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Page Sections', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 2),
+                    const Text('Drag and drop sections to reorder', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                    const SizedBox(height: 14),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _homePageSections.length,
+                      itemBuilder: (context, index) {
+                        final sec = _homePageSections[index];
+                        final isSelected = index == _selectedSectionIndex;
+
+                        return GestureDetector(
+                          onTap: () => setState(() {
+                            _selectedSectionIndex = index;
+                            _sectionTitleCtrl.text = sec['title'] as String;
+                          }),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: isSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.drag_indicator_rounded, size: 16, color: Color(0xFF94A3B8)),
+                                const SizedBox(width: 6),
+                                Icon(sec['icon'] as IconData, size: 16, color: isSelected ? const Color(0xFF10B981) : const Color(0xFF64748B)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(sec['title'] as String, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isSelected ? const Color(0xFF065F46) : const Color(0xFF334155))),
+                                      Text('ID: ${sec['id']}', style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: sec['enabled'] as bool,
+                                  activeColor: const Color(0xFF10B981),
+                                  onChanged: (val) => setState(() => sec['enabled'] = val),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF10B981), style: BorderStyle.solid),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.add, size: 16, color: Color(0xFF10B981)),
+                            SizedBox(width: 4),
+                            Text('Add Section', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // PANE 2: EDIT SECTION DETAILS (CENTER EDITOR)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section Title Header Bar
+                    Row(
+                      children: [
+                        Text('Edit Section: ${activeSection['title']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                        const SizedBox(width: 10),
+                        Text('ID: ${activeSection['id']}', style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(10)),
+                          child: const Text('Active', style: TextStyle(color: Color(0xFF10B981), fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                        const Spacer(),
+                        IconButton(icon: const Icon(Icons.content_copy_rounded, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                        IconButton(icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFFEF4444)), onPressed: () {}),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Inner Sub-Tabs (Content, Settings, Style, Visibility, Targeting)
+                    Row(
+                      children: ['Content', 'Settings', 'Style', 'Visibility', 'Targeting'].map((t) {
+                        final isSel = _sectionEditorTab == t;
+                        return GestureDetector(
+                          onTap: () => setState(() => _sectionEditorTab = t),
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 20),
+                            padding: const EdgeInsets.only(bottom: 6),
+                            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isSel ? const Color(0xFF10B981) : Colors.transparent, width: 2))),
+                            child: Text(t, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isSel ? const Color(0xFF10B981) : const Color(0xFF64748B))),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+
+                    // Section Title (Internal)
+                    const Text('Section Title (Internal)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _sectionTitleCtrl,
+                      decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text('This title is only for internal reference', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+
+                    const SizedBox(height: 16),
+
+                    // Slider Type Selector Cards
+                    const Text('Slider Type', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildSliderTypeCard('Image Slider', 'Multiple images with dots', Icons.photo_library_outlined, _sliderType == 'Image Slider'),
+                        const SizedBox(width: 10),
+                        _buildSliderTypeCard('Single Banner', 'Single image/banner', Icons.image_outlined, _sliderType == 'Single Banner'),
+                        const SizedBox(width: 10),
+                        _buildSliderTypeCard('Auto Rotating', 'Auto rotate banners', Icons.autorenew_rounded, _sliderType == 'Auto Rotating'),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Slider Images List
+                    const Text('Slider Images', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                    const SizedBox(height: 8),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _sliderImages.length,
+                      itemBuilder: (context, index) {
+                        final img = _sliderImages[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.drag_indicator, size: 16, color: Color(0xFF94A3B8)),
+                              const SizedBox(width: 8),
+                              Container(
+                                width: 44,
+                                height: 28,
+                                decoration: BoxDecoration(color: Color(img['color'] as int), borderRadius: BorderRadius.circular(6)),
+                                child: const Center(child: Icon(Icons.image, color: Colors.white, size: 14)),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(img['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A))),
+                                    Text(img['route'] as String, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
+                                  ],
+                                ),
+                              ),
+                              IconButton(icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                              IconButton(icon: const Icon(Icons.link_rounded, size: 16, color: Color(0xFF64748B)), onPressed: () {}),
+                              IconButton(icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)), onPressed: () => setState(() => _sliderImages.removeAt(index))),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.add, size: 16, color: Color(0xFF10B981)),
+                          label: const Text('Add Image', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 12)),
+                          style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF10B981)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text('Recommended size: 1242x400px | Max 5MB', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Slider Settings Controls Grid
+                    const Text('Slider Settings', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Row(
+                          children: [
+                            const Text('Auto Play', style: TextStyle(fontSize: 12)),
+                            Switch(value: _sliderAutoPlay, activeColor: const Color(0xFF10B981), onChanged: (val) => setState(() => _sliderAutoPlay = val)),
+                          ],
+                        ),
+                        const SizedBox(width: 24),
+                        Row(
+                          children: [
+                            const Text('Interval ', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                              child: Row(
+                                children: [
+                                  Text('$_sliderInterval sec', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                  const Icon(Icons.arrow_drop_down, size: 14),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Row(
+                          children: [
+                            const Text('Show Dots', style: TextStyle(fontSize: 12)),
+                            Switch(value: _sliderShowDots, activeColor: const Color(0xFF10B981), onChanged: (val) => setState(() => _sliderShowDots = val)),
+                          ],
+                        ),
+                        const SizedBox(width: 24),
+                        Row(
+                          children: [
+                            const Text('Show Arrows', style: TextStyle(fontSize: 12)),
+                            Switch(value: _sliderShowArrows, activeColor: const Color(0xFF10B981), onChanged: (val) => setState(() => _sliderShowArrows = val)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        const Text('Infinite Loop', style: TextStyle(fontSize: 12)),
+                        Switch(value: _sliderInfiniteLoop, activeColor: const Color(0xFF10B981), onChanged: (val) => setState(() => _sliderInfiniteLoop = val)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+                    Row(
+                      children: const [
+                        Text('Advanced Options', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF64748B)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // PANE 3: SECTION STATUS & TARGETING (RIGHT INNER PANEL)
+            SizedBox(
+              width: 240,
+              child: Column(
+                children: [
+                  // Section Status Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Section Status', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFA7F3D0))),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _sectionStatus,
+                              style: const TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.bold, fontSize: 12),
+                              items: ['Active', 'Inactive', 'Scheduled'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                              onChanged: (val) => setState(() => _sectionStatus = val!),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        const Text('Visible For', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        const SizedBox(height: 4),
+                        Column(
+                          children: ['All Users', 'Logged In Users', 'New Users'].map((target) {
+                            final isSel = _sectionVisibleFor == target;
+                            return GestureDetector(
+                              onTap: () => setState(() => _sectionVisibleFor = target),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 3),
+                                child: Row(
+                                  children: [
+                                    Icon(isSel ? Icons.radio_button_checked : Icons.radio_button_off, size: 14, color: isSel ? const Color(0xFF10B981) : const Color(0xFF94A3B8)),
+                                    const SizedBox(width: 6),
+                                    Text(target, style: const TextStyle(fontSize: 11, color: Color(0xFF334155))),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        const Text('Devices', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        Row(
+                          children: [
+                            Checkbox(value: _sectionAndroid, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _sectionAndroid = v!)),
+                            const Text('Android', style: TextStyle(fontSize: 11)),
+                            Checkbox(value: _sectionIOS, activeColor: const Color(0xFF10B981), onChanged: (v) => setState(() => _sectionIOS = v!)),
+                            const Text('iOS', style: TextStyle(fontSize: 11)),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        const Text('Placement', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        const SizedBox(height: 4),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _sectionPlacement,
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF334155)),
+                              items: ['Top of Page', 'Middle of Page', 'Bottom of Page'].map((p) => DropdownMenuItem(value: p, child: Text(p))).toList(),
+                              onChanged: (v) => setState(() => _sectionPlacement = v!),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        const Text('Priority Order', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: 32,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xFFE2E8F0))),
+                          child: Text('$_sectionPriority', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text('Lower numbers appear first', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Performance (Last 7 Days) Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Performance (Last 7 Days)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text('Impressions', style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                                Text('48,562', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF10B981))),
+                                Text('↑ 18.6%', style: TextStyle(fontSize: 9, color: Color(0xFF10B981))),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text('Clicks', style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                                Text('12,845', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF0284C7))),
+                                Text('↑ 22.4%', style: TextStyle(fontSize: 9, color: Color(0xFF0284C7))),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text('CTR', style: TextStyle(fontSize: 9, color: Color(0xFF64748B))),
+                                Text('26.47%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF8B5CF6))),
+                                Text('↑ 3.2%', style: TextStyle(fontSize: 9, color: Color(0xFF8B5CF6))),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Section ID Card
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Section ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(activeSection['id'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                            const Icon(Icons.content_copy_rounded, size: 14, color: Color(0xFF64748B)),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        const Text('Use this ID for API or developer reference', style: TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // PANE 4: QUICK ACTIONS & TIPS (FAR RIGHT PANEL)
+            SizedBox(
+              width: 200,
+              child: Column(
+                children: [
+                  // Quick Actions Card
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Quick Actions', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                        const SizedBox(height: 10),
+                        _buildQuickActionTile('Duplicate Section', Icons.content_copy_rounded, () {}),
+                        _buildQuickActionTile('Copy Section ID', Icons.link_rounded, () {}),
+                        _buildQuickActionTile('Disable Section', Icons.block_rounded, () {}),
+                        _buildQuickActionTile('Delete Section', Icons.delete_outline_rounded, () {}, isDanger: true),
+                        _buildQuickActionTile('Export Section Data', Icons.download_rounded, () {}),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Tips Card (Light blue tint)
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFC7D2FE)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Row(
+                          children: [
+                            Icon(Icons.lightbulb_outline_rounded, size: 16, color: Color(0xFF4F46E5)),
+                            SizedBox(width: 6),
+                            Text('Tips', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF3730A3))),
+                          ],
+                        ),
+                        SizedBox(height: 6),
+                        Text('• Drag and drop sections to reorder', style: TextStyle(fontSize: 10, color: Color(0xFF4338CA))),
+                        SizedBox(height: 3),
+                        Text('• Use visibility settings to target specific user groups', style: TextStyle(fontSize: 10, color: Color(0xFF4338CA))),
+                        SizedBox(height: 3),
+                        Text('• Changes are saved in real-time', style: TextStyle(fontSize: 10, color: Color(0xFF4338CA))),
+                        SizedBox(height: 3),
+                        Text('• Preview your changes before publishing', style: TextStyle(fontSize: 10, color: Color(0xFF4338CA))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // BOTTOM ACTION BAR (BACK TO PAGES / PREVIEW / SAVE CHANGES)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.arrow_back, size: 16, color: Color(0xFF475569)),
+                label: const Text('Back to Pages', style: TextStyle(color: Color(0xFF475569), fontWeight: FontWeight.bold, fontSize: 13)),
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFCBD5E1)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              ),
+              const Spacer(),
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.visibility_outlined, size: 16, color: Color(0xFF4F46E5)),
+                label: const Text('Preview Changes', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13)),
+                style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFF818CF8)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              ),
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _saveSettings,
+                icon: const Icon(Icons.save_rounded, size: 16),
+                label: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 36),
+
+        // Copyright Notice
+        const Center(
+          child: Text('© 2024 Vaidyam Botanicals. All rights reserved.', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSliderTypeCard(String title, String subtitle, IconData icon, bool isSelected) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _sliderType = title),
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFECFDF5) : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: isSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 16, color: isSelected ? const Color(0xFF10B981) : const Color(0xFF64748B)),
+                  const SizedBox(width: 6),
+                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: isSelected ? const Color(0xFF065F46) : const Color(0xFF334155))),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(subtitle, style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8))),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ── KPI STAT CARD WIDGET ──
   Widget _buildKpiCard(String title, String value, String trend, IconData icon, Color iconBg, Color iconColor, double width) {
     return Container(
@@ -1080,35 +1825,27 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
     );
   }
 
-  Widget _buildQuickActionTile(String label, IconData icon, VoidCallback onTap) {
+  Widget _buildQuickActionTile(String label, IconData icon, VoidCallback onTap, {bool isDanger = false}) {
+    final color = isDanger ? const Color(0xFFEF4444) : const Color(0xFF334155);
+    final bg = isDanger ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5);
+    final iconColor = isDanger ? const Color(0xFFEF4444) : const Color(0xFF10B981);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(6)), child: Icon(icon, color: const Color(0xFF10B981), size: 16)),
+            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)), child: Icon(icon, color: iconColor, size: 15)),
             const SizedBox(width: 10),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+            Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color)),
           ],
         ),
       ),
     );
   }
 
-  // ── SUB-TABS 1 TO 8 IMPLEMENTATION ──
-  Widget _buildAppPagesTab() {
-    final pages = [
-      {'name': 'Home Screen', 'route': '/', 'status': 'Active'},
-      {'name': 'Shop Catalog Page', 'route': '/shop', 'status': 'Active'},
-      {'name': 'Explore & Concerns', 'route': '/explore', 'status': 'Active'},
-      {'name': 'Wishlist Page', 'route': '/wishlist', 'status': 'Active'},
-      {'name': 'Cart & Checkout Screen', 'route': '/cart', 'status': 'Active'},
-      {'name': 'Order History & Tracking', 'route': '/dashboard?tab=My%20Orders', 'status': 'Active'},
-    ];
-    return _buildTabContainer('App Pages Manager', Icons.description_outlined, pages);
-  }
-
+  // ── SUB-TABS 2 TO 8 IMPLEMENTATION ──
   Widget _buildAppCategoriesTab() {
     final categories = [
       {'name': 'Haircare & Oils', 'route': '💇', 'status': 'Hot'},
