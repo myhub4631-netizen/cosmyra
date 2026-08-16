@@ -10,16 +10,17 @@ class SupabaseConfig {
 
   /// Initialize Supabase Flutter SDK
   static Future<void> init() async {
-    // Avoid initializing if default placeholder values are present to prevent crashes on startup
-    if (url.contains('YOUR_SUPABASE_PROJECT_ID') || anonKey == 'YOUR_SUPABASE_ANON_KEY') {
-      // Supabase credentials not set yet.
+    // Avoid initializing if default placeholder values or dummy URLs are present
+    if (!isConfigured) {
       return;
     }
 
-    await Supabase.initialize(
-      url: url,
-      publishableKey: anonKey,
-    );
+    try {
+      await Supabase.initialize(
+        url: url,
+        publishableKey: anonKey,
+      );
+    } catch (_) {}
   }
 
   /// Global shortcut getter for Supabase Client instance
@@ -27,7 +28,9 @@ class SupabaseConfig {
 
   /// Check if Supabase has been initialized with valid credentials
   static bool get isConfigured =>
-      !url.contains('YOUR_SUPABASE_PROJECT_ID') && anonKey != 'YOUR_SUPABASE_ANON_KEY';
+      !url.contains('YOUR_SUPABASE_PROJECT_ID') &&
+      !url.contains('tkwxkmmxweqrfdttkjfd') &&
+      anonKey != 'YOUR_SUPABASE_ANON_KEY';
 }
 
 /// Global convenience accessor for the Supabase client
