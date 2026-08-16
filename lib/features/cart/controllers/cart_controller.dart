@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../catalog/models/product_model.dart';
+import '../../coupons/controllers/coupon_controller.dart';
 import '../models/cart_item_model.dart';
 
 final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
@@ -10,18 +11,25 @@ class CartState {
   final List<CartItem> items;
   final String? appliedCouponCode;
   final double couponDiscountPercent;
+  final double fixedDiscountAmount;
 
   const CartState({
     this.items = const [],
     this.appliedCouponCode,
     this.couponDiscountPercent = 0.0,
+    this.fixedDiscountAmount = 0.0,
   });
 
   int get totalItemCount => items.fold(0, (sum, item) => sum + item.quantity);
 
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.totalPrice);
 
-  double get couponDiscount => (subtotal * (couponDiscountPercent / 100.0)).roundToDouble();
+  double get couponDiscount {
+    if (fixedDiscountAmount > 0) {
+      return fixedDiscountAmount > subtotal ? subtotal : fixedDiscountAmount;
+    }
+    return (subtotal * (couponDiscountPercent / 100.0)).roundToDouble();
+  }
 
   double get shippingFee => (subtotal - couponDiscount) >= 499.0 || items.isEmpty ? 0.0 : 49.0;
 
@@ -31,12 +39,14 @@ class CartState {
     List<CartItem>? items,
     String? appliedCouponCode,
     double? couponDiscountPercent,
+    double? fixedDiscountAmount,
     bool clearCoupon = false,
   }) {
     return CartState(
       items: items ?? this.items,
       appliedCouponCode: clearCoupon ? null : (appliedCouponCode ?? this.appliedCouponCode),
       couponDiscountPercent: clearCoupon ? 0.0 : (couponDiscountPercent ?? this.couponDiscountPercent),
+      fixedDiscountAmount: clearCoupon ? 0.0 : (fixedDiscountAmount ?? this.fixedDiscountAmount),
     );
   }
 }
@@ -104,12 +114,32 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(items: updatedList);
   }
 
+  bool applyCouponModel(CouponModel coupon) {
+    if (state.subtotal < coupon.minSpend) return false;
+
+    if (coupon.discountType == 'percentage') {
+      state = state.copyWith(
+        appliedCouponCode: coupon.code,
+        couponDiscountPercent: coupon.discountValue,
+        fixedDiscountAmount: 0.0,
+      );
+    } else {
+      state = state.copyWith(
+        appliedCouponCode: coupon.code,
+        couponDiscountPercent: 0.0,
+        fixedDiscountAmount: coupon.discountValue,
+      );
+    }
+    return true;
+  }
+
   bool applyCoupon(String code) {
     final cleanCode = code.trim().toUpperCase();
-    if (cleanCode == 'COSMYRA10') {
+    if (cleanCode == 'VAIDYAM20' || cleanCode == 'COSMYRA10') {
       state = state.copyWith(
         appliedCouponCode: cleanCode,
-        couponDiscountPercent: 10.0,
+        couponDiscountPercent: cleanCode == 'VAIDYAM20' ? 20.0 : 10.0,
+        fixedDiscountAmount: 0.0,
       );
       return true;
     }

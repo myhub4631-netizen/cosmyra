@@ -5,6 +5,7 @@ import '../../../config/theme/app_colors.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../coupons/controllers/coupon_controller.dart';
 import '../../orders/repositories/order_repository.dart';
 
 class VaidyamCheckoutScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   final _pincodeController = TextEditingController(text: '800001');
   final _addressController = TextEditingController();
   final _cityController = TextEditingController(text: 'Patna');
+  final _couponController = TextEditingController();
   String _selectedState = 'Bihar';
   bool _isDefaultAddress = true;
   String _selectedPaymentMethod = 'UPI / QR';
@@ -71,11 +73,11 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
     final wishlist = ref.watch(wishlistProvider);
     final totalCartCount = cartState.totalItemCount;
 
-    // Calculate Subtotal & Total
-    final double rawSubtotal = cartState.subtotal;
-    final double subtotal = rawSubtotal > 0 ? rawSubtotal : 11797.0;
-    final double discount = subtotal > 3000 ? 1299.0 : 499.0;
-    final double total = subtotal - discount;
+    // Calculate Real Subtotal, Coupon Discount & Total (NO Hardcoded 499 Discount!)
+    final double subtotal = cartState.subtotal;
+    final double discount = cartState.couponDiscount;
+    final double shippingFee = cartState.shippingFee;
+    final double total = cartState.finalTotal;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 950;
@@ -608,6 +610,10 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
 
   // Column 3: Order Summary Card
   Widget _buildOrderSummaryCard(BuildContext context, double subtotal, double discount, double total, int itemCounts) {
+    final cartState = ref.watch(cartProvider);
+    final coupons = ref.watch(couponProvider);
+    final visibleCoupons = coupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList();
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -628,11 +634,193 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
           const Text('Order Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
           const SizedBox(height: 20),
 
+          // ── COUPON CODE INPUT & APPLY ──
+          const Text('Apply Coupon Code:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+          const SizedBox(height: 8),
+          if (cartState.appliedCouponCode != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.confirmation_number_outlined, color: Color(0xFF059669), size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Applied: ${cartState.appliedCouponCode} (-₹${discount.toInt()})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF065F46)),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      ref.read(cartProvider.notifier).removeCoupon();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Coupon removed.')));
+                    },
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                    child: const Text('Remove ❌', style: TextStyle(color: Color(0xFFEF4444), fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: TextField(
+                      controller: _couponController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter Promo / Coupon Code',
+                        hintStyle: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    final code = _couponController.text.trim();
+                    if (code.isEmpty) return;
+                    final coupon = ref.read(couponProvider.notifier).findByCode(code);
+                    if (coupon == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Invalid or expired coupon code "$code"!')),
+                      );
+                      return;
+                    }
+                    if (subtotal < coupon.minSpend) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Minimum order spend of ₹${coupon.minSpend.toInt()} required for ${coupon.code}!')),
+                      );
+                      return;
+                    }
+                    final applied = ref.read(cartProvider.notifier).applyCouponModel(coupon);
+                    if (applied) {
+                      _couponController.clear();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Coupon "${coupon.code}" applied successfully!')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(80, 44),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('APPLY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ],
+            ),
+          ],
+
+          // ── VISIBLE COUPONS AT CHECKOUT ──
+          if (visibleCoupons.isNotEmpty && cartState.appliedCouponCode == null) ...[
+            const SizedBox(height: 16),
+            const Text('Available Offers & Coupons:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF4B5563))),
+            const SizedBox(height: 8),
+            Column(
+              children: visibleCoupons.map((c) {
+                final discountText = c.discountType == 'percentage' ? '${c.discountValue.toInt()}% OFF' : '₹${c.discountValue.toInt()} OFF';
+                final isEligible = subtotal >= c.minSpend;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFFC7D2FE)),
+                        ),
+                        child: Text(
+                          c.code,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$discountText - ${c.title}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (c.minSpend > 0)
+                              Text(
+                                'On orders above ₹${c.minSpend.toInt()}',
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+                              ),
+                          ],
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          if (!isEligible) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Add items worth ₹${(c.minSpend - subtotal).toInt()} more to use ${c.code}')),
+                            );
+                            return;
+                          }
+                          ref.read(cartProvider.notifier).applyCouponModel(c);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Applied ${c.code}!')),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isEligible ? const Color(0xFF4F46E5) : const Color(0xFFCBD5E1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text('APPLY', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+          const Divider(color: Color(0xFFE5E7EB)),
+          const SizedBox(height: 16),
+
           _buildSummaryRow('Subtotal ($itemCounts Items)', '₹${subtotal.toInt()}'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Discount', '- ₹${discount.toInt()}', isDiscount: true),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Shipping', 'Free', isDiscount: true),
+          if (discount > 0) ...[
+            _buildSummaryRow('Coupon Discount', '- ₹${discount.toInt()}', isDiscount: true),
+            const SizedBox(height: 12),
+          ],
+          _buildSummaryRow('Shipping', cartState.shippingFee == 0 ? 'Free' : '₹${cartState.shippingFee.toInt()}', isDiscount: cartState.shippingFee == 0),
 
           const SizedBox(height: 16),
           const Divider(color: Color(0xFFE5E7EB)),
@@ -658,27 +846,28 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
 
           const SizedBox(height: 20),
 
-          // Savings Banner Box
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFECFDF5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFA7F3D0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.stars, color: Color(0xFF059669), size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'You will save ₹${discount.toInt()} on this order',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF065F46)),
+          // Savings Banner Box (Only if discount > 0)
+          if (discount > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.stars, color: Color(0xFF059669), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You will save ₹${discount.toInt()} on this order',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF065F46)),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
           const SizedBox(height: 24),
 

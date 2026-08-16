@@ -9,6 +9,8 @@ import '../widgets/admin_homepage_cms_view.dart';
 import '../widgets/admin_orders_view.dart';
 import 'admin_dashboard_screen.dart';
 
+import '../widgets/admin_coupons_view.dart';
+
 class AdminMasterScreen extends ConsumerStatefulWidget {
   const AdminMasterScreen({super.key});
 
@@ -66,7 +68,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminCatalogView(),
       const AdminOrdersView(),
       const AdminCustomersView(),
-      const Center(child: Text('Marketing & Discounts (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
+      const AdminCouponsView(),
       const Center(child: Text('Analytics View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
       const Center(child: Text('Reports View (Coming Soon)', style: TextStyle(fontSize: 16, color: Color(0xFF64748B)))),
       const AdminHomepageCmsView(),
