@@ -35526,9 +35526,7 @@ break
 case 6:case 1:return A.E(q,r)
 case 2:return A.D(o.at(-1),r)}})
 return A.F($async$aAn,r)},
-jf(){var s,r="https://tkwxkmmxweqrfdttkjfd.supabase.co"
-if(!B.f.m(r,"YOUR_SUPABASE_PROJECT_ID"))s=!B.f.m(r,"tkwxkmmxweqrfdttkjfd")
-else s=!1
+jf(){var s=!B.f.m("https://tkwxkmmxweqrfdttkjfd.supabase.co","YOUR_SUPABASE_PROJECT_ID")
 return s},
 bpK(a){var s,r,q,p,o,n,m,l,k
 try{s=a.length!==0?a:"favicon.png?v="+Date.now()

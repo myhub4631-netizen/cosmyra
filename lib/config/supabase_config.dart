@@ -28,8 +28,9 @@ class SupabaseConfig {
 
   /// Check if Supabase has been initialized with valid credentials
   static bool get isConfigured =>
+      url.isNotEmpty &&
       !url.contains('YOUR_SUPABASE_PROJECT_ID') &&
-      !url.contains('tkwxkmmxweqrfdttkjfd') &&
+      anonKey.isNotEmpty &&
       anonKey != 'YOUR_SUPABASE_ANON_KEY';
 }
 
