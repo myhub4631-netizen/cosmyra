@@ -983,17 +983,12 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: isHttp
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 48, color: Color(0xFF4F46E5)),
-                        )
-                      : Image.asset(
-                          imageUrl.isNotEmpty ? imageUrl : 'assets/images/shampoo.jpg',
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 48, color: Color(0xFF4F46E5)),
-                        ),
+                  child: ProductImageWidget(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    height: 135,
+                    width: double.infinity,
+                  ),
                 ),
               ),
               // Discount Tag Badge (Top-Left)
@@ -1371,21 +1366,12 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: (prod['image'] as String? ?? '').startsWith('http')
-                    ? Image.network(
-                        prod['image'] as String,
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
-                      )
-                    : Image.asset(
-                        (prod['image'] as String? ?? '').isNotEmpty ? (prod['image'] as String) : 'assets/images/shampoo.jpg',
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(color: _cardBg, height: 140, child: const Icon(Icons.spa, color: _primaryPurple)),
-                      ),
+                child: ProductImageWidget(
+                  imageUrl: prod['image'] as String? ?? '',
+                  height: 140,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
               // Discount Tag Badge (Top-Left)
               Positioned(
@@ -1763,12 +1749,11 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
-                                    child: Image.asset(
-                                      item['image'] as String,
+                                    child: ProductImageWidget(
+                                      imageUrl: item['image'] as String? ?? '',
                                       width: 110,
                                       height: 110,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(width: 110, height: 110, color: _cardBg, child: const Icon(Icons.spa, color: _primaryPurple)),
                                     ),
                                   ),
                                   const SizedBox(width: 14),
@@ -1938,7 +1923,12 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.asset(item['image'] as String, width: 90, height: 90, fit: BoxFit.cover),
+                                  child: ProductImageWidget(
+                                    imageUrl: item['image'] as String? ?? '',
+                                    width: 90,
+                                    height: 90,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -2183,12 +2173,11 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                                   const SizedBox(width: 8),
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(10),
-                                    child: Image.asset(
-                                      b['image'] as String,
+                                    child: ProductImageWidget(
+                                      imageUrl: b['image'] as String? ?? '',
                                       width: 90,
                                       height: 90,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(width: 90, height: 90, color: Colors.white24, child: const Icon(Icons.inventory_2_outlined)),
                                     ),
                                   ),
                                 ],

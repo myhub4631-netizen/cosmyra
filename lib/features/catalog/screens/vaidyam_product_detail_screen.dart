@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -397,7 +398,9 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
                             width: isSelected ? 2 : 1,
                           ),
                           image: DecorationImage(
-                            image: url.startsWith('http') ? NetworkImage(url) as ImageProvider : AssetImage(url),
+                            image: url.startsWith('data:')
+                                ? MemoryImage(base64Decode(url.split(',').last)) as ImageProvider
+                                : (url.startsWith('http') ? NetworkImage(url) as ImageProvider : AssetImage(url)),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -443,7 +446,9 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
                       ),
                     ],
                     image: DecorationImage(
-                      image: currentImage.startsWith('http') ? NetworkImage(currentImage) as ImageProvider : AssetImage(currentImage),
+                      image: currentImage.startsWith('data:')
+                          ? MemoryImage(base64Decode(currentImage.split(',').last)) as ImageProvider
+                          : (currentImage.startsWith('http') ? NetworkImage(currentImage) as ImageProvider : AssetImage(currentImage)),
                       fit: BoxFit.cover,
                     ),
                   ),
