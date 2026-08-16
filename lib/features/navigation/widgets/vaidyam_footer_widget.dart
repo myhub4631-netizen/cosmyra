@@ -107,14 +107,14 @@ class VaidyamFooterWidget extends ConsumerWidget {
           onTap: () => context.go('/'),
           child: logoUrl.isNotEmpty
               ? ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 40, maxWidth: 180),
+                  constraints: const BoxConstraints(maxHeight: 44, maxWidth: 220),
                   child: logoUrl.startsWith('data:image')
                       ? Image.memory(
                           base64Decode(logoUrl.split(',').last),
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Image.asset(
                             'assets/images/cosmyra_logo.png',
-                            height: 36,
+                            height: 40,
                             fit: BoxFit.contain,
                           ),
                         )
@@ -123,26 +123,16 @@ class VaidyamFooterWidget extends ConsumerWidget {
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Image.asset(
                             'assets/images/cosmyra_logo.png',
-                            height: 36,
+                            height: 40,
                             fit: BoxFit.contain,
                           ),
                         ),
                 )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      'assets/images/cosmyra_logo.png',
-                      height: 38,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 28),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Vaidyam Botanicals',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ],
+              : Image.asset(
+                  'assets/images/cosmyra_logo.png',
+                  height: 42,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 28),
                 ),
         ),
 

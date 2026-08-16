@@ -3,11 +3,11 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "c9bc25a7718fba01b0d09ca8eb1fd57c",
+const RESOURCES = {"flutter_bootstrap.js": "e94485f01e69f53ad8de824a27b693d5",
 "version.json": "148beba544507a7e2adb3382301e57c7",
 "index.html": "73fe647c769b766ae7676ea9bbee7ac9",
 "/": "73fe647c769b766ae7676ea9bbee7ac9",
-"main.dart.js": "96fa585dd2ec284c737008ca40bfa86e",
+"main.dart.js": "fa7dada17739460f42409e570c96118b",
 "flutter.js": "888483df48293866f9f41d3d9274a779",
 "favicon.png": "660bd87f38db88fe20f13fd13d35d9e4",
 "icons/Icon-192.png": "660bd87f38db88fe20f13fd13d35d9e4",
@@ -26,7 +26,7 @@ const RESOURCES = {"flutter_bootstrap.js": "c9bc25a7718fba01b0d09ca8eb1fd57c",
 "assets/assets/images/facewash.jpg": "79cc1d9363e3b4e39c52076bd3b6f284",
 "assets/assets/images/soap.jpg": "d423e783d97d0e5fc33375d9a892ae09",
 "assets/assets/images/shampoo.jpg": "c2c8044ab1582299fe0d9429a7e2ded7",
-"assets/assets/images/cosmyra_logo.png": "ae237141ebd4b4ca6055ebd0fba1f39d",
+"assets/assets/images/cosmyra_logo.png": "a645506fc35ddbe626ce272be09a1180",
 "canvaskit/skwasm.js": "1ef3ea3a0fec4569e5d531da25f34095",
 "canvaskit/skwasm_heavy.js": "413f5b2b2d9345f37de148e2544f584f",
 "canvaskit/skwasm.js.symbols": "0088242d10d7e7d6d2649d1fe1bda7c1",

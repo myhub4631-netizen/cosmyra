@@ -20,7 +20,7 @@ class MobileAppSettings {
 
   const MobileAppSettings({
     this.mobileLogoUrl = '',
-    this.mobileAppName = 'Vaidyam Botanicals',
+    this.mobileAppName = 'Cosmyra',
     this.announcementBarText = '🌿 Special Offer: Free Shipping on all orders above ₹999!',
     this.showAnnouncementBar = true,
     this.searchPlaceholder = 'Search in Ayurveda, Haircare, Skincare...',

@@ -2510,16 +2510,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   constraints: const BoxConstraints(maxHeight: 40, maxWidth: 160),
                                   child: _headerLogoCtrl.text.startsWith('data:image')
                                       ? Image.memory(base64Decode(_headerLogoCtrl.text.split(',').last), fit: BoxFit.contain)
-                                      : Image.network(_headerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.local_florist, color: Color(0xFF10B981), size: 28)),
+                                      : Image.network(_headerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Image.asset('assets/images/cosmyra_logo.png', height: 32, fit: BoxFit.contain)),
                                 )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.local_florist, color: Color(0xFF10B981), size: 24),
-                                    SizedBox(width: 8),
-                                    Text('Vaidyam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF065F46))),
-                                  ],
-                                ),
+                              : Image.asset('assets/images/cosmyra_logo.png', height: 36, fit: BoxFit.contain),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -2569,16 +2562,9 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
                                   constraints: const BoxConstraints(maxHeight: 40, maxWidth: 160),
                                   child: _footerLogoCtrl.text.startsWith('data:image')
                                       ? Image.memory(base64Decode(_footerLogoCtrl.text.split(',').last), fit: BoxFit.contain)
-                                      : Image.network(_footerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 24)),
+                                      : Image.network(_footerLogoCtrl.text, fit: BoxFit.contain, errorBuilder: (_, __, ___) => Image.asset('assets/images/cosmyra_logo.png', height: 32, fit: BoxFit.contain)),
                                 )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 20),
-                                    SizedBox(width: 6),
-                                    Text('Vaidyam Botanicals', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
-                                  ],
-                                ),
+                              : Image.asset('assets/images/cosmyra_logo.png', height: 36, fit: BoxFit.contain),
                         ),
                         const SizedBox(height: 12),
                         Row(
