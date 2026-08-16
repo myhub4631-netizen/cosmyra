@@ -18,19 +18,34 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Cosmyra - Pure Ayurveda, Botanical Haircare, Skincare & Wellness Formulations.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="cosmyra">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="apple-mobile-web-app-title" content="Cosmyra">
+  <link id="app-apple-icon" rel="apple-touch-icon" href="icons/Icon-192.png?v=2">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link id="app-favicon" rel="icon" type="image/png" href="favicon.png?v=2"/>
 
-  <title>cosmyra</title>
+  <title>Cosmyra • Pure Ayurveda & Botanical Wellness</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    try {
+      var savedSettings = localStorage.getItem('cosmyra_brand_settings');
+      if (savedSettings) {
+        var parsed = JSON.parse(savedSettings);
+        if (parsed && parsed.faviconUrl && parsed.faviconUrl.trim() !== '') {
+          var link = document.getElementById('app-favicon');
+          if (link) {
+            link.href = parsed.faviconUrl;
+          }
+        }
+      }
+    } catch(e) {}
+  </script>
 </head>
 <body>
   <script>

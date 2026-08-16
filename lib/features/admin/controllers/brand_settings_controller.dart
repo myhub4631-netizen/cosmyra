@@ -112,17 +112,16 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
   }
 
   void _updateDomFavicon(String url) {
-    if (!kIsWeb || url.isEmpty) return;
+    if (!kIsWeb) return;
     try {
-      final html.Element? existingLink = html.document.querySelector("link[rel*='icon']");
-      if (existingLink != null) {
-        existingLink.setAttribute('href', url);
-      } else {
-        final newLink = html.LinkElement()
-          ..type = 'image/x-icon'
-          ..rel = 'shortcut icon'
-          ..href = url;
-        html.document.getElementsByTagName('head').first.append(newLink);
+      final String targetUrl = url.isNotEmpty ? url : 'favicon.png?v=${DateTime.now().millisecondsSinceEpoch}';
+      final links = html.document.querySelectorAll("link[rel*='icon']");
+      for (final link in links) {
+        link.setAttribute('href', targetUrl);
+      }
+      final element = html.document.getElementById('app-favicon');
+      if (element != null) {
+        element.setAttribute('href', targetUrl);
       }
     } catch (_) {}
   }
