@@ -41,7 +41,8 @@ class _VaidyamMobileCartScreenWidgetState extends ConsumerState<VaidyamMobileCar
     super.initState();
     // Default all items checked
     for (var item in widget.itemsList) {
-      _checkedItems.add(item['key'] as String);
+      final String k = item['key']?.toString() ?? '${item['id']}_${item['index']}';
+      _checkedItems.add(k);
     }
   }
 
@@ -152,7 +153,7 @@ class _VaidyamMobileCartScreenWidgetState extends ConsumerState<VaidyamMobileCar
     return Column(
       children: widget.itemsList.map((item) {
         final int index = (item['index'] is int) ? item['index'] as int : widget.itemsList.indexOf(item);
-        final String key = item['key']?.toString() ?? 'item-$index';
+        final String key = item['key']?.toString() ?? '${item['id']}_$index';
         final bool isChecked = _checkedItems.contains(key);
         final double price = (item['price'] as num).toDouble();
         final double mrp = (item['mrp'] as num).toDouble();
