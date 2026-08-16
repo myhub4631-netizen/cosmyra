@@ -54,38 +54,8 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
     {'name': 'BIOTIQUE', 'tag': 'Botanical Skincare'},
   ];
 
-  Timer? _countdownTimer;
-  Duration _saleTimeLeft = const Duration(hours: 5, minutes: 42, seconds: 18);
-
-  @override
-  void initState() {
-    super.initState();
-    _startCountdownTimer();
-  }
-
-  void _startCountdownTimer() {
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (_saleTimeLeft.inSeconds > 0) {
-          _saleTimeLeft = _saleTimeLeft - const Duration(seconds: 1);
-        } else {
-          _saleTimeLeft = const Duration(hours: 24);
-        }
-      });
-    });
-  }
-
-  String get _formattedCountdown {
-    final hours = _saleTimeLeft.inHours.toString().padLeft(2, '0');
-    final minutes = (_saleTimeLeft.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (_saleTimeLeft.inSeconds % 60).toString().padLeft(2, '0');
-    return '${hours}h ${minutes}m ${seconds}s';
-  }
-
   @override
   void dispose() {
-    _countdownTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -941,37 +911,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                   ],
                 ),
                 // Live Sale Countdown Timer Badge Counter
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFFCA5A5)),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.timer_outlined, size: 14, color: Color(0xFFDC2626)),
-                      const SizedBox(width: 5),
-                      const Text(
-                        '🔥 Sale Ends In: ',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB91C1C)),
-                      ),
-                      Text(
-                        _formattedCountdown,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFFDC2626),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                const _SaleCountdownBadgeWidget(),
               ],
             ),
             InkWell(
@@ -2373,6 +2313,78 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SaleCountdownBadgeWidget extends StatefulWidget {
+  const _SaleCountdownBadgeWidget();
+
+  @override
+  State<_SaleCountdownBadgeWidget> createState() => _SaleCountdownBadgeWidgetState();
+}
+
+class _SaleCountdownBadgeWidgetState extends State<_SaleCountdownBadgeWidget> {
+  Timer? _timer;
+  Duration _timeLeft = const Duration(hours: 5, minutes: 42, seconds: 18);
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        if (_timeLeft.inSeconds > 0) {
+          _timeLeft = _timeLeft - const Duration(seconds: 1);
+        } else {
+          _timeLeft = const Duration(hours: 24);
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hours = _timeLeft.inHours.toString().padLeft(2, '0');
+    final minutes = (_timeLeft.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_timeLeft.inSeconds % 60).toString().padLeft(2, '0');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.timer_outlined, size: 14, color: Color(0xFFDC2626)),
+          const SizedBox(width: 5),
+          const Text(
+            '🔥 Sale Ends In: ',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFB91C1C)),
+          ),
+          Text(
+            '${hours}h ${minutes}m ${seconds}s',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFFDC2626),
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

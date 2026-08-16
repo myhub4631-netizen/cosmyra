@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +10,8 @@ class ProductImageWidget extends StatelessWidget {
   final BoxFit fit;
   final double? width;
   final double? height;
+
+  static final Map<String, Uint8List> _base64Cache = {};
 
   const ProductImageWidget({
     super.key,
@@ -24,10 +27,14 @@ class ProductImageWidget extends StatelessWidget {
 
     if (imageUrl.startsWith('data:')) {
       try {
-        final base64Str = imageUrl.split(',').last;
-        final bytes = base64Decode(base64Str);
+        final Uint8List bytes = _base64Cache.putIfAbsent(imageUrl, () {
+          final base64Str = imageUrl.split(',').last;
+          return base64Decode(base64Str);
+        });
+
         return Image.memory(
           bytes,
+          key: ValueKey(imageUrl.hashCode),
           width: width,
           height: height,
           fit: fit,
