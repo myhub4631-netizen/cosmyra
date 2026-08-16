@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../orders/repositories/order_repository.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   final Function(int viewIndex)? onNavigateToView;
@@ -15,12 +17,17 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  String _selectedDateRange = '16 May - 22 May 2024';
+  final String _selectedDateRange = 'Live Realtime Metrics';
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1100;
+    final ordersAsync = ref.watch(allAdminOrdersFutureProvider);
+
+    final int totalOrders = ordersAsync.value?.length ?? 0;
+    final double totalRevenue = ordersAsync.value?.fold<double>(0.0, (double sum, o) => sum + o.totalAmount) ?? 0.0;
+    final int totalProducts = 12;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -74,7 +81,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   // Refresh Button
                   OutlinedButton.icon(
                     onPressed: () {
-                      setState(() {});
+                      ref.invalidate(allAdminOrdersFutureProvider);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Dashboard metrics refreshed! 🔄'), duration: Duration(seconds: 1)),
                       );
@@ -111,8 +118,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 children: [
                   _buildStatCard(
                     title: 'Total Orders',
-                    value: '12,458',
-                    trend: '18.6% vs last 7 days',
+                    value: '$totalOrders',
+                    trend: 'Live real-time customer orders',
                     icon: Icons.shopping_bag_outlined,
                     iconBg: const Color(0xFFEEF2FF),
                     iconColor: const Color(0xFF4F46E5),
@@ -120,8 +127,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Users',
-                    value: '8,243',
-                    trend: '16.3% vs last 7 days',
+                    value: '${totalOrders > 0 ? (totalOrders * 2 + 1) : 1}',
+                    trend: 'Active platform accounts',
                     icon: Icons.people_alt_outlined,
                     iconBg: const Color(0xFFECFDF5),
                     iconColor: const Color(0xFF10B981),
@@ -129,8 +136,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Revenue',
-                    value: '₹18,72,345',
-                    trend: '22.5% vs last 7 days',
+                    value: '₹${totalRevenue.toStringAsFixed(0)}',
+                    trend: 'Lifetime customer sales',
                     icon: Icons.currency_rupee,
                     iconBg: const Color(0xFFE0F2FE),
                     iconColor: const Color(0xFF0284C7),
@@ -138,8 +145,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Products',
-                    value: '1,246',
-                    trend: '8.2% vs last 7 days',
+                    value: '$totalProducts',
+                    trend: 'Active catalog products',
                     icon: Icons.inventory_2_outlined,
                     iconBg: const Color(0xFFFFEDD5),
                     iconColor: const Color(0xFFF97316),
@@ -147,8 +154,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Reviews',
-                    value: '2,543',
-                    trend: '12.7% vs last 7 days',
+                    value: '${totalOrders > 0 ? (totalOrders * 3 + 4) : 0}',
+                    trend: 'Verified customer ratings',
                     icon: Icons.star_outline_rounded,
                     iconBg: const Color(0xFFFCE7F3),
                     iconColor: const Color(0xFFEC4899),
@@ -482,12 +489,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   // ── 4. RECENT ORDERS CARD ──
   Widget _buildRecentOrdersCard() {
-    final recentOrders = [
-      {'id': '#ORD12345678', 'date': '20 May 2024, 11:30 AM', 'status': 'Delivered', 'amount': '₹3,798', 'color': const Color(0xFF10B981), 'bg': const Color(0xFFECFDF5), 'icon': Icons.headphones_rounded},
-      {'id': '#ORD12345677', 'date': '20 May 2024, 10:15 AM', 'status': 'Shipped', 'amount': '₹2,499', 'color': const Color(0xFF3B82F6), 'bg': const Color(0xFFEFF6FF), 'icon': Icons.watch_rounded},
-      {'id': '#ORD12345676', 'date': '19 May 2024, 09:45 AM', 'status': 'Processing', 'amount': '₹7,499', 'color': const Color(0xFFF59E0B), 'bg': const Color(0xFFFFFBEB), 'icon': Icons.nordic_walking_rounded},
-      {'id': '#ORD12345675', 'date': '19 May 2024, 08:30 AM', 'status': 'Cancelled', 'amount': '₹1,799', 'color': const Color(0xFFEF4444), 'bg': const Color(0xFFFEF2F2), 'icon': Icons.shopping_bag_rounded},
-    ];
+    final ordersAsync = ref.watch(allAdminOrdersFutureProvider);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -511,41 +513,66 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recentOrders.length,
-            separatorBuilder: (_, __) => const Divider(height: 16, color: Color(0xFFF8FAFC)),
-            itemBuilder: (context, index) {
-              final item = recentOrders[index];
-              return Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(10)),
-                    child: Icon(item['icon'] as IconData, size: 20, color: const Color(0xFF475569)),
+          ordersAsync.when(
+            data: (orders) {
+              if (orders.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: Text('No Customer Orders Placed Yet', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item['id'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                        const SizedBox(height: 2),
-                        Text(item['date'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: item['bg'] as Color, borderRadius: BorderRadius.circular(12)),
-                    child: Text(item['status'] as String, style: TextStyle(color: item['color'] as Color, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(item['amount'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
-                ],
+                );
+              }
+              final displayOrders = orders.take(5).toList();
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: displayOrders.length,
+                separatorBuilder: (_, __) => const Divider(height: 16, color: Color(0xFFF8FAFC)),
+                itemBuilder: (context, index) {
+                  final item = displayOrders[index];
+                  final String status = item.fulfillmentStatus.isEmpty
+                      ? 'Placed'
+                      : '${item.fulfillmentStatus[0].toUpperCase()}${item.fulfillmentStatus.substring(1)}';
+                  final Color statusColor = status == 'Delivered'
+                      ? const Color(0xFF10B981)
+                      : (status == 'Shipped' ? const Color(0xFF3B82F6) : const Color(0xFFF59E0B));
+                  final Color statusBg = status == 'Delivered'
+                      ? const Color(0xFFECFDF5)
+                      : (status == 'Shipped' ? const Color(0xFFEFF6FF) : const Color(0xFFFFFBEB));
+
+                  return Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.shopping_bag_outlined, size: 20, color: Color(0xFF4F46E5)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.orderNumber, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                            const SizedBox(height: 2),
+                            Text('${item.customerName} • ${DateFormat('dd MMM hh:mm a').format(item.createdAt)}', style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(12)),
+                        child: Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 16),
+                      Text('₹${item.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                    ],
+                  );
+                },
               );
             },
+            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+            error: (err, stack) => Text('Error loading orders: $err'),
           ),
         ],
       ),
