@@ -8,6 +8,7 @@ import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../../navigation/widgets/vaidyam_mobile_app_header.dart';
+import '../../navigation/widgets/vaidyam_footer_widget.dart';
 
 class VaidyamMobileHomeScreenWidget extends ConsumerStatefulWidget {
   final List<Map<String, dynamic>> activeProducts;
@@ -133,6 +134,9 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
               _buildTrustStatsBar(),
 
               const SizedBox(height: 32),
+
+              // 10. App Footer Bar (Matching Screenshot 1-to-1)
+              const VaidyamFooterWidget(),
             ],
           ),
         ),
