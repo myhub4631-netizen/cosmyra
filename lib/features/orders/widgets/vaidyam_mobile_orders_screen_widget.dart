@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../repositories/order_repository.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
 class VaidyamMobileOrdersScreenWidget extends ConsumerStatefulWidget {
@@ -80,8 +81,34 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final int cartCount = cartState.totalItemCount;
+    final ordersAsync = ref.watch(userOrdersFutureProvider);
+    final userOrders = ordersAsync.value ?? [];
 
-    final filteredOrders = _demoOrdersList.where((order) {
+    final List<Map<String, dynamic>> combinedOrders = [];
+
+    for (var ro in userOrders) {
+      final String firstImg = ro.items.isNotEmpty && ro.items.first.productName.contains('Shampoo')
+          ? 'assets/images/shampoo.jpg'
+          : (ro.items.isNotEmpty && ro.items.first.productName.contains('Soap') ? 'assets/images/soap.jpg' : 'assets/images/facewash.jpg');
+
+      final String statusName = ro.fulfillmentStatus.substring(0, 1).toUpperCase() + ro.fulfillmentStatus.substring(1);
+
+      combinedOrders.add({
+        'id': ro.orderNumber,
+        'date': '${ro.createdAt.day} May 2026',
+        'itemsCount': '${ro.items.length} ${ro.items.length == 1 ? "Item" : "Items"}',
+        'price': '₹${ro.totalAmount.toStringAsFixed(0)}',
+        'isPaid': ro.paymentStatus == 'captured' || ro.paymentStatus == 'paid',
+        'status': statusName,
+        'statusText': 'Order ${ro.orderNumber} placed successfully',
+        'image': firstImg,
+        'type': ro.fulfillmentStatus.toLowerCase(),
+      });
+    }
+
+    combinedOrders.addAll(_demoOrdersList);
+
+    final filteredOrders = combinedOrders.where((order) {
       if (_activeStatus == 'All Orders') return true;
       return (order['status'] as String).toLowerCase() == _activeStatus.toLowerCase();
     }).toList();
@@ -101,7 +128,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
               const SizedBox(height: 16),
 
               // 2. Horizontal Status Filter Scroll Bar
-              _buildStatusFilterRow(),
+              _buildStatusFilterRow(combinedOrders),
 
               const SizedBox(height: 16),
 
@@ -204,7 +231,23 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
   }
 
   // 2. Horizontal Status Filter Scroll Bar
-  Widget _buildStatusFilterRow() {
+  Widget _buildStatusFilterRow(List<Map<String, dynamic>> combinedOrders) {
+    int allCount = combinedOrders.length;
+    int processingCount = combinedOrders.where((o) => (o['status'] as String).toLowerCase() == 'processing' || (o['status'] as String).toLowerCase() == 'placed').length;
+    int shippedCount = combinedOrders.where((o) => (o['status'] as String).toLowerCase() == 'shipped').length;
+    int deliveredCount = combinedOrders.where((o) => (o['status'] as String).toLowerCase() == 'delivered').length;
+    int cancelledCount = combinedOrders.where((o) => (o['status'] as String).toLowerCase() == 'cancelled').length;
+    int returnsCount = combinedOrders.where((o) => (o['status'] as String).toLowerCase() == 'returns' || (o['status'] as String).toLowerCase() == 'returned').length;
+
+    final List<Map<String, dynamic>> dynamicFilters = [
+      {'label': 'All Orders', 'count': '$allCount', 'icon': Icons.shopping_bag_outlined},
+      {'label': 'Processing', 'count': '$processingCount', 'icon': Icons.inventory_2_outlined},
+      {'label': 'Shipped', 'count': '$shippedCount', 'icon': Icons.local_shipping_outlined},
+      {'label': 'Delivered', 'count': '$deliveredCount', 'icon': Icons.check_circle_outline_rounded},
+      {'label': 'Cancelled', 'count': '$cancelledCount', 'icon': Icons.cancel_outlined},
+      {'label': 'Returns', 'count': '$returnsCount', 'icon': Icons.autorenew_rounded},
+    ];
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -215,7 +258,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: _statusFilters.map((filter) {
+          children: dynamicFilters.map((filter) {
             final String label = filter['label'] as String;
             final String count = filter['count'] as String;
             final IconData icon = filter['icon'] as IconData;

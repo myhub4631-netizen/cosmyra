@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../../orders/repositories/order_repository.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
 class VaidyamMobileAccountScreenWidget extends ConsumerStatefulWidget {
@@ -312,7 +313,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetricCol('Total Orders', '${widget.totalOrders}', () => widget.onSelectTab('My Orders')),
+                _buildMetricCol('Total Orders', '${widget.totalOrders}', () => context.push('/orders')),
                 Container(width: 1, height: 50, color: Colors.white12),
                 _buildMetricCol('Wishlist', '${widget.wishlistCount}', () => context.push('/wishlist')),
                 Container(width: 1, height: 50, color: Colors.white12),
@@ -341,15 +342,40 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     );
   }
 
-  // 4. My Orders Quick Status Bar
+  // 4. My Orders Quick Status Bar (DYNAMIC REAL STATS & DIRECT ROUTING!)
   Widget _buildMyOrdersCard(BuildContext context) {
+    final ordersAsync = ref.watch(userOrdersFutureProvider);
+    final userOrders = ordersAsync.value ?? [];
+
+    int allCount = userOrders.isNotEmpty ? userOrders.length : widget.totalOrders;
+    int processingCount = 0;
+    int shippedCount = 0;
+    int deliveredCount = 0;
+    int cancelledCount = 0;
+    int returnsCount = 0;
+
+    for (var o in userOrders) {
+      final st = o.fulfillmentStatus.toLowerCase();
+      if (st == 'shipped') {
+        shippedCount++;
+      } else if (st == 'delivered') {
+        deliveredCount++;
+      } else if (st == 'cancelled') {
+        cancelledCount++;
+      } else if (st == 'returned' || st == 'return requested') {
+        returnsCount++;
+      } else {
+        processingCount++;
+      }
+    }
+
     final List<Map<String, dynamic>> orderStatuses = [
-      {'label': 'All Orders', 'count': widget.totalOrders, 'icon': Icons.shopping_bag_outlined, 'color': const Color(0xFF4F46E5)},
-      {'label': 'Processing', 'count': 3, 'icon': Icons.inventory_2_outlined, 'color': const Color(0xFFD97706)},
-      {'label': 'Shipped', 'count': 7, 'icon': Icons.local_shipping_outlined, 'color': const Color(0xFF2563EB)},
-      {'label': 'Delivered', 'count': 12, 'icon': Icons.check_circle_outline_rounded, 'color': const Color(0xFF16A34A)},
-      {'label': 'Cancelled', 'count': 2, 'icon': Icons.cancel_outlined, 'color': const Color(0xFFDC2626)},
-      {'label': 'Returns', 'count': 1, 'icon': Icons.replay_rounded, 'color': const Color(0xFF7C3AED)},
+      {'label': 'All Orders', 'count': allCount, 'icon': Icons.shopping_bag_outlined, 'color': const Color(0xFF4F46E5)},
+      {'label': 'Processing', 'count': processingCount, 'icon': Icons.inventory_2_outlined, 'color': const Color(0xFFD97706)},
+      {'label': 'Shipped', 'count': shippedCount, 'icon': Icons.local_shipping_outlined, 'color': const Color(0xFF2563EB)},
+      {'label': 'Delivered', 'count': deliveredCount, 'icon': Icons.check_circle_outline_rounded, 'color': const Color(0xFF16A34A)},
+      {'label': 'Cancelled', 'count': cancelledCount, 'icon': Icons.cancel_outlined, 'color': const Color(0xFFDC2626)},
+      {'label': 'Returns', 'count': returnsCount, 'icon': Icons.replay_rounded, 'color': const Color(0xFF7C3AED)},
     ];
 
     return Container(
@@ -366,7 +392,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
             children: [
               const Text('My Orders', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: _textDark)),
               InkWell(
-                onTap: () => widget.onSelectTab('My Orders'),
+                onTap: () => context.push('/orders'),
                 child: Row(
                   children: const [
                     Text('View All Orders', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _darkGreen)),
@@ -383,7 +409,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: orderStatuses.map((st) {
               return InkWell(
-                onTap: () => widget.onSelectTab('My Orders'),
+                onTap: () => context.push('/orders'),
                 child: Column(
                   children: [
                     Container(
