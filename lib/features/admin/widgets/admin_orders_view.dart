@@ -1,3 +1,5 @@
+import 'dart:html' as html;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -414,16 +416,141 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invoice sent to print queue! 🖨️')));
+                _downloadInvoiceHtml(order);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Downloading invoice for ${order['id']}... 🖨️')),
+                );
               },
-              icon: const Icon(Icons.print, size: 16),
-              label: const Text('Print Invoice'),
+              icon: const Icon(Icons.file_download_outlined, size: 16),
+              label: const Text('Print & Download Invoice'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
             ),
           ],
         );
       },
     );
+  }
+
+  void _downloadInvoiceHtml(Map<String, dynamic> order) {
+    final String orderId = order['id']?.toString() ?? 'Order';
+    final String date = order['date']?.toString() ?? '';
+    final String customerName = order['customerName']?.toString() ?? 'Customer';
+    final String customerEmail = order['customerEmail']?.toString() ?? '';
+    final String customerPhone = order['customerPhone']?.toString() ?? '';
+    final String address = order['address']?.toString() ?? '';
+    final String status = order['status']?.toString() ?? 'Placed';
+    final double amount = (order['amount'] as num?)?.toDouble() ?? 0.0;
+    final double subtotal = (order['subtotal'] as num?)?.toDouble() ?? amount;
+    final double discount = (order['discount'] as num?)?.toDouble() ?? 0.0;
+    final double shipping = (order['shippingCharge'] as num?)?.toDouble() ?? 0.0;
+    final items = (order['items'] as List?) ?? [];
+
+    final String itemsHtml = items.map((i) {
+      final name = i['name']?.toString() ?? 'Product';
+      final variant = i['variant']?.toString() ?? '';
+      final price = (i['price'] as num?)?.toDouble() ?? 0.0;
+      return '''
+        <tr>
+          <td style="padding:10px; border-bottom:1px solid #eee;">
+            <strong>$name</strong><br/>
+            <span style="font-size:12px; color:#666;">$variant</span>
+          </td>
+          <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">
+            ₹${price.toStringAsFixed(2)}
+          </td>
+        </tr>
+      ''';
+    }).join('');
+
+    final String htmlContent = '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice - $orderId</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 30px; color: #333; background: #fff; }
+    .invoice-card { max-width: 700px; margin: auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4f46e5; padding-bottom: 20px; margin-bottom: 20px; }
+    .brand { font-size: 24px; font-weight: 900; color: #4f46e5; letter-spacing: -0.5px; }
+    .tagline { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .meta { text-align: right; }
+    .order-id { font-size: 18px; font-weight: bold; color: #1e293b; }
+    .badge { display: inline-block; padding: 4px 8px; background: #ecfdf5; color: #059669; font-weight: bold; border-radius: 4px; font-size: 12px; margin-top: 4px; }
+    .section-title { font-size: 13px; font-weight: bold; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .customer-box { background: #f8fafc; border-radius: 8px; padding: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #f1f5f9; text-align: left; padding: 10px; font-size: 12px; color: #475569; border-bottom: 2px solid #cbd5e1; }
+    th.right { text-align: right; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .total-row { display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: 900; color: #4f46e5; border-top: 2px solid #e2e8f0; margin-top: 10px; }
+    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+    @media print {
+      body { padding: 0; }
+      .invoice-card { border: none; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-card">
+    <div class="header">
+      <div>
+        <div class="brand">COSMYRA BOTANICALS</div>
+        <div class="tagline">Certified 100% Organic Formulations</div>
+      </div>
+      <div class="meta">
+        <div class="order-id">INVOICE: $orderId</div>
+        <div>Date: $date</div>
+        <div class="badge">STATUS: ${status.toUpperCase()}</div>
+      </div>
+    </div>
+
+    <div class="customer-box">
+      <div class="section-title">Billed To</div>
+      <div style="font-size: 16px; font-weight: bold; color: #0f172a;">$customerName</div>
+      <div style="font-size: 13px; color: #475569;">Email: $customerEmail | Phone: $customerPhone</div>
+      <div style="font-size: 13px; color: #475569; margin-top: 4px;">Address: $address</div>
+    </div>
+
+    <div class="section-title">Order Items</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Item & Description</th>
+          <th class="right">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        $itemsHtml
+      </tbody>
+    </table>
+
+    <div style="width: 280px; margin-left: auto;">
+      <div class="summary-row"><span>Subtotal:</span><span>₹${subtotal.toStringAsFixed(2)}</span></div>
+      ${discount > 0 ? '<div class="summary-row" style="color:#059669;"><span>Discount:</span><span>- ₹' + discount.toStringAsFixed(2) + '</span></div>' : ''}
+      <div class="summary-row"><span>Shipping:</span><span>${shipping == 0 ? 'Free' : '₹' + shipping.toStringAsFixed(2)}</span></div>
+      <div class="total-row"><span>Total Paid:</span><span>₹${amount.toStringAsFixed(2)}</span></div>
+    </div>
+
+    <div class="footer">
+      Thank you for shopping with Cosmyra Botanicals! • For support email: 1mdollar2027@gmail.com
+    </div>
+  </div>
+  <script>
+    window.onload = function() { window.print(); }
+  </script>
+</body>
+</html>
+''';
+
+    if (kIsWeb) {
+      final blob = html.Blob([htmlContent], 'text/html');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'Invoice_${orderId}.html')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+    }
   }
 
   @override
