@@ -815,33 +815,41 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
                       ),
                   ],
                 ),
-                InkWell(
-                  onTap: () {
-                    ref.read(cartProvider.notifier).addItem(product: p, variant: v);
-                    showCenterActionToast(
-                      context,
-                      title: 'Added to Shopping Bag! 🛍️',
-                      message: p.name,
-                      icon: Icons.shopping_bag_outlined,
-                      iconColor: const Color(0xFF4F46E5),
-                      primaryActionLabel: 'VIEW CART',
-                      onPrimaryAction: () => context.push('/cart'),
-                    );
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _isHovered ? const Color(0xFF4F46E5) : const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: _isHovered ? const Color(0xFF4338CA) : const Color(0xFFE5E7EB)),
+                Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        ref.read(cartProvider.notifier).addItem(product: p, variant: v);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('✨ ${p.name} added to cart!'), backgroundColor: const Color(0xFF10B981)),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFC7D2FE)),
+                        ),
+                        child: const Text('ADD +', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                      ),
                     ),
-                    child: Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 18,
-                      color: _isHovered ? Colors.white : const Color(0xFF374151),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () {
+                        ref.read(cartProvider.notifier).addItem(product: p, variant: v);
+                        context.push('/checkout');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF4F46E5)]),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text('Buy ⚡', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),

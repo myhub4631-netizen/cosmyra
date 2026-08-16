@@ -759,32 +759,62 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
                             ),
                           ],
                         ),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            if (variant != null) {
-                              ref.read(cartProvider.notifier).addItem(product: p, variant: variant);
-                            } else {
-                              _addToCartHelper(
-                                id: p.id,
-                                name: p.name,
-                                categoryId: p.categoryId,
-                                variantLabel: 'Standard Pack',
-                                price: 999.0,
-                                mrp: 1199.0,
-                                image: image,
-                              );
-                            }
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Added ${p.name} to Cart! 🛒')),
-                            );
-                          },
-                          icon: const Icon(Icons.shopping_cart_outlined, size: 14, color: _primaryPurple),
-                          label: const Text('Add to Cart', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _primaryPurple)),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            side: const BorderSide(color: Color(0xFFC7D2FE)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
+                        Row(
+                          children: [
+                            OutlinedButton(
+                              onPressed: () {
+                                if (variant != null) {
+                                  ref.read(cartProvider.notifier).addItem(product: p, variant: variant);
+                                } else {
+                                  _addToCartHelper(
+                                    id: p.id,
+                                    name: p.name,
+                                    categoryId: p.categoryId,
+                                    variantLabel: 'Standard Pack',
+                                    price: 999.0,
+                                    mrp: 1199.0,
+                                    image: image,
+                                  );
+                                }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Added ${p.name} to Cart! 🛒')),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                side: const BorderSide(color: Color(0xFFC7D2FE)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('ADD +', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _primaryPurple)),
+                            ),
+                            const SizedBox(width: 4),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                if (variant != null) {
+                                  ref.read(cartProvider.notifier).addItem(product: p, variant: variant);
+                                } else {
+                                  _addToCartHelper(
+                                    id: p.id,
+                                    name: p.name,
+                                    categoryId: p.categoryId,
+                                    variantLabel: 'Standard Pack',
+                                    price: 999.0,
+                                    mrp: 1199.0,
+                                    image: image,
+                                  );
+                                }
+                                context.push('/checkout');
+                              },
+                              icon: const Icon(Icons.bolt, size: 12, color: Colors.white),
+                              label: const Text('Buy ⚡', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _primaryPurple,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

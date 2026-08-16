@@ -2337,7 +2337,7 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
                   child: ElevatedButton.icon(
                     onPressed: () => widget.onAddToCart(deal, isBuyNow: true),
                     icon: const Icon(Icons.bolt, size: 14, color: Colors.white),
-                    label: const Text('Buy Now', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    label: const Text('Buy ⚡', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4F46E5),
                       foregroundColor: Colors.white,
