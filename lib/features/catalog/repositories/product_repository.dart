@@ -151,10 +151,25 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   ];
 
   Future<void> _loadProductsFromStorage() async {
+    // 1. Fetch real live products from Supabase database first
+    if (SupabaseConfig.isConfigured) {
+      try {
+        final remoteProducts = await ProductRepository().getProducts();
+        if (remoteProducts.isNotEmpty) {
+          state = remoteProducts;
+          _saveProductsToStorage();
+          return;
+        }
+      } catch (e) {
+        print('Error fetching real products from Supabase: $e');
+      }
+    }
+
+    // 2. Fallback to local storage if offline or Supabase isn't initialized yet
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
-      if (jsonStr != null) {
+      if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         final List<ProductModel> loaded = [];
         for (final item in decoded) {
@@ -164,8 +179,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
             }
           } catch (_) {}
         }
-        state = loaded;
-        return;
+        if (loaded.isNotEmpty) {
+          state = loaded;
+          return;
+        }
       }
     } catch (_) {}
 
@@ -181,9 +198,66 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     } catch (_) {}
   }
 
+  Future<void> _syncProductToSupabase(ProductModel p) async {
+    if (!SupabaseConfig.isConfigured) return;
+    try {
+      final productData = {
+        'id': p.id,
+        'brand_id': p.brandId,
+        'category_id': p.categoryId,
+        'name': p.name,
+        'slug': p.slug,
+        'tagline': p.tagline,
+        'description': p.description,
+        'ingredients': p.ingredients,
+        'how_to_use': p.howToUse,
+        'free_from_claims': p.freeFromClaims,
+        'is_featured': p.isFeatured,
+        'is_active': true,
+      };
+
+      await supabase.from('products').upsert(productData);
+
+      for (final v in p.variants) {
+        final variantData = {
+          'id': v.id,
+          'product_id': p.id,
+          'sku': v.sku,
+          'size_label': v.sizeLabel,
+          'price_inr': v.price,
+          'mrp_inr': v.mrp,
+          'stock_quantity': v.stock,
+          'is_default': v.isDefault,
+        };
+        await supabase.from('product_variants').upsert(variantData);
+      }
+
+      for (int i = 0; i < p.imageUrls.length; i++) {
+        final imgData = {
+          'product_id': p.id,
+          'image_url': p.imageUrls[i],
+          'display_order': i,
+        };
+        await supabase.from('product_images').upsert(imgData);
+      }
+    } catch (e) {
+      print('Sync product to Supabase error: $e');
+    }
+  }
+
+  Future<void> _deleteProductFromSupabase(String productId) async {
+    if (!SupabaseConfig.isConfigured) return;
+    try {
+      await supabase.from('products').delete().eq('id', productId);
+    } catch (e) {
+      print('Delete product from Supabase error: $e');
+    }
+  }
+
   void addProduct(ProductModel product) {
     state = [product, ...state];
     _saveProductsToStorage();
+    _syncProductToSupabase(product);
   }
 
   void updateProduct(ProductModel product) {
@@ -192,11 +266,13 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         if (p.id == product.id) product else p,
     ];
     _saveProductsToStorage();
+    _syncProductToSupabase(product);
   }
 
   void deleteProduct(String productId) {
     state = state.where((p) => p.id.trim() != productId.trim()).toList();
     _saveProductsToStorage();
+    _deleteProductFromSupabase(productId);
   }
 
   Future<void> resetToDefaultCatalog() async {
@@ -209,6 +285,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   void restockProduct(String productId, int addAmount) {
+    ProductModel? targetProduct;
     state = state.map((p) {
       if (p.id == productId) {
         final updatedVariants = p.variants.map((v) {
@@ -217,11 +294,15 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
           }
           return v;
         }).toList();
-        return p.copyWith(variants: updatedVariants);
+        targetProduct = p.copyWith(variants: updatedVariants);
+        return targetProduct!;
       }
       return p;
     }).toList();
     _saveProductsToStorage();
+    if (targetProduct != null) {
+      _syncProductToSupabase(targetProduct!);
+    }
   }
 
   void clearAllProducts() {
