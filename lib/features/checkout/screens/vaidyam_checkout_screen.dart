@@ -137,7 +137,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Vaidyam Botanicals',
+                          'Cosmyra',
                           style: TextStyle(
                             fontFamily: 'serif',
                             fontSize: 22,

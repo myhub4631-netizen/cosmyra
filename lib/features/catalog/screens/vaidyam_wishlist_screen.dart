@@ -222,7 +222,7 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  'Vaidyam Botanicals',
+                  'Cosmyra',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

@@ -170,7 +170,7 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            brandSettings.brandName.isEmpty ? 'Vaidyam Botanicals' : brandSettings.brandName,
+                            brandSettings.brandName.isEmpty ? 'Cosmyra' : brandSettings.brandName,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w900,

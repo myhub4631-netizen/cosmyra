@@ -319,7 +319,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  'Vaidyam Botanicals',
+                  'Cosmyra',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

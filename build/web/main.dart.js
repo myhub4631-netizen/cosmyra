@@ -57360,7 +57360,7 @@ return A.E($async$DH,r)},
 I(a){var s,r,q,p,o,n,m=this,l=null,k=m.gaK(),j=k.bv($.j9(),t.lO),i=k.bv($.e2(),t.r2),h=k.bv($.fQ(),t.c8),g=i.gq6(),f=A.bs(a,l,t.w).w.a.a>900
 k=t.p
 s=A.t(l,A.p(A.a([B.asV,A.p(B.mN,B.f,B.d,B.c,0,l,l)],k),B.f,B.C,B.c,0,l,l),B.h,B.q,l,l,l,l,l,B.i0,l,l,1/0)
-r=A.a([A.aE(!1,l,!0,A.p(A.a([A.t(l,B.mC,B.h,l,l,new A.y(B.at,l,l,A.o(10),l,l,B.k),l,l,l,B.aC,l,l,l),B.aq,A.k("Vaidyam Botanicals",l,l,l,l,A.b9(l,l,B.dj,l,l,l,l,l,"serif",l,l,22,l,l,B.av,l,l,!0,l,0.5,l,l,l,l,l,l),l,l)],k),B.f,B.d,B.c,0,l,l),l,!0,l,l,l,l,l,l,l,l,l,new A.aP_(a),l,l,l,l,l,l,l),B.b4],k)
+r=A.a([A.aE(!1,l,!0,A.p(A.a([A.t(l,B.mC,B.h,l,l,new A.y(B.at,l,l,A.o(10),l,l,B.k),l,l,l,B.aC,l,l,l),B.aq,A.k("Cosmyra",l,l,l,l,A.b9(l,l,B.dj,l,l,l,l,l,"serif",l,l,22,l,l,B.av,l,l,!0,l,0.5,l,l,l,l,l,l),l,l)],k),B.f,B.d,B.c,0,l,l),l,!0,l,l,l,l,l,l,l,l,l,new A.aP_(a),l,l,l,l,l,l,l),B.b4],k)
 if(f){q=A.o(8)
 p=A.ae(B.x,B.m,1)
 o=m.z
@@ -57473,7 +57473,7 @@ return A.E($async$DN,r)},
 I(a){var s,r,q,p,o,n,m=this,l=null,k=m.gaK(),j=k.bv($.e2(),t.r2),i=k.bv($.fQ(),t.c8),h=j.gq6(),g=A.bs(a,l,t.w).w.a.a>900
 k=t.p
 s=A.t(l,A.p(A.a([B.asU,A.p(B.mN,B.f,B.d,B.c,0,l,l)],k),B.f,B.C,B.c,0,l,l),B.h,B.q,l,l,l,l,l,B.i0,l,l,1/0)
-r=A.a([A.aE(!1,l,!0,A.p(A.a([A.t(l,B.mC,B.h,l,l,new A.y(B.at,l,l,A.o(10),l,l,B.k),l,l,l,B.aC,l,l,l),B.aq,A.k("Vaidyam Botanicals",l,l,l,l,A.b9(l,l,B.dj,l,l,l,l,l,"serif",l,l,22,l,l,B.av,l,l,!0,l,0.5,l,l,l,l,l,l),l,l)],k),B.f,B.d,B.c,0,l,l),l,!0,l,l,l,l,l,l,l,l,l,new A.aT3(a),l,l,l,l,l,l,l),B.b4],k)
+r=A.a([A.aE(!1,l,!0,A.p(A.a([A.t(l,B.mC,B.h,l,l,new A.y(B.at,l,l,A.o(10),l,l,B.k),l,l,l,B.aC,l,l,l),B.aq,A.k("Cosmyra",l,l,l,l,A.b9(l,l,B.dj,l,l,l,l,l,"serif",l,l,22,l,l,B.av,l,l,!0,l,0.5,l,l,l,l,l,l),l,l)],k),B.f,B.d,B.c,0,l,l),l,!0,l,l,l,l,l,l,l,l,l,new A.aT3(a),l,l,l,l,l,l,l),B.b4],k)
 if(g){q=A.o(8)
 p=A.ae(B.x,B.m,1)
 o=m.Q
@@ -57669,7 +57669,7 @@ m=A.a([B.yg,B.B,B.wN],a2)
 if(f)m.push(A.p(B.a5r,B.f,B.d,B.c,0,a1,a1))
 m=A.t(a1,A.p(m,B.f,B.d,B.c,0,a1,a1),B.h,B.U,a1,a1,a1,a1,a1,B.Uc,a1,a1,1/0)
 e=A.t(a1,B.y6,B.h,a1,a1,new A.y(B.U,a1,a1,A.o(10),a1,a1,B.k),a1,a1,a1,B.aC,a1,a1,a1)
-e=A.a([A.aE(!1,a1,!0,A.p(A.a([e,B.aq,A.k("Vaidyam Botanicals",a1,a1,a1,a1,A.b9(a1,a1,B.pr,a1,a1,a1,a1,a1,"serif",a1,a1,f?22:18,a1,a1,B.av,a1,a1,!0,a1,-0.5,a1,a1,a1,a1,a1,a1),a1,a1)],a2),B.f,B.d,B.c,0,a1,a1),a1,!0,a1,a1,a1,a1,a1,a1,a1,a1,a1,new A.aY3(a5),a1,a1,a1,a1,a1,a1,a1),B.b4],a2)
+e=A.a([A.aE(!1,a1,!0,A.p(A.a([e,B.aq,A.k("Cosmyra",a1,a1,a1,a1,A.b9(a1,a1,B.pr,a1,a1,a1,a1,a1,"serif",a1,a1,f?22:18,a1,a1,B.av,a1,a1,!0,a1,-0.5,a1,a1,a1,a1,a1,a1),a1,a1)],a2),B.f,B.d,B.c,0,a1,a1),a1,!0,a1,a1,a1,a1,a1,a1,a1,a1,a1,new A.aY3(a5),a1,a1,a1,a1,a1,a1,a1),B.b4],a2)
 if(f){d=A.o(8)
 c=A.ae(B.e2,B.m,1)
 b=a0.x
@@ -58654,7 +58654,7 @@ f=t.p
 r=A.a([B.wL],f)
 if(n)r.push(A.p(B.mN,B.f,B.d,B.c,0,g,g))
 r=A.t(g,A.p(r,B.f,B.C,B.c,0,g,g),B.h,B.q,g,g,g,g,g,B.i0,g,g,1/0)
-m=A.a([A.aE(!1,g,!0,A.p(A.a([A.t(g,B.mC,B.h,g,g,new A.y(B.at,g,g,A.o(10),g,g,B.k),g,g,g,B.aC,g,g,g),B.aq,A.k("Vaidyam Botanicals",g,g,g,g,A.b9(g,g,B.dj,g,g,g,g,g,"serif",g,g,22,g,g,B.av,g,g,!0,g,0.5,g,g,g,g,g,g),g,g)],f),B.f,B.d,B.c,0,g,g),g,!0,g,g,g,g,g,g,g,g,g,new A.b0i(a),g,g,g,g,g,g,g),B.b4],f)
+m=A.a([A.aE(!1,g,!0,A.p(A.a([A.t(g,B.mC,B.h,g,g,new A.y(B.at,g,g,A.o(10),g,g,B.k),g,g,g,B.aC,g,g,g),B.aq,A.k("Cosmyra",g,g,g,g,A.b9(g,g,B.dj,g,g,g,g,g,"serif",g,g,22,g,g,B.av,g,g,!0,g,0.5,g,g,g,g,g,g),g,g)],f),B.f,B.d,B.c,0,g,g),g,!0,g,g,g,g,g,g,g,g,g,new A.b0i(a),g,g,g,g,g,g,g),B.b4],f)
 if(n){l=A.o(8)
 k=A.ae(B.x,B.m,1)
 j=h.Q
@@ -59442,7 +59442,7 @@ i=t.p
 q=A.a([B.wL],i)
 if(r)q.push(A.p(B.mN,B.f,B.d,B.c,0,j,j))
 q=A.t(j,A.p(q,B.f,B.C,B.c,0,j,j),B.h,B.q,j,j,j,j,j,B.i0,j,j,1/0)
-p=A.a([A.aE(!1,j,!0,A.p(A.a([A.t(j,B.mC,B.h,j,j,new A.y(B.at,j,j,A.o(10),j,j,B.k),j,j,j,B.aC,j,j,j),B.aq,A.k("Vaidyam Botanicals",j,j,j,j,A.b9(j,j,B.dj,j,j,j,j,j,"serif",j,j,22,j,j,B.av,j,j,!0,j,0.5,j,j,j,j,j,j),j,j)],i),B.f,B.d,B.c,0,j,j),j,!0,j,j,j,j,j,j,j,j,j,new A.aYz(a),j,j,j,j,j,j,j),B.b4],i)
+p=A.a([A.aE(!1,j,!0,A.p(A.a([A.t(j,B.mC,B.h,j,j,new A.y(B.at,j,j,A.o(10),j,j,B.k),j,j,j,B.aC,j,j,j),B.aq,A.k("Cosmyra",j,j,j,j,A.b9(j,j,B.dj,j,j,j,j,j,"serif",j,j,22,j,j,B.av,j,j,!0,j,0.5,j,j,j,j,j,j),j,j)],i),B.f,B.d,B.c,0,j,j),j,!0,j,j,j,j,j,j,j,j,j,new A.aYz(a),j,j,j,j,j,j,j),B.b4],i)
 if(r){o=A.o(8)
 n=A.ae(B.x,B.m,1)
 p.push(A.t(j,A.p(A.a([A.t(j,B.atW,B.h,j,j,B.ll,j,j,j,B.c4,j,j,j),B.UK,A.t(j,B.ik,B.h,j,j,B.lm,j,44,j,j,j,j,44)],i),B.f,B.d,B.c,0,j,j),B.h,j,j,new A.y(B.aP,j,n,o,j,j,B.k),j,44,j,j,j,j,440))}p.push(B.b4)
@@ -60005,7 +60005,7 @@ m=a7.a
 if(m.length!==0)n.push(new A.dl(B.MU,new A.jw(m,B.f6,g,56,g),g))
 else{m=A.t(g,B.XA,B.h,g,g,new A.y(B.ez,g,g,A.o(14),g,g,B.k),g,g,g,B.d5,g,g,g)
 l=a7.e
-l=A.k(l.length===0?"Vaidyam Botanicals":l,g,g,g,g,B.akQ,g,g)
+l=A.k(l.length===0?"Cosmyra":l,g,g,g,g,B.akQ,g,g)
 k=a7.f
 B.b.J(n,A.a([m,B.Y,A.z(A.a([l,B.a5,A.k(k.length===0?"Pure Ayurveda. Real Results.":k,g,g,g,g,B.ajE,g,g)],a2),B.n,B.d,B.c)],a2))}n=A.a([A.aE(!1,g,!0,A.p(n,B.f,B.d,B.O,0,g,g),g,!0,g,g,g,g,g,g,g,g,g,new A.aZk(b1),g,g,g,g,g,g,g)],a2)
 if(q)n.push(B.ae9)
