@@ -133,7 +133,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
+                  color: const Color(0xFF4F46E5).withOpacity(0.25),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -144,7 +144,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.language_rounded, color: Colors.white, size: 32),

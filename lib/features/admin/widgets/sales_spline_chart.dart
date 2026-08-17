@@ -111,8 +111,8 @@ class _SplineChartPainter extends CustomPainter {
       begin: Alignment.topCenter,
       end: Alignment.bottomCenter,
       colors: [
-        const Color(0xFF6366F1).withValues(alpha: 0.25),
-        const Color(0xFF6366F1).withValues(alpha: 0.0),
+        const Color(0xFF6366F1).withOpacity(0.25),
+        const Color(0xFF6366F1).withOpacity(0.0),
       ],
     );
 

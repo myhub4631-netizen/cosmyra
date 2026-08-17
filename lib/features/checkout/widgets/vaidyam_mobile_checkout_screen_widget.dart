@@ -60,7 +60,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -315,7 +315,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -460,7 +460,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
           border: Border.all(color: hasCoupon ? _primaryPurple : const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withOpacity(0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -471,7 +471,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _primaryPurple.withValues(alpha: 0.1),
+                color: _primaryPurple.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.local_offer_outlined, color: _primaryPurple, size: 20),
@@ -643,7 +643,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _primaryPurple.withValues(alpha: 0.1),
+                  color: _primaryPurple.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.location_on_rounded, color: _primaryPurple, size: 20),

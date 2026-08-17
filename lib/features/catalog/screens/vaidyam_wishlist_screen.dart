@@ -766,10 +766,10 @@ class _VaidyamWishlistScreenState extends ConsumerState<VaidyamWishlistScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isSelected ? _primaryPurple.withValues(alpha: 0.3) : _borderGray),
+        border: Border.all(color: isSelected ? _primaryPurple.withOpacity(0.3) : _borderGray),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

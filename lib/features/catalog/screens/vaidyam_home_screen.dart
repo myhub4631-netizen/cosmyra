@@ -635,7 +635,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                           child: Container(
                             height: 300,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: Colors.white.withOpacity(0.6),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Image.asset(
@@ -678,7 +678,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             left: 12,
             top: 150,
             child: CircleAvatar(
-              backgroundColor: Colors.white.withValues(alpha: 0.9),
+              backgroundColor: Colors.white.withOpacity(0.9),
               radius: 18,
               child: const Icon(Icons.keyboard_arrow_left, color: _textDark, size: 20),
             ),
@@ -687,7 +687,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
             right: 12,
             top: 150,
             child: CircleAvatar(
-              backgroundColor: Colors.white.withValues(alpha: 0.9),
+              backgroundColor: Colors.white.withOpacity(0.9),
               radius: 18,
               child: const Icon(Icons.keyboard_arrow_right, color: _textDark, size: 20),
             ),
@@ -953,7 +953,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 2)),
                     ],
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
@@ -1206,7 +1206,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 8, offset: const Offset(0, 2)),
                     ],
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
@@ -1444,7 +1444,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: const Color(0xFFE5E7EB)),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
+                              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2)),
                             ],
                           ),
                           child: Column(
@@ -1700,7 +1700,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
@@ -1717,7 +1717,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
@@ -1931,7 +1931,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                                     children: [
                                       Text(b['price'] as String, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: b['textColor'] as Color)),
                                       const SizedBox(width: 6),
-                                      Text(b['originalPrice'] as String, style: TextStyle(fontSize: 11, color: (b['subtextColor'] as Color).withValues(alpha: 0.7), decoration: TextDecoration.lineThrough)),
+                                      Text(b['originalPrice'] as String, style: TextStyle(fontSize: 11, color: (b['subtextColor'] as Color).withOpacity(0.7), decoration: TextDecoration.lineThrough)),
                                     ],
                                   ),
                                   ElevatedButton.icon(
@@ -2004,7 +2004,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 6, offset: const Offset(0, 2)),
+                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 2)),
                     ],
                     border: Border.all(color: const Color(0xFFE5E7EB)),
                   ),
@@ -2136,7 +2136,7 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
           ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered ? const Color(0xFF6366F1).withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.03),
+              color: _isHovered ? const Color(0xFF6366F1).withOpacity(0.15) : Colors.black.withOpacity(0.03),
               blurRadius: _isHovered ? 14 : 8,
               offset: Offset(0, _isHovered ? 6 : 2),
             ),
@@ -2187,7 +2187,7 @@ class _DealProductCardWidgetState extends State<_DealProductCardWidget> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E1B4B).withValues(alpha: 0.94),
+                            color: const Color(0xFF1E1B4B).withOpacity(0.94),
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: const [
                               BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),

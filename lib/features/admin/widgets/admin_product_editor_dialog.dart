@@ -192,7 +192,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.forestSage.withValues(alpha: 0.12),
+                    color: AppColors.forestSage.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.edit_note, color: AppColors.forestSage, size: 24),
@@ -311,7 +311,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                         const SizedBox(height: 8),
 
                         Card(
-                          color: AppColors.forestSage.withValues(alpha: 0.05),
+                          color: AppColors.forestSage.withOpacity(0.05),
                           child: Padding(
                             padding: const EdgeInsets.all(14),
                             child: Row(
@@ -337,7 +337,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: AppColors.goldAccent.withValues(alpha: 0.15),
+                                    color: AppColors.goldAccent.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Column(
@@ -421,21 +421,21 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                             FilterChip(
                               label: const Text('Vata Balancing'),
                               selected: _vataBalance,
-                              selectedColor: AppColors.forestSage.withValues(alpha: 0.2),
+                              selectedColor: AppColors.forestSage.withOpacity(0.2),
                               onSelected: (val) => setState(() => _vataBalance = val),
                             ),
                             const SizedBox(width: 8),
                             FilterChip(
                               label: const Text('Pitta Soothing'),
                               selected: _pittaBalance,
-                              selectedColor: AppColors.goldAccent.withValues(alpha: 0.2),
+                              selectedColor: AppColors.goldAccent.withOpacity(0.2),
                               onSelected: (val) => setState(() => _pittaBalance = val),
                             ),
                             const SizedBox(width: 8),
                             FilterChip(
                               label: const Text('Kapha Cleansing'),
                               selected: _kaphaBalance,
-                              selectedColor: AppColors.info.withValues(alpha: 0.2),
+                              selectedColor: AppColors.info.withOpacity(0.2),
                               onSelected: (val) => setState(() => _kaphaBalance = val),
                             ),
                           ],
@@ -597,7 +597,7 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                                     height: 90,
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      color: AppColors.forestSage.withValues(alpha: 0.1),
+                                      color: AppColors.forestSage.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(6),
                                       image: DecorationImage(
                                         image: _getGalleryImageProvider(url),

@@ -207,7 +207,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -259,7 +259,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4338CA).withValues(alpha: 0.3),
+            color: const Color(0xFF4338CA).withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -315,7 +315,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: Colors.white.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
@@ -333,7 +333,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
             children: [
               Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.4), shape: BoxShape.circle)),
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: Colors.white.withOpacity(0.4), shape: BoxShape.circle)),
             ],
           ),
         ],
@@ -356,7 +356,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

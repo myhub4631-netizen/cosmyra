@@ -170,7 +170,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: Colors.black.withOpacity(0.03),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -262,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.forestSageDark.withValues(alpha: 0.3),
+                      color: AppColors.forestSageDark.withOpacity(0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -277,7 +277,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.goldAccent.withValues(alpha: 0.25),
+                            color: AppColors.goldAccent.withOpacity(0.25),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: AppColors.goldAccent, width: 0.8),
                           ),
@@ -548,7 +548,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.forestSage.withValues(alpha: 0.3)),
+                  border: Border.all(color: AppColors.forestSage.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
@@ -664,7 +664,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.forestSage.withValues(alpha: 0.1),
+        color: AppColors.forestSage.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -800,7 +800,7 @@ class _ProductGridCard extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
+                        color: Colors.black.withOpacity(0.65),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
@@ -821,7 +821,7 @@ class _ProductGridCard extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
+                        color: Colors.black.withOpacity(0.65),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(

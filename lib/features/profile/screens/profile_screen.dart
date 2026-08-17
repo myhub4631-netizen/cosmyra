@@ -111,7 +111,7 @@ class ProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: AppColors.luxurySageGradient,
                 borderRadius: BorderRadius.circular(18),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10)],
               ),
               child: Row(
                 children: [
@@ -146,7 +146,7 @@ class ProfileScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.goldAccent.withValues(alpha: 0.25),
+                            color: AppColors.goldAccent.withOpacity(0.25),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

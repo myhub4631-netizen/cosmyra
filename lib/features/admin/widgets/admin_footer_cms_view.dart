@@ -689,7 +689,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isActive ? Border.all(color: const Color(0xFFE5E7EB)) : null,
-          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4)] : null,
+          boxShadow: isActive ? [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)] : null,
         ),
         child: Row(
           children: [
@@ -717,7 +717,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
       ),
       child: Row(
         children: [
@@ -760,7 +760,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFFC7D2FE)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
           ),
           child: Row(
             children: [
@@ -882,7 +882,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -1131,7 +1131,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
           decoration: BoxDecoration(
             color: const Color(0xFF0B132B),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1166,7 +1166,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                               height: 28,
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.1),
+                                color: Colors.white.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Align(
@@ -1289,7 +1289,7 @@ class _AdminFooterCmsViewState extends ConsumerState<AdminFooterCmsView> {
                           children: ['VISA', 'Mastercard', 'UPI', 'Paytm', 'PhonePe'].map((p) {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(3)),
+                              decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(3)),
                               child: Text(p, style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold)),
                             );
                           }).toList(),

@@ -97,14 +97,14 @@ class _VaidyamMobileAjaxSearchBarState extends ConsumerState<VaidyamMobileAjaxSe
             boxShadow: _focusNode.hasFocus
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      color: const Color(0xFF6366F1).withOpacity(0.12),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ]
                 : [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: Colors.black.withOpacity(0.02),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -171,7 +171,7 @@ class _VaidyamMobileAjaxSearchBarState extends ConsumerState<VaidyamMobileAjaxSe
               border: Border.all(color: const Color(0xFFE2E8F0)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
+                  color: Colors.black.withOpacity(0.12),
                   blurRadius: 16,
                   spreadRadius: 2,
                   offset: const Offset(0, 6),

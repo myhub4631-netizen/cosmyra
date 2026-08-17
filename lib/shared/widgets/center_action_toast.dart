@@ -15,7 +15,7 @@ void showCenterActionToast(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Action Notification',
-    barrierColor: Colors.black.withValues(alpha: 0.45),
+    barrierColor: Colors.black.withOpacity(0.45),
     transitionDuration: const Duration(milliseconds: 250),
     pageBuilder: (ctx, anim1, anim2) {
       if (autoDismiss) {
@@ -38,7 +38,7 @@ void showCenterActionToast(
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
@@ -51,7 +51,7 @@ void showCenterActionToast(
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.12),
+                    color: iconColor.withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: iconColor, size: 48),

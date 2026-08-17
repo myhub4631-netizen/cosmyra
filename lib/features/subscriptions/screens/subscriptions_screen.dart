@@ -159,7 +159,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: AppColors.success.withValues(alpha: 0.15),
+                                            color: AppColors.success.withOpacity(0.15),
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(

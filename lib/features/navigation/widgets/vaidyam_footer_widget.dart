@@ -310,7 +310,7 @@ class VaidyamFooterWidget extends ConsumerWidget {
             Container(width: 12, height: 12, decoration: const BoxDecoration(color: Color(0xFFEB001B), shape: BoxShape.circle)),
             Transform.translate(
               offset: const Offset(-4, 0),
-              child: Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFFF79E1B).withValues(alpha: 0.8), shape: BoxShape.circle)),
+              child: Container(width: 12, height: 12, decoration: BoxDecoration(color: const Color(0xFFF79E1B).withOpacity(0.8), shape: BoxShape.circle)),
             ),
           ],
         ),

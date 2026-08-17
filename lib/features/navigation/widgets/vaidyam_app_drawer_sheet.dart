@@ -12,7 +12,7 @@ class VaidyamAppDrawerSheet extends ConsumerStatefulWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'AppDrawer',
-      barrierColor: Colors.black.withValues(alpha: 0.54),
+      barrierColor: Colors.black.withOpacity(0.54),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, anim1, anim2) => const Align(
         alignment: Alignment.centerLeft,

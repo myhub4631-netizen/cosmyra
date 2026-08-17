@@ -665,7 +665,7 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
           ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered ? const Color(0xFF6366F1).withValues(alpha: 0.12) : Colors.black.withValues(alpha: 0.03),
+              color: _isHovered ? const Color(0xFF6366F1).withOpacity(0.12) : Colors.black.withOpacity(0.03),
               blurRadius: _isHovered ? 12 : 6,
               offset: Offset(0, _isHovered ? 5 : 2),
             ),
@@ -716,7 +716,7 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1E1B4B).withValues(alpha: 0.92),
+                              color: const Color(0xFF1E1B4B).withOpacity(0.92),
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: const [
                                 BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),

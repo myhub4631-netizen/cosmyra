@@ -1026,7 +1026,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8)],
       ),
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Column(
@@ -1258,7 +1258,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFE5E7EB)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6)],
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1806,9 +1806,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                 return Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.04),
+                    color: color.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withValues(alpha: 0.3)),
+                    border: Border.all(color: color.withOpacity(0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1969,7 +1969,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
                           child: Icon(n['icon'] as IconData, color: color, size: 20),
                         ),
                         const SizedBox(width: 14),
@@ -2565,7 +2565,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       width: 140,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: 0.3),
+        color: bgColor.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: bgColor),
       ),
@@ -2592,7 +2592,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor.withValues(alpha: 0.4),
+        color: bgColor.withOpacity(0.4),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: bgColor),
       ),
@@ -2825,7 +2825,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 6)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6)],
       ),
       child: Row(
         children: [

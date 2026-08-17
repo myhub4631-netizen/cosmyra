@@ -3317,7 +3317,7 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   Widget _buildMiniPerfStat(String title, String value, String trend, Color color) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withValues(alpha: 0.15))),
+      decoration: BoxDecoration(color: color.withOpacity(0.06), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withOpacity(0.15))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

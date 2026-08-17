@@ -276,7 +276,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
                 decoration: BoxDecoration(
                   color: isActive ? const Color(0xFFF3E8FF) : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
-                  border: isActive ? Border.all(color: _primaryPurple.withValues(alpha: 0.3)) : null,
+                  border: isActive ? Border.all(color: _primaryPurple.withOpacity(0.3)) : null,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -386,7 +386,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -631,7 +631,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _primaryPurple.withValues(alpha: 0.1),
+              color: _primaryPurple.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Center(

@@ -484,7 +484,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
         border: Border.all(color: const Color(0xFFF3F4F6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -600,7 +600,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
         border: Border.all(color: const Color(0xFFF3F4F6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -720,7 +720,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
         border: Border.all(color: const Color(0xFFF3F4F6)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -1141,7 +1141,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                              color: const Color(0xFF4F46E5).withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.lock_outline_rounded, color: Color(0xFF4F46E5), size: 24),

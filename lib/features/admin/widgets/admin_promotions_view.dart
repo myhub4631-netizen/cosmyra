@@ -121,7 +121,7 @@ class _AdminPromotionsViewState extends ConsumerState<AdminPromotionsView> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.goldAccent.withValues(alpha: 0.15),
+                          color: AppColors.goldAccent.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.local_offer_outlined, color: AppColors.goldAccent),
@@ -141,7 +141,7 @@ class _AdminPromotionsViewState extends ConsumerState<AdminPromotionsView> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: isActive ? AppColors.success.withValues(alpha: 0.1) : AppColors.error.withValues(alpha: 0.1),
+                                    color: isActive ? AppColors.success.withOpacity(0.1) : AppColors.error.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

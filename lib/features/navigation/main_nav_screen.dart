@@ -37,7 +37,7 @@ class MainNavScreen extends ConsumerWidget {
           color: isDark ? AppColors.charcoalCard : AppColors.creamCard,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 16,
               offset: const Offset(0, -3),
             ),
@@ -56,7 +56,7 @@ class MainNavScreen extends ConsumerWidget {
               ref.read(mainNavTabProvider.notifier).state = index;
             },
             backgroundColor: isDark ? AppColors.charcoalCard : AppColors.creamCard,
-            indicatorColor: isDark ? AppColors.goldAccent.withValues(alpha: 0.25) : AppColors.forestSage.withValues(alpha: 0.15),
+            indicatorColor: isDark ? AppColors.goldAccent.withOpacity(0.25) : AppColors.forestSage.withOpacity(0.15),
             elevation: 0,
             destinations: [
               const NavigationDestination(

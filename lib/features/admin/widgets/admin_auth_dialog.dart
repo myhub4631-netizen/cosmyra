@@ -60,7 +60,7 @@ class _AdminAuthDialogState extends ConsumerState<AdminAuthDialog> with SingleTi
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.goldAccent.withValues(alpha: 0.15),
+                    color: AppColors.goldAccent.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.admin_panel_settings_outlined, color: AppColors.goldAccent, size: 24),
@@ -114,9 +114,9 @@ class _AdminAuthDialogState extends ConsumerState<AdminAuthDialog> with SingleTi
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
+                              color: AppColors.success.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                              border: Border.all(color: AppColors.success.withOpacity(0.3)),
                             ),
                             child: Row(
                               children: [

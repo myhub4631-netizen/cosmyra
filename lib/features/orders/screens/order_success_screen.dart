@@ -23,7 +23,7 @@ class OrderSuccessScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
+                    color: AppColors.success.withOpacity(0.12),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.check_circle, size: 72, color: AppColors.success),

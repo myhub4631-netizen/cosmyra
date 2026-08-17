@@ -829,7 +829,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isActive ? Border.all(color: const Color(0xFFE5E7EB)) : null,
-          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4)] : null,
+          boxShadow: isActive ? [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 4)] : null,
         ),
         child: Row(
           children: [
@@ -907,7 +907,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
         ],
       ),
       padding: const EdgeInsets.all(16),
@@ -1071,7 +1071,7 @@ class _AdminHomepageCmsViewState extends ConsumerState<AdminHomepageCmsView> {
                       height: 32,
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Align(

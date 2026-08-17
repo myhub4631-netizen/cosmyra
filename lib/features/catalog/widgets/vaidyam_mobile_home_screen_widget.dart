@@ -190,7 +190,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: _primaryPurple.withValues(alpha: 0.1),
+                    color: _primaryPurple.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.location_on_rounded, color: _primaryPurple, size: 18),
@@ -303,7 +303,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: _primaryPurple.withValues(alpha: 0.3),
+                    color: _primaryPurple.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -406,14 +406,14 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                     height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? _primaryPurple.withValues(alpha: 0.1) : Colors.white,
+                      color: isSelected ? _primaryPurple.withOpacity(0.1) : Colors.white,
                       border: Border.all(
                         color: isSelected ? _primaryPurple : const Color(0xFFE2E8F0),
                         width: isSelected ? 2 : 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
+                          color: Colors.black.withOpacity(0.04),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -473,7 +473,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -494,7 +494,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: _primaryPurple.withValues(alpha: 0.15),
+                            color: _primaryPurple.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -602,7 +602,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                       width: _activeHeroIndex == index ? 16 : 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: _activeHeroIndex == index ? _primaryPurple : _primaryPurple.withValues(alpha: 0.3),
+                        color: _activeHeroIndex == index ? _primaryPurple : _primaryPurple.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -746,7 +746,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Colors.black.withOpacity(0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -1044,7 +1044,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                   border: Border.all(color: const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withOpacity(0.03),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1293,7 +1293,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                     style: TextStyle(
                       fontSize: isSmall ? 11 : 12,
                       fontWeight: FontWeight.bold,
-                      color: textColor.withValues(alpha: 0.8),
+                      color: textColor.withOpacity(0.8),
                     ),
                   ),
                   const SizedBox(height: 8),
