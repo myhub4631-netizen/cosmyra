@@ -451,8 +451,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
 
   @override
   Widget build(BuildContext context) {
-    final allProducts = ref.watch(adminProductsProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
+    try {
+      final allProducts = ref.watch(adminProductsProvider);
+      final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 1180;
 
     final filteredProducts = allProducts.where((p) {
@@ -1305,7 +1306,31 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
         ],
       ),
     );
+  } catch (e) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.inventory_2_outlined, size: 54, color: Color(0xFF4F46E5)),
+            const SizedBox(height: 16),
+            const Text('Catalog & Inventory', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E1B4B))),
+            const SizedBox(height: 8),
+            Text('Restoring catalog view... ($e)', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () => ref.read(adminProductsProvider.notifier).resetToDefaultCatalog(),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Restore Default Catalog Data'),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
   }
+}
 
   Widget _buildMetricCard(String title, String val, String sub, IconData icon, Color bg, Color iconColor, bool isPositive) {
     return Container(
