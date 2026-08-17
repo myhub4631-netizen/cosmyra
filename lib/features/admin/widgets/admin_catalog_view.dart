@@ -808,17 +808,12 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                               child: InkWell(
                                 onTap: () {
                                   setState(() {
-                                  try {
-                                    setState(() {
-                                      if (isAllSelected) {
-                                        _selectedProductIds.clear();
-                                      } else {
-                                        _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
-                                      }
-                                    });
-                                  } catch (_) {
-                                    return;
-                                  }
+                                    if (isAllSelected) {
+                                      _selectedProductIds.clear();
+                                    } else {
+                                      _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
+                                    }
+                                  });
                                 },
                                 child: Icon(
                                   isAllSelected ? Icons.check_box : Icons.check_box_outline_blank,
@@ -1261,12 +1256,15 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                     ],
                                   ),
                                 );
-                              },
-                            ),
-                          ],
-                        ),
+                              } catch (_) {
+                                return const SizedBox.shrink();
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ),
+                  ),
 
                       // Pagination Footer Bar
                       Padding(
