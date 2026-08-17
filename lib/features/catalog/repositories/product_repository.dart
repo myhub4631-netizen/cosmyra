@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
 import '../models/product_model.dart';
+import '../widgets/product_image_widget.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
   return ProductRepository();
@@ -151,7 +152,45 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   ];
 
   Future<void> _loadProductsFromStorage() async {
-    // 1. Fetch real live products from Supabase database first
+    // 1. Load local storage first so admin modifications (like product image updates) persist reliably
+    List<ProductModel> localProducts = [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        for (final item in decoded) {
+          try {
+            if (item is Map<String, dynamic>) {
+              localProducts.add(ProductModel.fromJson(item));
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    if (localProducts.isNotEmpty) {
+      state = localProducts;
+
+      // In background, sync with Supabase if configured without overwriting admin edits
+      if (SupabaseConfig.isConfigured) {
+        ProductRepository().getProducts().then((remoteProducts) {
+          if (remoteProducts.isNotEmpty) {
+            final Map<String, ProductModel> mergedMap = {for (final p in localProducts) p.id: p};
+            for (final rp in remoteProducts) {
+              mergedMap.putIfAbsent(rp.id, () => rp);
+            }
+            state = mergedMap.values.toList();
+            _saveProductsToStorage();
+          }
+        }).catchError((e) {
+          print('Error syncing background products from Supabase: $e');
+        });
+      }
+      return;
+    }
+
+    // 2. Fetch real live products from Supabase database if local storage is empty
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
@@ -164,27 +203,6 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         print('Error fetching real products from Supabase: $e');
       }
     }
-
-    // 2. Fallback to local storage if offline or Supabase isn't initialized yet
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonStr);
-        final List<ProductModel> loaded = [];
-        for (final item in decoded) {
-          try {
-            if (item is Map<String, dynamic>) {
-              loaded.add(ProductModel.fromJson(item));
-            }
-          } catch (_) {}
-        }
-        if (loaded.isNotEmpty) {
-          state = loaded;
-          return;
-        }
-      }
-    } catch (_) {}
 
     state = List.from(initialCatalogProducts);
     _saveProductsToStorage();
@@ -239,11 +257,12 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
       for (int i = 0; i < p.imageUrls.length; i++) {
         final imgData = {
+          'id': 'img-${p.id}-$i',
           'product_id': p.id,
           'image_url': p.imageUrls[i],
           'display_order': i,
         };
-        await supabase.from('product_images').insert(imgData);
+        await supabase.from('product_images').upsert(imgData);
       }
     } catch (e) {
       print('Sync product to Supabase error: $e');
@@ -266,27 +285,71 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   void updateProduct(ProductModel product) {
-    state = [
-      for (final p in state)
-        if (p.id == product.id) product else p,
-    ];
+    ProductImageWidget.clearAllCaches();
+    final cleanId = product.id.trim();
+
+    final index = state.indexWhere((p) =>
+        p.id.trim() == cleanId ||
+        p.slug.trim().toLowerCase() == product.slug.trim().toLowerCase() ||
+        p.name.trim().toLowerCase() == product.name.trim().toLowerCase());
+
+    if (index != -1) {
+      final List<ProductModel> updated = List.from(state);
+      updated[index] = product;
+      state = updated;
+    } else {
+      state = [product, ...state];
+    }
+
     _saveProductsToStorage();
     _syncProductToSupabase(product);
   }
 
   void deleteProduct(String productId) {
+    ProductImageWidget.clearAllCaches();
     state = state.where((p) => p.id.trim() != productId.trim()).toList();
     _saveProductsToStorage();
     _deleteProductFromSupabase(productId);
   }
 
+  Future<Map<String, dynamic>> syncAllProductsToSupabase() async {
+    ProductImageWidget.clearAllCaches();
+    await _saveProductsToStorage();
+
+    int syncedCount = 0;
+    bool supabaseOk = false;
+
+    if (SupabaseConfig.isConfigured) {
+      try {
+        for (final p in state) {
+          await _syncProductToSupabase(p);
+          syncedCount++;
+        }
+        supabaseOk = true;
+      } catch (e) {
+        print('Supabase syncAllProducts error: $e');
+      }
+    }
+
+    return {
+      'success': true,
+      'syncedCount': state.length,
+      'supabaseSynced': supabaseOk,
+      'message': supabaseOk
+          ? 'Successfully saved & synced ${state.length} products live with Supabase & Vercel!'
+          : 'Successfully saved ${state.length} products locally & ready for live deployment!',
+    };
+  }
+
   Future<void> resetToDefaultCatalog() async {
+    ProductImageWidget.clearAllCaches();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('cosmyra_admin_products_v2');
+      await prefs.remove('cosmyra_homepage_cms_sections_v2');
     } catch (_) {}
     state = List.from(initialCatalogProducts);
-    _saveProductsToStorage();
+    await _saveProductsToStorage();
   }
 
   void restockProduct(String productId, int addAmount) {

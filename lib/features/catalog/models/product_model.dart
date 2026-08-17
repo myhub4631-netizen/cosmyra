@@ -223,7 +223,7 @@ class ProductModel {
         'how_to_use': howToUse,
         'free_from_claims': freeFromClaims,
         'product_variants': variants.map((v) => v.toJson()).toList(),
-        'product_images': imageUrls.map((img) => {'image_url': img}).toList(),
+        'product_images': imageUrls.asMap().entries.map((e) => {'image_url': e.value, 'display_order': e.key}).toList(),
         'is_featured': isFeatured,
       };
 

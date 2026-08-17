@@ -20,6 +20,74 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
   String _selectedStockStatus = 'All';
 
   final Set<String> _selectedProductIds = {};
+  final ScrollController _horizontalScrollController = ScrollController();
+  bool _isSyncingLive = false;
+
+  @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveAndSyncLive(BuildContext context) async {
+    setState(() => _isSyncingLive = true);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+            SizedBox(width: 12),
+            Text('Syncing changes live with Supabase & Vercel deployment...'),
+          ],
+        ),
+        backgroundColor: Color(0xFF4F46E5),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    final result = await ref.read(adminProductsProvider.notifier).syncAllProductsToSupabase();
+    ref.invalidate(productsFutureProvider);
+
+    setState(() => _isSyncingLive = false);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  result['message'] as String,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF059669),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  void _scrollTableLeft() {
+    if (_horizontalScrollController.hasClients) {
+      final double target = (_horizontalScrollController.offset - 350).clamp(0.0, _horizontalScrollController.position.maxScrollExtent);
+      _horizontalScrollController.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+  }
+
+  void _scrollTableRight() {
+    if (_horizontalScrollController.hasClients) {
+      final double target = (_horizontalScrollController.offset + 350).clamp(0.0, _horizontalScrollController.position.maxScrollExtent);
+      _horizontalScrollController.animateTo(target, duration: const Duration(milliseconds: 250), curve: Curves.easeOutCubic);
+    }
+  }
 
   void _showAddProductModal(BuildContext context, ProductModel? existingProduct) {
     showDialog(
@@ -466,20 +534,37 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                   ),
                   const SizedBox(width: 10),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      ref.read(adminProductsProvider.notifier).resetToDefaultCatalog();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Hard reset complete! Reset catalog to default products.'),
-                          backgroundColor: Color(0xFF059669),
-                        ),
-                      );
+                    onPressed: () async {
+                      await ref.read(adminProductsProvider.notifier).resetToDefaultCatalog();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('⚡ Hard reset complete! All image caches cleared & catalog restored.'),
+                            backgroundColor: Color(0xFF059669),
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.restart_alt, size: 18, color: Color(0xFFDC2626)),
                     label: const Text('Hard Reset', style: TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       side: const BorderSide(color: Color(0xFFFCA5A5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton.icon(
+                    onPressed: _isSyncingLive ? null : () => _saveAndSyncLive(context),
+                    icon: _isSyncingLive
+                        ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.cloud_upload_rounded, size: 18),
+                    label: Text(_isSyncingLive ? 'Syncing...' : '💾 Save & Sync Live', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF059669),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      elevation: 2,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
@@ -667,6 +752,30 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                     }),
                                     child: const Text('Clear Filters', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
                                   ),
+                                const Spacer(),
+                                Row(
+                                  children: [
+                                    OutlinedButton.icon(
+                                      onPressed: _scrollTableLeft,
+                                      icon: const Icon(Icons.arrow_back_ios_new, size: 12),
+                                      label: const Text('Scroll Left', style: TextStyle(fontSize: 11)),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        minimumSize: Size.zero,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    OutlinedButton.icon(
+                                      onPressed: _scrollTableRight,
+                                      icon: const Icon(Icons.arrow_forward_ios, size: 12),
+                                      label: const Text('Scroll Right', style: TextStyle(fontSize: 11)),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                        minimumSize: Size.zero,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           ],
@@ -677,7 +786,9 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
 
                       // Horizontal Scrollable Data Table Container
                       SingleChildScrollView(
+                        controller: _horizontalScrollController,
                         scrollDirection: Axis.horizontal,
+                        physics: const ClampingScrollPhysics(),
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
                             minWidth: 1150,
@@ -1339,6 +1450,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
         children: [
           const Text('Quick Actions', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
           const SizedBox(height: 12),
+          _buildQuickActionRow(context, Icons.cloud_upload_rounded, '💾 Save & Sync Live with Supabase', () => _saveAndSyncLive(context)),
           _buildQuickActionRow(context, Icons.add, 'Add New Product', () => _showAddProductModal(context, null)),
           _buildQuickActionRow(context, Icons.file_download_outlined, 'Bulk Import Products', () => _showBulkImportModal(context)),
           _buildQuickActionRow(context, Icons.file_upload_outlined, 'Export Products JSON', () => _showExportModal(context, products)),

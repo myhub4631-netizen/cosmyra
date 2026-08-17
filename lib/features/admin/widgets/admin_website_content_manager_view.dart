@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/web_image_picker.dart';
 import '../controllers/brand_settings_controller.dart';
 import '../controllers/homepage_cms_controller.dart';
+import 'admin_media_view.dart';
 
 class AdminWebsiteContentManagerView extends ConsumerStatefulWidget {
   final int initialSubTab;
@@ -33,7 +34,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 9, vsync: this, initialIndex: widget.initialSubTab.clamp(0, 8));
+    _tabController = TabController(length: 10, vsync: this, initialIndex: widget.initialSubTab.clamp(0, 9));
 
     final brand = ref.read(brandSettingsProvider);
 
@@ -208,6 +209,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
                 Tab(icon: Icon(Icons.help_outline_rounded, size: 18), text: 'FAQs'),
                 Tab(icon: Icon(Icons.search_rounded, size: 18), text: 'SEO Settings'),
                 Tab(icon: Icon(Icons.settings_outlined, size: 18), text: 'Site Settings'),
+                Tab(icon: Icon(Icons.photo_library_outlined, size: 18), text: 'Media Library'),
               ],
             ),
           ),
@@ -222,7 +224,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
               Expanded(
                 flex: 7,
                 child: SizedBox(
-                  height: 620,
+                  height: 680,
                   child: TabBarView(
                     controller: _tabController,
                     children: [
@@ -235,6 +237,7 @@ class _AdminWebsiteContentManagerViewState extends ConsumerState<AdminWebsiteCon
                       _buildFaqsTab(),
                       _buildSeoTab(),
                       _buildSiteSettingsTab(),
+                      const AdminMediaView(),
                     ],
                   ),
                 ),

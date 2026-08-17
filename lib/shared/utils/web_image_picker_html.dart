@@ -16,8 +16,9 @@ Future<String?> pickImageAsBase64() async {
         reader.readAsDataUrl(file);
         reader.onLoadEnd.listen((e) {
           final String? result = reader.result as String?;
+          final String? cleanedResult = result?.replaceAll(RegExp(r'[\r\n\s]+'), '');
           if (!completer.isCompleted) {
-            completer.complete(result);
+            completer.complete(cleanedResult);
           }
         });
       } else {

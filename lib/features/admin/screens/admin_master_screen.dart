@@ -11,6 +11,7 @@ import 'admin_dashboard_screen.dart';
 
 import '../widgets/admin_branding_view.dart';
 import '../widgets/admin_coupons_view.dart';
+import '../widgets/admin_media_view.dart';
 import '../widgets/admin_mobile_app_view.dart';
 import '../widgets/admin_website_content_manager_view.dart';
 
@@ -22,7 +23,7 @@ class AdminMasterScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
-  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website Content Manager, 8: Website Footer, 9: Logo & Branding, 10: Mobile App Panel
+  int _activeViewIndex = 0; // 0: Dashboard, 1: Catalog, 2: Orders, 3: Customers, 4: Marketing, 5: Analytics, 6: Reports, 7: Website Content Manager, 8: Website Footer, 9: Logo & Branding, 10: Mobile App Panel, 11: Media Library
   int _websiteSubTab = 0;
   int _mobileAppSubTab = 0;
 
@@ -86,6 +87,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminFooterCmsView(),
       const AdminBrandingView(),
       AdminMobileAppView(key: ValueKey('mobile_app_tab_$_mobileAppSubTab'), initialSubTab: _mobileAppSubTab),
+      const AdminMediaView(),
     ];
 
     return Scaffold(
@@ -379,6 +381,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                   _subNavItem('Testimonials', 7, () => setState(() { _websiteSubTab = 5; _activeViewIndex = 7; })),
                   _subNavItem('FAQ', 7, () => setState(() { _websiteSubTab = 6; _activeViewIndex = 7; })),
                   _subNavItem('SEO Settings', 7, () => setState(() { _websiteSubTab = 7; _activeViewIndex = 7; })),
+                  _subNavItem('Media Library', 11, () => setState(() { _activeViewIndex = 11; })),
                 ],
 
                 _navItem('Mobile App', Icons.phone_iphone_rounded, 10, hasChildren: true),
@@ -390,6 +393,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                   _subNavItem('App Configurations', 10, () => setState(() { _mobileAppSubTab = 4; _activeViewIndex = 10; })),
                   _subNavItem('Bottom Navigation', 10, () => setState(() { _mobileAppSubTab = 5; _activeViewIndex = 10; })),
                 ],
+                _navItem('Media Library', Icons.photo_library_outlined, 11),
 
                 const SizedBox(height: 14),
                 _groupHeader('COMMERCE'),

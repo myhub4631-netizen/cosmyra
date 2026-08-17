@@ -17,11 +17,14 @@ class ProductDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(adminProductsProvider);
-    final targetProduct = product ??
-        products.firstWhere(
-          (p) => p.id == productId,
-          orElse: () => products.first,
-        );
+    final searchId = (productId ?? product?.id ?? '').trim();
+
+    final targetProduct = searchId.isNotEmpty
+        ? products.firstWhere(
+            (p) => p.id.trim() == searchId || p.slug.trim().toLowerCase() == searchId.toLowerCase(),
+            orElse: () => product ?? products.first,
+          )
+        : (product ?? products.first);
 
     return VaidyamProductDetailScreen(product: targetProduct);
   }

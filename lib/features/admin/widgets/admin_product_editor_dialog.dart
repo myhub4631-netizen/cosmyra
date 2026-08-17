@@ -7,6 +7,8 @@ import '../../../shared/utils/web_image_picker.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../catalog/models/product_model.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../cart/controllers/cart_controller.dart';
+import 'admin_media_view.dart';
 
 class AdminProductEditorDialog extends ConsumerStatefulWidget {
   final ProductModel? product;
@@ -513,6 +515,24 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                               icon: const Icon(Icons.add_photo_alternate, size: 18),
                               label: const Text('Add URL'),
                             ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final selected = await showMediaPickerModal(context);
+                                if (selected != null && selected.isNotEmpty) {
+                                  setState(() {
+                                    _imageUrls.insert(0, selected);
+                                    _primaryImageIndex = 0;
+                                  });
+                                }
+                              },
+                              icon: const Icon(Icons.perm_media_outlined, size: 18),
+                              label: const Text('Media Library'),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF4F46E5)),
+                                foregroundColor: const Color(0xFF4F46E5),
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -730,58 +750,95 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    final name = _nameController.text.trim().isEmpty ? 'New Botanical Product' : _nameController.text.trim();
-                    final price = double.tryParse(_priceController.text) ?? 399.0;
-                    final mrp = double.tryParse(_mrpController.text) ?? 499.0;
-                    final stock = int.tryParse(_stockController.text) ?? 100;
-                    final sku = _skuController.text.trim().isEmpty ? 'VDY-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}' : _skuController.text.trim();
-                    final size = _sizeController.text.trim().isEmpty ? '200 ml' : _sizeController.text.trim();
-                    final prodId = widget.product?.id ?? 'prod-${DateTime.now().millisecondsSinceEpoch}';
+                  onPressed: () async {
+                    try {
+                      final pendingUrl = _newImageUrlController.text.trim();
+                      final finalImageUrls = List<String>.from(_imageUrls);
+                      if (pendingUrl.isNotEmpty && !finalImageUrls.contains(pendingUrl)) {
+                        finalImageUrls.insert(0, pendingUrl);
+                      }
+                      if (_primaryImageIndex > 0 && _primaryImageIndex < finalImageUrls.length) {
+                        final primaryUrl = finalImageUrls.removeAt(_primaryImageIndex);
+                        finalImageUrls.insert(0, primaryUrl);
+                      }
 
-                    final variant = ProductVariant(
-                      id: widget.product?.defaultVariant.id ?? 'var-${DateTime.now().millisecondsSinceEpoch}',
-                      productId: prodId,
-                      sku: sku,
-                      sizeLabel: size,
-                      price: price,
-                      mrp: mrp,
-                      stock: stock,
-                      isDefault: true,
-                    );
+                      final name = _nameController.text.trim().isEmpty ? (widget.product?.name ?? 'New Botanical Product') : _nameController.text.trim();
+                      final price = double.tryParse(_priceController.text) ?? (widget.product?.defaultVariant.price ?? 399.0);
+                      final mrp = double.tryParse(_mrpController.text) ?? (widget.product?.defaultVariant.mrp ?? 499.0);
+                      final stock = int.tryParse(_stockController.text) ?? (widget.product?.defaultVariant.stock ?? 100);
+                      final sku = _skuController.text.trim().isEmpty
+                          ? (widget.product?.defaultVariant.sku ?? 'VDY-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}')
+                          : _skuController.text.trim();
+                      final size = _sizeController.text.trim().isEmpty ? (widget.product?.defaultVariant.sizeLabel ?? '200 ml') : _sizeController.text.trim();
+                      final prodId = (widget.product?.id ?? '').trim().isEmpty ? 'prod-${DateTime.now().millisecondsSinceEpoch}' : widget.product!.id.trim();
 
-                    final finalImageUrls = List<String>.from(_imageUrls);
-                    if (_primaryImageIndex > 0 && _primaryImageIndex < finalImageUrls.length) {
-                      final primaryUrl = finalImageUrls.removeAt(_primaryImageIndex);
-                      finalImageUrls.insert(0, primaryUrl);
+                      final variant = ProductVariant(
+                        id: widget.product?.defaultVariant.id ?? 'var-${DateTime.now().millisecondsSinceEpoch}',
+                        productId: prodId,
+                        sku: sku,
+                        sizeLabel: size,
+                        price: price,
+                        mrp: mrp,
+                        stock: stock,
+                        isDefault: true,
+                      );
+
+                      final updatedProd = ProductModel(
+                        id: prodId,
+                        brandId: widget.product?.brandId ?? 'brand-vaidyam',
+                        categoryId: _selectedCategory,
+                        name: name,
+                        slug: _slugController.text.trim().isEmpty ? (widget.product?.slug ?? 'botanical-product') : _slugController.text.trim(),
+                        tagline: _taglineController.text.trim(),
+                        description: _descController.text.trim().isEmpty ? (widget.product?.description ?? 'Pure botanical formulation.') : _descController.text.trim(),
+                        ingredients: _ingredientsController.text.trim().isEmpty ? (widget.product?.ingredients ?? 'Aqua, Botanical Extracts.') : _ingredientsController.text.trim(),
+                        howToUse: _howToUseController.text.trim(),
+                        freeFromClaims: widget.product?.freeFromClaims ?? const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
+                        variants: [variant],
+                        imageUrls: finalImageUrls,
+                        isFeatured: _isFeatured,
+                      );
+
+                      if (isEditing) {
+                        ref.read(adminProductsProvider.notifier).updateProduct(updatedProd);
+                        ref.read(cartProvider.notifier).refreshProductData(updatedProd);
+                      } else {
+                        ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
+                      }
+
+                      ref.invalidate(adminProductsProvider);
+                      ref.invalidate(productsFutureProvider);
+                      ref.invalidate(filteredProductsProvider);
+
+                      if (context.mounted) {
+                        Navigator.of(context).pop(updatedProd);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(isEditing ? '✓ Saved "$name" & Synced Live!' : '✓ Published "$name" Live to Store!'),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF059669),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error saving product: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
-
-                    final updatedProd = ProductModel(
-                      id: prodId,
-                      brandId: 'brand-vaidyam',
-                      categoryId: _selectedCategory,
-                      name: name,
-                      slug: _slugController.text.trim().isEmpty ? 'botanical-product' : _slugController.text.trim(),
-                      tagline: _taglineController.text.trim(),
-                      description: _descController.text.trim().isEmpty ? 'Pure botanical formulation.' : _descController.text.trim(),
-                      ingredients: _ingredientsController.text.trim().isEmpty ? 'Aqua, Botanical Extracts.' : _ingredientsController.text.trim(),
-                      howToUse: _howToUseController.text.trim(),
-                      freeFromClaims: const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
-                      variants: [variant],
-                      imageUrls: finalImageUrls,
-                      isFeatured: _isFeatured,
-                    );
-
-                    if (isEditing) {
-                      ref.read(adminProductsProvider.notifier).updateProduct(updatedProd);
-                    } else {
-                      ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
-                    }
-
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(isEditing ? 'Updated $name in catalog' : 'Added $name to catalog')),
-                    );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.forestSage, foregroundColor: AppColors.softWhite),
                   icon: const Icon(Icons.check_circle_outline, size: 18),

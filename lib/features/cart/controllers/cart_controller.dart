@@ -150,6 +150,17 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(clearCoupon: true);
   }
 
+  void refreshProductData(ProductModel updatedProduct) {
+    if (state.items.isEmpty) return;
+    final updatedList = state.items.map((item) {
+      if (item.product.id == updatedProduct.id) {
+        return item.copyWith(product: updatedProduct);
+      }
+      return item;
+    }).toList();
+    state = state.copyWith(items: updatedList);
+  }
+
   void clearCart() {
     state = const CartState();
   }

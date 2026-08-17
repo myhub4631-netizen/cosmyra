@@ -38,13 +38,18 @@ class ProductImageWidget extends StatelessWidget {
     if (trimmedUrl.startsWith('data:')) {
       try {
         final Uint8List bytes = _base64Cache.putIfAbsent(trimmedUrl, () {
-          final base64Str = trimmedUrl.split(',').last;
-          return base64Decode(base64Str);
+          String cleanBase64 = trimmedUrl.split(',').last.replaceAll(RegExp(r'[\r\n\s]+'), '');
+          try {
+            return base64Decode(cleanBase64);
+          } catch (_) {
+            cleanBase64 = Uri.decodeComponent(cleanBase64).replaceAll(RegExp(r'[\r\n\s]+'), '');
+            return base64Decode(cleanBase64);
+          }
         });
 
         return Image.memory(
           bytes,
-          key: ValueKey(trimmedUrl.hashCode),
+          key: ValueKey('base64_${trimmedUrl.hashCode}_${trimmedUrl.length}'),
           width: width,
           height: height,
           fit: fit,
@@ -68,6 +73,7 @@ class ProductImageWidget extends StatelessWidget {
     if (trimmedUrl.startsWith('assets/')) {
       return Image.asset(
         trimmedUrl,
+        key: ValueKey('asset_$trimmedUrl'),
         width: width,
         height: height,
         fit: fit,
@@ -81,7 +87,9 @@ class ProductImageWidget extends StatelessWidget {
     }
 
     return CachedNetworkImage(
+      key: ValueKey('net_$trimmedUrl'),
       imageUrl: trimmedUrl,
+      cacheKey: trimmedUrl,
       width: width,
       height: height,
       fit: fit,
@@ -98,5 +106,11 @@ class ProductImageWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static void clearAllCaches() {
+    _base64Cache.clear();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
   }
 }
