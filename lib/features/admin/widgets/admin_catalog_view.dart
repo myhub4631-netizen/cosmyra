@@ -1191,8 +1191,8 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     break;
                                                 }
                                               },
-                                              itemBuilder: (context) => [
-                                                const PopupMenuItem(
+                                              itemBuilder: (context) => <PopupMenuEntry<String>>[
+                                                const PopupMenuItem<String>(
                                                   value: 'edit',
                                                   child: Row(
                                                     children: [
@@ -1202,7 +1202,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'duplicate',
                                                   child: Row(
                                                     children: [
@@ -1212,7 +1212,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'change_image',
                                                   child: Row(
                                                     children: [
@@ -1222,7 +1222,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'restock',
                                                   child: Row(
                                                     children: [
@@ -1232,7 +1232,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'copy_sku',
                                                   child: Row(
                                                     children: [
@@ -1242,7 +1242,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'view',
                                                   child: Row(
                                                     children: [
@@ -1257,7 +1257,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                   height: 1,
                                                   child: Divider(height: 1, color: Color(0xFFE5E7EB)),
                                                 ),
-                                                const PopupMenuItem(
+                                                const PopupMenuItem<String>(
                                                   value: 'delete',
                                                   child: Row(
                                                     children: [
@@ -1271,8 +1271,6 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
                                   ),
                                 );
                               } catch (_) {

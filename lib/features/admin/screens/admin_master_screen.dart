@@ -222,8 +222,8 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           context.go('/');
                         }
                       },
-                      itemBuilder: (ctx) => [
-                        PopupMenuItem(
+                      itemBuilder: (ctx) => <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
                           enabled: false,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +238,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                           height: 1,
                           child: Divider(height: 1, color: Color(0xFFE5E7EB)),
                         ),
-                        const PopupMenuItem(
+                        const PopupMenuItem<String>(
                           value: 'site',
                           child: Row(
                             children: [
@@ -248,7 +248,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        const PopupMenuItem<String>(
                           value: 'logout',
                           child: Row(
                             children: [
