@@ -1271,13 +1271,15 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                             ),
                                           ],
                                         ),
+                                      ),
+                                    ],
                                   ),
                                 );
-                              } catch (_) {
-                                return const SizedBox.shrink();
-                              }
-                            },
-                          ),
+                            } catch (_) {
+                              return const SizedBox.shrink();
+                            }
+                          },
+                        ),
                         ],
                       ),
                     ),
