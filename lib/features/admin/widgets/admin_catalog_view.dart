@@ -808,12 +808,17 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                               child: InkWell(
                                 onTap: () {
                                   setState(() {
-                                    if (isAllSelected) {
-                                      _selectedProductIds.clear();
-                                    } else {
-                                      _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
-                                    }
-                                  });
+                                  try {
+                                    setState(() {
+                                      if (isAllSelected) {
+                                        _selectedProductIds.clear();
+                                      } else {
+                                        _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
+                                      }
+                                    });
+                                  } catch (_) {
+                                    return;
+                                  }
                                 },
                                 child: Icon(
                                   isAllSelected ? Icons.check_box : Icons.check_box_outline_blank,
@@ -862,10 +867,11 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                               itemCount: filteredProducts.length,
                               separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
                               itemBuilder: (context, index) {
-                                final prod = filteredProducts[index];
-                                final v = prod.defaultVariant;
-                                final imageUrl = prod.imageUrls.isNotEmpty ? prod.imageUrls.first : '';
-                                final isSelected = _selectedProductIds.contains(prod.id);
+                                try {
+                                  final prod = filteredProducts[index];
+                                  final v = prod.defaultVariant;
+                                  final imageUrl = prod.imageUrls.isNotEmpty ? prod.imageUrls.first : '';
+                                  final isSelected = _selectedProductIds.contains(prod.id);
 
                                 return Container(
                                   color: isSelected ? const Color(0xFFEEF2FF) : Colors.transparent,

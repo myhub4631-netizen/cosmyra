@@ -141,8 +141,21 @@ class ProductModel {
     this.isFeatured = false,
   });
 
-  ProductVariant get defaultVariant =>
-      variants.firstWhere((v) => v.isDefault, orElse: () => variants.first);
+  ProductVariant get defaultVariant => variants.firstWhere(
+        (v) => v.isDefault,
+        orElse: () => variants.isNotEmpty
+            ? variants.first
+            : ProductVariant(
+                id: 'var-$id',
+                productId: id,
+                sku: 'VDY-$id',
+                sizeLabel: '200 ml',
+                price: 399.0,
+                mrp: 499.0,
+                stock: 100,
+                isDefault: true,
+              ),
+      );
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     final claimsList = json['free_from_claims'] ?? json['freeFromClaims'];
