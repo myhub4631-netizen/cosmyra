@@ -811,7 +811,6 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                         ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
                       }
 
-                      ref.invalidate(adminProductsProvider);
                       ref.invalidate(productsFutureProvider);
                       ref.invalidate(filteredProductsProvider);
 

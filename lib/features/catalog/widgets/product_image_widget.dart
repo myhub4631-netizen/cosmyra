@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../config/theme/app_colors.dart';
@@ -77,6 +78,31 @@ class ProductImageWidget extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
+          child: Center(
+            child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+          ),
+        ),
+      );
+    }
+
+    if (kIsWeb) {
+      return Image.network(
+        trimmedUrl,
+        key: ValueKey('web_net_$trimmedUrl'),
+        width: width,
+        height: height,
+        fit: fit,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.goldAccent),
+            ),
+          );
+        },
         errorBuilder: (context, error, stackTrace) => Container(
           color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
           child: Center(

@@ -72,7 +72,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
       'isPaid': true,
       'status': 'Cancelled',
       'statusText': 'Cancelled on 11 May 2024',
-      'image': 'assets/images/kumkumadi.jpg',
+      'image': 'assets/images/facewash.jpg',
       'type': 'cancelled',
     },
   ];
@@ -106,8 +106,7 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
       });
     }
 
-    combinedOrders.addAll(_demoOrdersList);
-
+    // Do not inject fake demo orders
     final filteredOrders = combinedOrders.where((order) {
       if (_activeStatus == 'All Orders') return true;
       return (order['status'] as String).toLowerCase() == _activeStatus.toLowerCase();
@@ -138,10 +137,13 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
               const SizedBox(height: 16),
 
               // 4. Order Item Cards List
-              ...filteredOrders.map((order) => Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: _buildOrderCard(context, order),
-                  )),
+              if (filteredOrders.isEmpty)
+                _buildEmptyOrdersCard(context)
+              else
+                ...filteredOrders.map((order) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildOrderCard(context, order),
+                    )),
 
               const SizedBox(height: 8),
 
@@ -535,6 +537,55 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
           Text(
             status,
             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: fg),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyOrdersCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF2FF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.shopping_bag_outlined, size: 30, color: Color(0xFF4338CA)),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'No Orders Found',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'You haven\'t placed any orders yet. Explore our catalog to place your first order.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 18),
+          ElevatedButton.icon(
+            onPressed: () => context.push('/shop'),
+            icon: const Icon(Icons.shopping_cart_outlined, size: 16),
+            label: const Text('Start Shopping', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4338CA),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
           ),
         ],
       ),

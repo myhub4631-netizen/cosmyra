@@ -48,7 +48,9 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
     final filteredProducts = allProducts.where((p) {
       // Category filter
       if (_selectedCategory != null && _selectedCategory != 'all') {
-        if (p.categoryId != _selectedCategory) return false;
+        final cleanSelected = _selectedCategory!.replaceAll('cat-', '').toLowerCase();
+        final cleanProductCat = p.categoryId.replaceAll('cat-', '').toLowerCase();
+        if (cleanProductCat != cleanSelected && p.categoryId != _selectedCategory) return false;
       }
       // Price range filter
       final v = p.defaultVariant;

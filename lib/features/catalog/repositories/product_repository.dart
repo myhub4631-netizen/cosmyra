@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/product_model.dart';
 import '../widgets/product_image_widget.dart';
 
@@ -216,6 +218,35 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     } catch (_) {}
   }
 
+  /// Upload a base64 data URI to Supabase Storage and return the public URL.
+  /// Returns the original URL if it's not a base64 data URI or upload fails.
+  Future<String> _uploadBase64ToStorage(String dataUri, String productId, int index) async {
+    if (!dataUri.startsWith('data:')) return dataUri;
+    try {
+      // Extract mime type and base64 data
+      final mimeMatch = RegExp(r'data:image/([a-zA-Z]+);base64,').firstMatch(dataUri);
+      final extension = mimeMatch?.group(1) ?? 'png';
+      final base64Str = dataUri.split(',').last.replaceAll(RegExp(r'[\r\n\s]+'), '');
+      final Uint8List bytes = base64Decode(base64Str);
+
+      final filePath = 'product-images/$productId/img_${index}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+
+      // Upload to Supabase Storage bucket 'product-images'
+      await supabase.storage.from('product-images').uploadBinary(
+        filePath,
+        bytes,
+        fileOptions: FileOptions(contentType: 'image/$extension', upsert: true),
+      );
+
+      // Get the public URL
+      final publicUrl = supabase.storage.from('product-images').getPublicUrl(filePath);
+      return publicUrl;
+    } catch (e) {
+      print('Error uploading image to Supabase Storage: $e');
+      return dataUri; // Fallback: keep the base64 data URI
+    }
+  }
+
   Future<void> _syncProductToSupabase(ProductModel p) async {
     if (!SupabaseConfig.isConfigured) return;
     try {
@@ -255,14 +286,34 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         await supabase.from('product_images').delete().eq('product_id', p.id);
       } catch (_) {}
 
+      // Upload base64 images to Supabase Storage and save public URLs
+      final List<String> resolvedUrls = [];
       for (int i = 0; i < p.imageUrls.length; i++) {
+        final url = await _uploadBase64ToStorage(p.imageUrls[i], p.id, i);
+        resolvedUrls.add(url);
+
         final imgData = {
           'id': 'img-${p.id}-$i',
           'product_id': p.id,
-          'image_url': p.imageUrls[i],
+          'image_url': url,
           'display_order': i,
         };
         await supabase.from('product_images').upsert(imgData);
+      }
+
+      // If any base64 images were converted to public URLs, update local state too
+      if (resolvedUrls.any((url) => url.startsWith('http'))) {
+        final hasChanges = resolvedUrls.asMap().entries.any((e) => e.value != p.imageUrls[e.key]);
+        if (hasChanges) {
+          final updatedProduct = p.copyWith(imageUrls: resolvedUrls);
+          final index = state.indexWhere((prod) => prod.id.trim() == p.id.trim());
+          if (index != -1) {
+            final List<ProductModel> updated = List.from(state);
+            updated[index] = updatedProduct;
+            state = updated;
+            _saveProductsToStorage();
+          }
+        }
       }
     } catch (e) {
       print('Sync product to Supabase error: $e');
@@ -284,7 +335,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     _syncProductToSupabase(product);
   }
 
-  void updateProduct(ProductModel product) {
+  Future<void> updateProduct(ProductModel product) async {
     ProductImageWidget.clearAllCaches();
     final cleanId = product.id.trim();
 
@@ -301,7 +352,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       state = [product, ...state];
     }
 
-    _saveProductsToStorage();
+    await _saveProductsToStorage();
     _syncProductToSupabase(product);
   }
 

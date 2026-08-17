@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/controllers/mobile_app_settings_controller.dart';
 import '../../features/catalog/models/product_model.dart';
 import '../../features/catalog/repositories/product_repository.dart';
+import '../../features/catalog/widgets/product_image_widget.dart';
 
 class VaidyamMobileAjaxSearchBar extends ConsumerStatefulWidget {
   const VaidyamMobileAjaxSearchBar({super.key});
@@ -245,11 +246,10 @@ class _VaidyamMobileAjaxSearchBarState extends ConsumerState<VaidyamMobileAjaxSe
                               width: 44,
                               height: 44,
                               color: const Color(0xFFF1F5F9),
-                              child: imgUrl.isNotEmpty
-                                  ? (imgUrl.startsWith('data:image')
-                                      ? Image.memory(base64Decode(imgUrl.split(',').last), fit: BoxFit.cover)
-                                      : Image.network(imgUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.eco_rounded, color: Color(0xFF10B981), size: 24)))
-                                  : const Icon(Icons.eco_rounded, color: Color(0xFF10B981), size: 24),
+                              child: ProductImageWidget(
+                                imageUrl: imgUrl,
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
                           title: Text(

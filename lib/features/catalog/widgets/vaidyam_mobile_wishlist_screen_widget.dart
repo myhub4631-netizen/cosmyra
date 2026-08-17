@@ -44,7 +44,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
       'price': 1499.0,
       'mrp': 2100.0,
       'delivery': 'Delivery by 20 May',
-      'image': 'assets/images/cream.jpg',
+      'image': 'assets/images/facewash.jpg',
       'colorBg': const Color(0xFFEEF2FF),
     },
     {
@@ -72,7 +72,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
       'price': 2499.0,
       'mrp': 3299.0,
       'delivery': 'Delivery by 22 May',
-      'image': 'assets/images/serum.jpg',
+      'image': 'assets/images/facewash.jpg',
       'colorBg': const Color(0xFFECFDF5),
     },
     {
@@ -86,7 +86,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
       'price': 1299.0,
       'mrp': 1599.0,
       'delivery': 'Delivery by 20 May',
-      'image': 'assets/images/oil.jpg',
+      'image': 'assets/images/shampoo.jpg',
       'colorBg': const Color(0xFFFEF3C7),
     },
     {
@@ -100,7 +100,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
       'price': 999.0,
       'mrp': 1199.0,
       'delivery': 'Delivery by 21 May',
-      'image': 'assets/images/ubtan.jpg',
+      'image': 'assets/images/soap.jpg',
       'colorBg': const Color(0xFFF3E8FF),
     },
   ];
@@ -111,25 +111,16 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
     final totalCartCount = cartState.totalItemCount;
 
     final bool hasRealProducts = widget.wishlistProducts.isNotEmpty;
-    final int itemCount = hasRealProducts ? widget.wishlistProducts.length : _demoItems.length;
+    final int itemCount = widget.wishlistProducts.length;
 
     double totalValue = 0;
     double totalSavings = 0;
 
-    if (hasRealProducts) {
-      for (var p in widget.wishlistProducts) {
-        final price = p.variants.isNotEmpty ? p.variants.first.price : 0.0;
-        final mrp = p.variants.isNotEmpty ? p.variants.first.mrp : price;
-        totalValue += mrp;
-        totalSavings += (mrp > price ? (mrp - price) : 0);
-      }
-    } else {
-      for (var d in _demoItems) {
-        final price = d['price'] as double;
-        final mrp = d['mrp'] as double;
-        totalValue += mrp;
-        totalSavings += (mrp - price);
-      }
+    for (var p in widget.wishlistProducts) {
+      final price = p.variants.isNotEmpty ? p.variants.first.price : 0.0;
+      final mrp = p.variants.isNotEmpty ? p.variants.first.mrp : price;
+      totalValue += mrp;
+      totalSavings += (mrp > price ? (mrp - price) : 0);
     }
 
     return Scaffold(
@@ -160,7 +151,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
               if (hasRealProducts)
                 _buildRealProductCardsList(context)
               else
-                _buildDemoProductCardsList(context),
+                _buildEmptyWishlistState(context),
 
               const SizedBox(height: 16),
 
@@ -416,7 +407,55 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
     );
   }
 
-  // 4. Demo Wishlist Product Cards List
+  // 4. Empty Wishlist State
+  Widget _buildEmptyWishlistState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF2FF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.favorite_border_rounded, size: 36, color: Color(0xFF4338CA)),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Your Wishlist is Empty',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Save your favorite organic formulations and access them anytime.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () => context.push('/shop'),
+            icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+            label: const Text('Explore Botanical Catalog', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4338CA),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDemoProductCardsList(BuildContext context) {
     return Column(
       children: _demoItems.map((item) {
