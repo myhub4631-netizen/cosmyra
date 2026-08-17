@@ -1252,7 +1252,11 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                                     ],
                                                   ),
                                                 ),
-                                                const PopupMenuDivider(),
+                                                const PopupMenuItem<String>(
+                                                  enabled: false,
+                                                  height: 1,
+                                                  child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                                                ),
                                                 const PopupMenuItem(
                                                   value: 'delete',
                                                   child: Row(
