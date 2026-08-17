@@ -488,6 +488,20 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
 
     final isAllSelected = filteredProducts.isNotEmpty && filteredProducts.every((p) => _selectedProductIds.contains(p.id));
 
+    int activeCount = 0;
+    int lowStockCount = 0;
+    int outOfStockCount = 0;
+    double totalValuation = 0.0;
+    for (final p in allProducts) {
+      try {
+        final v = p.defaultVariant;
+        if (v.stock > 0) activeCount++;
+        if (v.stock > 0 && v.stock <= 20) lowStockCount++;
+        if (v.stock == 0) outOfStockCount++;
+        totalValuation += (v.price * v.stock);
+      } catch (_) {}
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -588,7 +602,7 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
             ],
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // 2. Summary Metric Cards Row (5 Stat Cards)
           Wrap(
@@ -596,10 +610,10 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
             runSpacing: 16,
             children: [
               _buildMetricCard('Total Products', '${allProducts.length}', 'Active Catalog', Icons.shopping_bag_outlined, const Color(0xFFE0E7FF), const Color(0xFF4F46E5), true),
-              _buildMetricCard('Active Products', '${allProducts.where((p) => p.defaultVariant.stock > 0).length}', 'In Stock', Icons.layers_outlined, const Color(0xFFD1FAE5), const Color(0xFF059669), true),
-              _buildMetricCard('Low Stock', '${allProducts.where((p) => p.defaultVariant.stock > 0 && p.defaultVariant.stock <= 20).length}', 'Requires Reorder', Icons.warning_amber_rounded, const Color(0xFFFEF3C7), const Color(0xFFD97706), false),
-              _buildMetricCard('Out of Stock', '${allProducts.where((p) => p.defaultVariant.stock == 0).length}', 'Urgent Action', Icons.highlight_off_rounded, const Color(0xFFFEE2E2), const Color(0xFFDC2626), false),
-              _buildMetricCard('Total Inventory Value', '₹${allProducts.fold(0.0, (sum, p) => sum + (p.defaultVariant.price * p.defaultVariant.stock)).toInt()}', 'Valuation', Icons.account_balance_wallet_outlined, const Color(0xFFDBEAFE), const Color(0xFF2563EB), true),
+              _buildMetricCard('Active Products', '$activeCount', 'In Stock', Icons.layers_outlined, const Color(0xFFD1FAE5), const Color(0xFF059669), true),
+              _buildMetricCard('Low Stock', '$lowStockCount', 'Requires Reorder', Icons.warning_amber_rounded, const Color(0xFFFEF3C7), const Color(0xFFD97706), false),
+              _buildMetricCard('Out of Stock', '$outOfStockCount', 'Urgent Action', Icons.highlight_off_rounded, const Color(0xFFFEE2E2), const Color(0xFFDC2626), false),
+              _buildMetricCard('Total Inventory Value', '₹${totalValuation.toInt()}', 'Valuation', Icons.account_balance_wallet_outlined, const Color(0xFFDBEAFE), const Color(0xFF2563EB), true),
             ],
           ),
 
