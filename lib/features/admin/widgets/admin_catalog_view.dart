@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import '../../catalog/models/product_model.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 import 'admin_product_editor_dialog.dart';
 
 class AdminCatalogView extends ConsumerStatefulWidget {
@@ -896,22 +897,13 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                                         width: 260,
                                         child: Row(
                                           children: [
-                                            Container(
-                                              width: 44,
-                                              height: 44,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF3F4F6),
-                                                borderRadius: BorderRadius.circular(8),
-                                                image: imageUrl.isNotEmpty
-                                                    ? DecorationImage(
-                                                        image: imageUrl.startsWith('data:')
-                                                            ? MemoryImage(base64Decode(imageUrl.split(',').last)) as ImageProvider
-                                                            : (imageUrl.startsWith('http') ? NetworkImage(imageUrl) as ImageProvider : AssetImage(imageUrl)),
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : null,
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(8),
+                                              child: SizedBox(
+                                                width: 44,
+                                                height: 44,
+                                                child: ProductImageWidget(imageUrl: imageUrl, fit: BoxFit.cover),
                                               ),
-                                              child: imageUrl.isEmpty ? const Icon(Icons.spa, color: Color(0xFF059669), size: 22) : null,
                                             ),
                                             const SizedBox(width: 10),
                                             Expanded(

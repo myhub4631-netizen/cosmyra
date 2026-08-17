@@ -150,8 +150,13 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
   ImageProvider _getGalleryImageProvider(String url) {
     if (url.startsWith('data:')) {
       try {
-        final base64Str = url.split(',').last;
-        return MemoryImage(base64Decode(base64Str));
+        String cleanBase64 = url.split(',').last.replaceAll(RegExp(r'[\r\n\s]+'), '');
+        try {
+          return MemoryImage(base64Decode(cleanBase64));
+        } catch (_) {
+          cleanBase64 = Uri.decodeComponent(cleanBase64).replaceAll(RegExp(r'[\r\n\s]+'), '');
+          return MemoryImage(base64Decode(cleanBase64));
+        }
       } catch (_) {
         return const AssetImage('assets/images/shampoo.jpg');
       }
