@@ -220,7 +220,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
                 horizontal: isDesktop ? 48.0 : 16.0,
                 vertical: 24.0,
               ),
-              child: _buildComboBundlesSection(isDesktop),
+              child: _buildAyurvedicRitualsKitsSection(isDesktop, activeProducts),
             ),
 
             // 12. Promo Banners Grid (3 Cards)
@@ -1732,11 +1732,16 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
   }
 
   // --- 11. 🎁 CURATED ROUTINE COMBOS & BUNDLES ---
-  Widget _buildComboBundlesSection(bool isDesktop) {
-    final allProducts = ref.watch(adminProductsProvider);
-    if (allProducts.isEmpty) return const SizedBox.shrink();
+  Widget _buildAyurvedicRitualsKitsSection(bool isDesktop, List<Map<String, dynamic>> activeProducts) {
+    String getRitualImg(int index, String fallback) {
+      if (activeProducts.length > index) {
+        final img = activeProducts[index]['image']?.toString();
+        if (img != null && img.isNotEmpty) return img;
+      }
+      return fallback;
+    }
 
-    final bundles = [
+    final List<Map<String, dynamic>> bundles = [
       {
         'title': 'Scalp & Hair Repair Ritual',
         'items': 'Includes Hair Oil + Shampoo + Herbal Tonic',
@@ -1750,7 +1755,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'subtextColor': const Color(0xFF92400E),
         'btnColor': const Color(0xFFB45309),
         'features': ['Strengthens roots', 'Reduces hair fall', 'Boosts growth'],
-        'image': 'assets/images/shampoo.jpg',
+        'image': getRitualImg(0, 'assets/images/shampoo.jpg'),
       },
       {
         'title': 'Royal Radiance Glow Kit',
@@ -1765,7 +1770,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'subtextColor': const Color(0xFF3730A3),
         'btnColor': const Color(0xFF4338CA),
         'features': ['Brightens skin', 'Evens skin tone', 'Deep nourishment'],
-        'image': 'assets/images/facewash.jpg',
+        'image': getRitualImg(1, 'assets/images/facewash.jpg'),
       },
       {
         'title': 'Daily Stress & Body Glow Trio',
@@ -1780,7 +1785,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'subtextColor': const Color(0xFF065F46),
         'btnColor': const Color(0xFF059669),
         'features': ['Relaxes body', 'Improves sleep', 'Nourishes skin'],
-        'image': 'assets/images/soap.jpg',
+        'image': getRitualImg(2, 'assets/images/soap.jpg'),
       },
     ];
 

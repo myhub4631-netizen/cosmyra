@@ -230,6 +230,18 @@ class ProductModel {
           json['featuredImage'];
       if (singleImg != null && singleImg.toString().trim().isNotEmpty) {
         imgs = [singleImg.toString().trim()];
+      } else {
+        final slug = (json['slug'] ?? '').toString().toLowerCase();
+        final name = (json['name'] ?? '').toString().toLowerCase();
+        if (slug.contains('shampoo') || name.contains('shampoo')) {
+          imgs = ['assets/images/shampoo.jpg'];
+        } else if (slug.contains('soap') || name.contains('soap')) {
+          imgs = ['assets/images/soap.jpg'];
+        } else if (slug.contains('face') || slug.contains('cleanser') || name.contains('face') || name.contains('cleanser')) {
+          imgs = ['assets/images/facewash.jpg'];
+        } else {
+          imgs = ['assets/images/shampoo.jpg'];
+        }
       }
     }
 

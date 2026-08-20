@@ -575,11 +575,19 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                     child: Center(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14),
-                        child: Image.asset(
-                          hero['image']!,
+                        child: ProductImageWidget(
+                          imageUrl: () {
+                            if (widget.activeProducts.isNotEmpty) {
+                              final pIndex = _activeHeroIndex % widget.activeProducts.length;
+                              final dynamicImg = widget.activeProducts[pIndex]['image']?.toString();
+                              if (dynamicImg != null && dynamicImg.isNotEmpty) {
+                                return dynamicImg;
+                              }
+                            }
+                            return hero['image']!;
+                          }(),
                           height: 120,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.local_florist, size: 80, color: _primaryPurple),
                         ),
                       ),
                     ),
@@ -1244,6 +1252,14 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
 
   // 7. Promo Cards Grid (3 Visual Banners)
   Widget _buildPromoCardsGrid(BuildContext context) {
+    String getImg(int index, String fallback) {
+      if (widget.activeProducts.length > index) {
+        final img = widget.activeProducts[index]['image']?.toString();
+        if (img != null && img.isNotEmpty) return img;
+      }
+      return fallback;
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -1255,7 +1271,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
             color: const Color(0xFFEDE9FE),
             textColor: const Color(0xFF5B21B6),
             buttonColor: const Color(0xFF7C3AED),
-            assetPath: 'assets/images/shampoo.jpg',
+            imageUrl: getImg(0, 'assets/images/shampoo.jpg'),
           ),
           const SizedBox(height: 12),
           Row(
@@ -1268,7 +1284,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                   color: const Color(0xFFFEF3C7),
                   textColor: const Color(0xFF92400E),
                   buttonColor: const Color(0xFFD97706),
-                  assetPath: 'assets/images/facewash.jpg',
+                  imageUrl: getImg(1, 'assets/images/facewash.jpg'),
                   isSmall: true,
                 ),
               ),
@@ -1281,7 +1297,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
                   color: const Color(0xFFD1FAE5),
                   textColor: const Color(0xFF065F46),
                   buttonColor: const Color(0xFF059669),
-                  assetPath: 'assets/images/soap.jpg',
+                  imageUrl: getImg(2, 'assets/images/soap.jpg'),
                   isSmall: true,
                 ),
               ),
@@ -1299,7 +1315,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
     required Color color,
     required Color textColor,
     required Color buttonColor,
-    required String assetPath,
+    required String imageUrl,
     bool isSmall = false,
   }) {
     return InkWell(
@@ -1351,8 +1367,8 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
             ),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                assetPath,
+              child: ProductImageWidget(
+                imageUrl: imageUrl,
                 width: isSmall ? 50 : 70,
                 height: isSmall ? 50 : 70,
                 fit: BoxFit.cover,
