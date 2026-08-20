@@ -134,9 +134,14 @@ class ProductImageWidget extends StatelessWidget {
     );
   }
 
-  static void clearAllCaches() {
+  static void clearAllCaches([String? specificUrl]) {
     _base64Cache.clear();
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
+    if (specificUrl != null && specificUrl.isNotEmpty) {
+      try {
+        CachedNetworkImage.evictFromCache(specificUrl);
+      } catch (_) {}
+    }
   }
 }
