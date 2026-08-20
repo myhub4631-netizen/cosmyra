@@ -118,13 +118,49 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     }
   }
 
+  static String _formatAsUuid(String input) {
+    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(input)) {
+      return input;
+    }
+    final clean = input.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
+    final padded = clean.padRight(32, '0');
+    final hex = padded.length > 32 ? padded.substring(0, 32) : padded;
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-4${hex.substring(13, 16)}-a${hex.substring(17, 20)}-${hex.substring(20, 32)}';
+  }
+
+  static String _resolveCategoryId(String categoryIdOrSlug) {
+    final clean = categoryIdOrSlug.toLowerCase().replaceAll('cat-', '').trim();
+    if (clean.contains('hair')) {
+      return 'e12a1332-bfcb-4179-bdf8-52ecb5d7ee54'; // Haircare Category UUID
+    } else if (clean.contains('skin')) {
+      return 'b481633d-9952-410e-90e9-f93cec2b5b9e'; // Skincare Category UUID
+    } else if (clean.contains('well')) {
+      return 'd8743d43-e440-4372-a0f4-68fa1cfe3651'; // Wellness Category UUID
+    }
+    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(categoryIdOrSlug)) {
+      return categoryIdOrSlug;
+    }
+    return 'b481633d-9952-410e-90e9-f93cec2b5b9e';
+  }
+
+  static String _resolveBrandId(String brandIdOrSlug) {
+    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(brandIdOrSlug)) {
+      return brandIdOrSlug;
+    }
+    return '6242b75a-f2b3-4895-8927-95ce0e24fa3c'; // Vaidyam Brand UUID
+  }
+
   Future<void> _syncProductToSupabase(ProductModel p) async {
     if (!SupabaseConfig.isConfigured) return;
     try {
+      final String uuidProdId = _formatAsUuid(p.id);
+      final String uuidBrandId = _resolveBrandId(p.brandId);
+      final String uuidCategoryId = _resolveCategoryId(p.categoryId);
+
       final productData = {
-        'id': p.id,
-        'brand_id': p.brandId,
-        'category_id': p.categoryId,
+        'id': uuidProdId,
+        'brand_id': uuidBrandId,
+        'category_id': uuidCategoryId,
         'name': p.name,
         'slug': p.slug,
         'tagline': p.tagline,
@@ -143,33 +179,36 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       await supabase.from('products').upsert(productData);
 
       for (final v in p.variants) {
+        final String uuidVariantId = _formatAsUuid(v.id);
         final variantData = {
-          'id': v.id,
-          'product_id': p.id,
+          'id': uuidVariantId,
+          'product_id': uuidProdId,
           'sku': v.sku,
           'size_label': v.sizeLabel,
           'price_inr': v.price,
           'mrp_inr': v.mrp,
           'stock_quantity': v.stock,
           'is_default': v.isDefault,
+          'is_active': true,
         };
         await supabase.from('product_variants').upsert(variantData);
       }
 
       // Purge old image entries in Supabase so updated images become primary
       try {
-        await supabase.from('product_images').delete().eq('product_id', p.id);
+        await supabase.from('product_images').delete().eq('product_id', uuidProdId);
       } catch (_) {}
 
       // Upload base64 images to Supabase Storage and save public URLs
       final List<String> resolvedUrls = [];
       for (int i = 0; i < p.imageUrls.length; i++) {
-        final url = await _uploadBase64ToStorage(p.imageUrls[i], p.id, i);
+        final url = await _uploadBase64ToStorage(p.imageUrls[i], uuidProdId, i);
         resolvedUrls.add(url);
 
+        final String uuidImageId = _formatAsUuid('img-${p.id}-$i');
         final imgData = {
-          'id': 'img-${p.id}-$i',
-          'product_id': p.id,
+          'id': uuidImageId,
+          'product_id': uuidProdId,
           'image_url': url,
           'display_order': i,
           'version': p.mediaVersion,
@@ -182,8 +221,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       if (resolvedUrls.any((url) => url.startsWith('http'))) {
         final hasChanges = resolvedUrls.asMap().entries.any((e) => e.value != p.imageUrls[e.key]);
         if (hasChanges) {
-          final updatedProduct = p.copyWith(imageUrls: resolvedUrls);
-          final index = state.indexWhere((prod) => prod.id.trim() == p.id.trim());
+          final updatedProduct = p.copyWith(id: uuidProdId, imageUrls: resolvedUrls);
+          final index = state.indexWhere((prod) => prod.id.trim() == p.id.trim() || prod.id.trim() == uuidProdId);
           if (index != -1) {
             final List<ProductModel> updated = List.from(state);
             updated[index] = updatedProduct;
