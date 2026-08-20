@@ -17,10 +17,33 @@ final adminProductsProvider = StateNotifierProvider<AdminProductsNotifier, List<
 
 class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   RealtimeChannel? _syncChannel;
+  final Set<String> _deletedProductIds = {};
 
   AdminProductsNotifier() : super([]) {
-    _loadProductsFromStorage();
+    _initCatalog();
+  }
+
+  Future<void> _initCatalog() async {
+    await _loadDeletedIds();
+    await _loadProductsFromStorage();
     _subscribeToSupabaseRealtime();
+  }
+
+  Future<void> _loadDeletedIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? saved = prefs.getStringList('cosmyra_deleted_product_ids_v1');
+      if (saved != null) {
+        _deletedProductIds.addAll(saved);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveDeletedIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('cosmyra_deleted_product_ids_v1', _deletedProductIds.toList());
+    } catch (_) {}
   }
 
   void _subscribeToSupabaseRealtime() {
@@ -71,6 +94,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
   void upsertProductLocally(ProductModel incoming) {
     ProductImageWidget.clearAllCaches();
+    _deletedProductIds.remove(incoming.id.trim());
+    _deletedProductIds.remove(incoming.slug.trim());
+    _saveDeletedIds();
+
     final index = state.indexWhere((p) => p.id.trim() == incoming.id.trim() || p.slug.trim().toLowerCase() == incoming.slug.trim().toLowerCase());
     if (index != -1) {
       final updated = List<ProductModel>.from(state);
@@ -84,7 +111,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
   void deleteProductLocally(String productId) {
     ProductImageWidget.clearAllCaches();
-    state = state.where((p) => p.id.trim() != productId.trim()).toList();
+    final cleanId = productId.trim();
+    _deletedProductIds.add(cleanId);
+    _saveDeletedIds();
+
+    state = state.where((p) => p.id.trim() != cleanId && p.slug.trim().toLowerCase() != cleanId.toLowerCase()).toList();
     _saveProductsToStorage();
   }
 
@@ -93,14 +124,22 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
-        if (remoteProducts.isNotEmpty) {
-          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
-          for (final rp in remoteProducts) {
-            mergedMap[rp.id] = rp;
-          }
-          state = mergedMap.values.toList();
-          await _saveProductsToStorage();
+        final validRemote = remoteProducts.where((p) => 
+          !_deletedProductIds.contains(p.id.trim()) && 
+          !_deletedProductIds.contains(p.slug.trim().toLowerCase())
+        ).toList();
+
+        final Map<String, ProductModel> resultMap = {};
+        for (final rp in validRemote) {
+          resultMap[rp.id.trim()] = rp;
         }
+        for (final localP in state) {
+          if (!_deletedProductIds.contains(localP.id.trim()) && !_deletedProductIds.contains(localP.slug.trim().toLowerCase())) {
+            resultMap[localP.id.trim()] = localP;
+          }
+        }
+        state = resultMap.values.toList();
+        await _saveProductsToStorage();
       } catch (e) {
         print('Error fetching fresh products from Supabase: $e');
       }
@@ -108,6 +147,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   Future<void> _loadProductsFromStorage() async {
+    await _loadDeletedIds();
     List<ProductModel> localProducts = [];
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -117,7 +157,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         for (final item in decoded) {
           try {
             if (item is Map<String, dynamic>) {
-              localProducts.add(ProductModel.fromJson(item));
+              final p = ProductModel.fromJson(item);
+              if (!_deletedProductIds.contains(p.id.trim()) && !_deletedProductIds.contains(p.slug.trim().toLowerCase())) {
+                localProducts.add(p);
+              }
             }
           } catch (_) {}
         }
@@ -131,15 +174,21 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
-        if (remoteProducts.isNotEmpty) {
-          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
-          for (final rp in remoteProducts) {
-            mergedMap[rp.id] = rp;
-          }
-          ProductImageWidget.clearAllCaches();
-          state = mergedMap.values.toList();
-          _saveProductsToStorage();
+        final validRemote = remoteProducts.where((p) => 
+          !_deletedProductIds.contains(p.id.trim()) && 
+          !_deletedProductIds.contains(p.slug.trim().toLowerCase())
+        ).toList();
+
+        final Map<String, ProductModel> resultMap = {};
+        for (final rp in validRemote) {
+          resultMap[rp.id.trim()] = rp;
         }
+        for (final lp in localProducts) {
+          resultMap[lp.id.trim()] = lp;
+        }
+        ProductImageWidget.clearAllCaches();
+        state = resultMap.values.toList();
+        _saveProductsToStorage();
       } catch (e) {
         print('Error fetching real products from Supabase: $e');
       }
@@ -549,6 +598,15 @@ class ProductRepository {
 
   /// Fetch all active products with variants and images
   Future<List<ProductModel>> getProducts() async {
+    Set<String> deletedIds = {};
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? saved = prefs.getStringList('cosmyra_deleted_product_ids_v1');
+      if (saved != null) {
+        deletedIds = saved.toSet();
+      }
+    } catch (_) {}
+
     try {
       if (SupabaseConfig.isConfigured) {
         final response = await supabase
@@ -556,14 +614,15 @@ class ProductRepository {
             .select('*, product_variants(*), product_images(*)')
             .eq('is_active', true);
         if (response.isNotEmpty) {
-          return (response as List).map((json) => ProductModel.fromJson(json)).toList();
+          final List<ProductModel> fetched = (response as List).map((json) => ProductModel.fromJson(json)).toList();
+          return fetched.where((p) => !deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())).toList();
         }
       }
     } catch (e) {
       print('Supabase fetch failed: $e');
     }
 
-    // Try loading saved admin products from SharedPreferences first before static initial products
+    // Try loading saved admin products from SharedPreferences
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
@@ -571,9 +630,14 @@ class ProductRepository {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         final List<ProductModel> stored = [];
         for (final item in decoded) {
-          if (item is Map<String, dynamic>) {
-            stored.add(ProductModel.fromJson(item));
-          }
+          try {
+            if (item is Map<String, dynamic>) {
+              final p = ProductModel.fromJson(item);
+              if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
+                stored.add(p);
+              }
+            }
+          } catch (_) {}
         }
         if (stored.isNotEmpty) return stored;
       }
