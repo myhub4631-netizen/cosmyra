@@ -1030,12 +1030,45 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
         const SizedBox(height: 12),
 
         // Horizontal Product List
-        SizedBox(
-          height: 290,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            itemCount: deals.length,
+        if (deals.isEmpty)
+          Container(
+            height: 120,
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.inventory_2_outlined, color: _primaryPurple, size: 28),
+                const SizedBox(height: 6),
+                const Text('No products available at the moment', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _textDark)),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: () => ref.read(adminProductsProvider.notifier).fetchFreshFromSupabase(),
+                  icon: const Icon(Icons.refresh_rounded, size: 14),
+                  label: const Text('Retry / Refresh', style: TextStyle(fontSize: 11)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryPurple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox(
+            height: 290,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: deals.length,
             itemBuilder: (context, index) {
               final item = deals[index];
               final String id = item['id'] as String;

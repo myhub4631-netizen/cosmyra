@@ -18,154 +18,28 @@ final adminProductsProvider = StateNotifierProvider<AdminProductsNotifier, List<
 class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   AdminProductsNotifier() : super([]) {
     _loadProductsFromStorage();
+    _subscribeToSupabaseRealtime();
   }
 
-  static final List<ProductModel> initialCatalogProducts = [
-    ProductModel(
-      id: 'prod-vaidyam-shampoo-1',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-haircare',
-      name: 'Vaidyam Anti-Dandruff Herbal Shampoo',
-      slug: 'anti-dandruff-herbal-shampoo',
-      tagline: 'Deep scalp cleansing with Tea Tree, Neem & Bhringraj',
-      description: 'Clears flakes, controls excess scalp sebum, and restores hair vitality with 100% organic botanicals.',
-      ingredients: 'Tea Tree Extract, Bhringraj, Neem, Aloe Vera, Purified Aqua.',
-      howToUse: 'Apply on wet hair, lather gently for 2 minutes, and rinse thoroughly.',
-      freeFromClaims: const ['100% Natural', 'Paraben Free', 'Sulfate Free'],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'v-shm-200ml',
-          productId: 'prod-vaidyam-shampoo-1',
-          sku: 'VDY-SHM-200',
-          sizeLabel: '200 ml Bottle',
-          price: 399,
-          mrp: 499,
-          stock: 200,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const ['assets/images/shampoo.jpg'],
-    ),
-    ProductModel(
-      id: 'prod-vaidyam-soap-2',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-skincare',
-      name: 'Vaidyam De-Tan Botanical Soap',
-      slug: 'de-tan-botanical-soap',
-      tagline: 'Pure Turmeric & Sandalwood complexion brightening bar',
-      description: 'Removes stubborn sun tan, deeply hydrates, and leaves skin smooth and glowing.',
-      ingredients: 'Wild Turmeric, Red Sandalwood, Coconut Oil, Essential Fragrance Oils.',
-      howToUse: 'Lather gently over wet body during bath and rinse with warm water.',
-      freeFromClaims: const ['Handcrafted', 'Cruelty Free', 'Chemical Free'],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'v-sop-125g',
-          productId: 'prod-vaidyam-soap-2',
-          sku: 'VDY-SOP-125',
-          sizeLabel: '125 g Bar',
-          price: 199,
-          mrp: 249,
-          stock: 125,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const ['assets/images/soap.jpg'],
-    ),
-    ProductModel(
-      id: 'prod-vaidyam-facewash-3',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-skincare',
-      name: 'Vaidyam Deep Clean Face Wash',
-      slug: 'deep-clean-face-wash',
-      tagline: 'Gentle clarifying wash with Neem & Chandan',
-      description: 'Removes pore impurities, prevents acne breakouts, and keeps skin soft and hydrated.',
-      ingredients: 'Neem Leaf Extract, Chandan (Sandalwood), Tulsi, Aqua.',
-      howToUse: 'Squeeze small amount on wet palm, massage over face, and wash off.',
-      freeFromClaims: const ['Paraben Free', 'Dermatologically Tested'],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'v-fcw-100ml',
-          productId: 'prod-vaidyam-facewash-3',
-          sku: 'VDY-FCW-100',
-          sizeLabel: '100 ml Tube',
-          price: 299,
-          mrp: 375,
-          stock: 98,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const ['assets/images/facewash.jpg'],
-    ),
-    ProductModel(
-      id: 'prod-vaidyam-hairoil-4',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-haircare',
-      name: 'Vaidyam Herbal Hair Oil',
-      slug: 'herbal-hair-oil',
-      tagline: 'Roots invigorating hair growth & scalp tonic',
-      description: 'Nourishes dry roots, prevents premature graying, and promotes thick hair growth.',
-      ingredients: 'Bhringraj, Amla, Brahmi, Sesame Seed Oil.',
-      howToUse: 'Warm oil gently and massage into scalp 1 hour before hair wash.',
-      freeFromClaims: const ['100% Herbal', 'No Artificial Color'],
-      isFeatured: false,
-      variants: const [
-        ProductVariant(
-          id: 'v-ho-100ml',
-          productId: 'prod-vaidyam-hairoil-4',
-          sku: 'VDY-HO-100',
-          sizeLabel: '100 ml Bottle',
-          price: 349,
-          mrp: 449,
-          stock: 0,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const ['assets/images/shampoo.jpg'],
-    ),
-    ProductModel(
-      id: 'prod-vaidyam-serum-5',
-      brandId: 'brand-vaidyam',
-      categoryId: 'cat-skincare',
-      name: 'Vaidyam Vitamin C Serum',
-      slug: 'vitamin-c-serum',
-      tagline: 'Brightening boost with Amla & Hyaluronic Acid',
-      description: 'Fades dark spots, boosts collagen production, and gives radiant skin tone.',
-      ingredients: 'Phyllanthus Emblica (Amla Vitamin C), Hyaluronic Acid, Ferulic Acid.',
-      howToUse: 'Apply 3-5 drops in morning skincare routine before moisturizer.',
-      freeFromClaims: const ['Cruelty Free', 'Dermatologist Formulated'],
-      isFeatured: true,
-      variants: const [
-        ProductVariant(
-          id: 'v-ser-30ml',
-          productId: 'prod-vaidyam-serum-5',
-          sku: 'VDY-SER-30',
-          sizeLabel: '30 ml Dropper',
-          price: 599,
-          mrp: 749,
-          stock: 30,
-          isDefault: true,
-        ),
-      ],
-      imageUrls: const ['assets/images/facewash.jpg'],
-    ),
-  ];
+  void _subscribeToSupabaseRealtime() {
+    if (SupabaseConfig.isConfigured) {
+      try {
+        supabase.from('products').stream(primaryKey: ['id']).listen((data) {
+          fetchFreshFromSupabase();
+        });
+      } catch (e) {
+        print('Realtime stream subscription error: $e');
+      }
+    }
+  }
 
   Future<void> fetchFreshFromSupabase() async {
     ProductImageWidget.clearAllCaches();
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
-        if (remoteProducts.isNotEmpty) {
-          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
-          for (final rp in remoteProducts) {
-            mergedMap[rp.id] = rp;
-          }
-          state = mergedMap.values.toList();
-          await _saveProductsToStorage();
-        }
+        state = remoteProducts;
+        await _saveProductsToStorage();
       } catch (e) {
         print('Error fetching fresh products from Supabase: $e');
       }
@@ -173,7 +47,6 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   Future<void> _loadProductsFromStorage() async {
-    // 1. Load local storage first for instant rendering
     List<ProductModel> localProducts = [];
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -192,42 +65,20 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
     if (localProducts.isNotEmpty) {
       state = localProducts;
-
-      // In background, fetch live Supabase products and update state if remote images/versions are newer
-      if (SupabaseConfig.isConfigured) {
-        ProductRepository().getProducts().then((remoteProducts) {
-          if (remoteProducts.isNotEmpty) {
-            final Map<String, ProductModel> mergedMap = {for (final p in localProducts) p.id: p};
-            for (final rp in remoteProducts) {
-              mergedMap[rp.id] = rp;
-            }
-            ProductImageWidget.clearAllCaches();
-            state = mergedMap.values.toList();
-            _saveProductsToStorage();
-          }
-        }).catchError((e) {
-          print('Error syncing background products from Supabase: $e');
-        });
-      }
-      return;
     }
 
-    // 2. Fetch real live products from Supabase database if local storage is empty
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
         if (remoteProducts.isNotEmpty) {
+          ProductImageWidget.clearAllCaches();
           state = remoteProducts;
           _saveProductsToStorage();
-          return;
         }
       } catch (e) {
         print('Error fetching real products from Supabase: $e');
       }
     }
-
-    state = List.from(initialCatalogProducts);
-    _saveProductsToStorage();
   }
 
   Future<void> _saveProductsToStorage() async {
@@ -455,7 +306,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       await prefs.remove('cosmyra_admin_products_v2');
       await prefs.remove('cosmyra_homepage_cms_sections_v2');
     } catch (_) {}
-    state = List.from(initialCatalogProducts);
+    state = [];
     await _saveProductsToStorage();
   }
 
@@ -632,7 +483,7 @@ class ProductRepository {
       }
     } catch (_) {}
 
-    return AdminProductsNotifier.initialCatalogProducts;
+    return [];
   }
 
   // Fallback initial categories
