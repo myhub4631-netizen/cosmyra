@@ -16,6 +16,8 @@ final adminProductsProvider = StateNotifierProvider<AdminProductsNotifier, List<
 });
 
 class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
+  RealtimeChannel? _syncChannel;
+
   AdminProductsNotifier() : super([]) {
     _loadProductsFromStorage();
     _subscribeToSupabaseRealtime();
@@ -24,6 +26,32 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   void _subscribeToSupabaseRealtime() {
     if (SupabaseConfig.isConfigured) {
       try {
+        _syncChannel = supabase.channel('cosmyra_catalog_sync');
+        _syncChannel?.onBroadcast(
+          event: 'product_upserted',
+          callback: (payload) {
+            try {
+              final prodJson = payload['product'];
+              if (prodJson is Map<String, dynamic>) {
+                final incomingProd = ProductModel.fromJson(prodJson);
+                upsertProductLocally(incomingProd);
+              }
+            } catch (_) {}
+          },
+        );
+        _syncChannel?.onBroadcast(
+          event: 'product_deleted',
+          callback: (payload) {
+            try {
+              final prodId = payload['id']?.toString();
+              if (prodId != null && prodId.isNotEmpty) {
+                deleteProductLocally(prodId);
+              }
+            } catch (_) {}
+          },
+        );
+        _syncChannel?.subscribe();
+
         supabase.from('products').stream(primaryKey: ['id']).listen((data) {
           fetchFreshFromSupabase();
         });
@@ -33,13 +61,46 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     }
   }
 
+  void _broadcastProductChange(String event, Map<String, dynamic> payload) {
+    if (SupabaseConfig.isConfigured && _syncChannel != null) {
+      try {
+        _syncChannel?.sendBroadcastMessage(event: event, payload: payload);
+      } catch (_) {}
+    }
+  }
+
+  void upsertProductLocally(ProductModel incoming) {
+    ProductImageWidget.clearAllCaches();
+    final index = state.indexWhere((p) => p.id.trim() == incoming.id.trim() || p.slug.trim().toLowerCase() == incoming.slug.trim().toLowerCase());
+    if (index != -1) {
+      final updated = List<ProductModel>.from(state);
+      updated[index] = incoming;
+      state = updated;
+    } else {
+      state = [incoming, ...state];
+    }
+    _saveProductsToStorage();
+  }
+
+  void deleteProductLocally(String productId) {
+    ProductImageWidget.clearAllCaches();
+    state = state.where((p) => p.id.trim() != productId.trim()).toList();
+    _saveProductsToStorage();
+  }
+
   Future<void> fetchFreshFromSupabase() async {
     ProductImageWidget.clearAllCaches();
     if (SupabaseConfig.isConfigured) {
       try {
         final remoteProducts = await ProductRepository().getProducts();
-        state = remoteProducts;
-        await _saveProductsToStorage();
+        if (remoteProducts.isNotEmpty) {
+          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
+          for (final rp in remoteProducts) {
+            mergedMap[rp.id] = rp;
+          }
+          state = mergedMap.values.toList();
+          await _saveProductsToStorage();
+        }
       } catch (e) {
         print('Error fetching fresh products from Supabase: $e');
       }
@@ -71,8 +132,12 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       try {
         final remoteProducts = await ProductRepository().getProducts();
         if (remoteProducts.isNotEmpty) {
+          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
+          for (final rp in remoteProducts) {
+            mergedMap[rp.id] = rp;
+          }
           ProductImageWidget.clearAllCaches();
-          state = remoteProducts;
+          state = mergedMap.values.toList();
           _saveProductsToStorage();
         }
       } catch (e) {
@@ -253,8 +318,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       updatedAt: nowStr,
       mediaUpdatedAt: nowStr,
     );
-    state = [newProd, ...state];
-    _saveProductsToStorage();
+    upsertProductLocally(newProd);
+    _broadcastProductChange('product_upserted', {'product': newProd.toJson()});
     _syncProductToSupabase(newProd);
   }
 
@@ -284,10 +349,6 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         updatedAt: nowStr,
         mediaUpdatedAt: mediaChanged ? nowStr : existing.mediaUpdatedAt,
       );
-
-      final List<ProductModel> updated = List.from(state);
-      updated[index] = updatedProduct;
-      state = updated;
     } else {
       updatedProduct = product.copyWith(
         mediaVersion: 1,
@@ -295,17 +356,16 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         updatedAt: nowStr,
         mediaUpdatedAt: nowStr,
       );
-      state = [updatedProduct, ...state];
     }
 
-    await _saveProductsToStorage();
+    upsertProductLocally(updatedProduct);
+    _broadcastProductChange('product_upserted', {'product': updatedProduct.toJson()});
     await _syncProductToSupabase(updatedProduct);
   }
 
   void deleteProduct(String productId) {
-    ProductImageWidget.clearAllCaches();
-    state = state.where((p) => p.id.trim() != productId.trim()).toList();
-    _saveProductsToStorage();
+    deleteProductLocally(productId);
+    _broadcastProductChange('product_deleted', {'id': productId});
     _deleteProductFromSupabase(productId);
   }
 
