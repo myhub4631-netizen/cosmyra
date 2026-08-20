@@ -153,8 +153,27 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     ),
   ];
 
+  Future<void> fetchFreshFromSupabase() async {
+    ProductImageWidget.clearAllCaches();
+    if (SupabaseConfig.isConfigured) {
+      try {
+        final remoteProducts = await ProductRepository().getProducts();
+        if (remoteProducts.isNotEmpty) {
+          final Map<String, ProductModel> mergedMap = {for (final p in state) p.id: p};
+          for (final rp in remoteProducts) {
+            mergedMap[rp.id] = rp;
+          }
+          state = mergedMap.values.toList();
+          await _saveProductsToStorage();
+        }
+      } catch (e) {
+        print('Error fetching fresh products from Supabase: $e');
+      }
+    }
+  }
+
   Future<void> _loadProductsFromStorage() async {
-    // 1. Load local storage first so admin modifications (like product image updates) persist reliably
+    // 1. Load local storage first for instant rendering
     List<ProductModel> localProducts = [];
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -174,14 +193,15 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     if (localProducts.isNotEmpty) {
       state = localProducts;
 
-      // In background, sync with Supabase if configured without overwriting admin edits
+      // In background, fetch live Supabase products and update state if remote images/versions are newer
       if (SupabaseConfig.isConfigured) {
         ProductRepository().getProducts().then((remoteProducts) {
           if (remoteProducts.isNotEmpty) {
             final Map<String, ProductModel> mergedMap = {for (final p in localProducts) p.id: p};
             for (final rp in remoteProducts) {
-              mergedMap.putIfAbsent(rp.id, () => rp);
+              mergedMap[rp.id] = rp;
             }
+            ProductImageWidget.clearAllCaches();
             state = mergedMap.values.toList();
             _saveProductsToStorage();
           }
@@ -263,6 +283,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         'free_from_claims': p.freeFromClaims,
         'is_featured': p.isFeatured,
         'is_active': true,
+        'media_version': p.mediaVersion,
+        'product_version': p.productVersion,
+        'updated_at': DateTime.now().toIso8601String(),
+        'media_updated_at': p.mediaUpdatedAt ?? DateTime.now().toIso8601String(),
       };
 
       await supabase.from('products').upsert(productData);
@@ -297,6 +321,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
           'product_id': p.id,
           'image_url': url,
           'display_order': i,
+          'version': p.mediaVersion,
+          'is_primary': i == 0,
         };
         await supabase.from('product_images').upsert(imgData);
       }
@@ -330,9 +356,16 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   }
 
   void addProduct(ProductModel product) {
-    state = [product, ...state];
+    final nowStr = DateTime.now().toIso8601String();
+    final newProd = product.copyWith(
+      mediaVersion: 1,
+      productVersion: 1,
+      updatedAt: nowStr,
+      mediaUpdatedAt: nowStr,
+    );
+    state = [newProd, ...state];
     _saveProductsToStorage();
-    _syncProductToSupabase(product);
+    _syncProductToSupabase(newProd);
   }
 
   Future<void> updateProduct(ProductModel product) async {
@@ -344,16 +377,39 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         p.slug.trim().toLowerCase() == product.slug.trim().toLowerCase() ||
         p.name.trim().toLowerCase() == product.name.trim().toLowerCase());
 
+    final nowStr = DateTime.now().toIso8601String();
+    ProductModel updatedProduct;
+
     if (index != -1) {
+      final existing = state[index];
+      final bool mediaChanged = existing.imageUrls.length != product.imageUrls.length ||
+          existing.imageUrls.asMap().entries.any((e) => e.value != product.imageUrls[e.key]);
+      
+      final int nextMediaVersion = mediaChanged ? existing.mediaVersion + 1 : existing.mediaVersion;
+      final int nextProductVersion = existing.productVersion + 1;
+
+      updatedProduct = product.copyWith(
+        mediaVersion: nextMediaVersion,
+        productVersion: nextProductVersion,
+        updatedAt: nowStr,
+        mediaUpdatedAt: mediaChanged ? nowStr : existing.mediaUpdatedAt,
+      );
+
       final List<ProductModel> updated = List.from(state);
-      updated[index] = product;
+      updated[index] = updatedProduct;
       state = updated;
     } else {
-      state = [product, ...state];
+      updatedProduct = product.copyWith(
+        mediaVersion: 1,
+        productVersion: 1,
+        updatedAt: nowStr,
+        mediaUpdatedAt: nowStr,
+      );
+      state = [updatedProduct, ...state];
     }
 
     await _saveProductsToStorage();
-    _syncProductToSupabase(product);
+    await _syncProductToSupabase(updatedProduct);
   }
 
   void deleteProduct(String productId) {
@@ -556,9 +612,27 @@ class ProductRepository {
           return (response as List).map((json) => ProductModel.fromJson(json)).toList();
         }
       }
+    } catch (e) {
+      print('Supabase fetch failed: $e');
+    }
+
+    // Try loading saved admin products from SharedPreferences first before static initial products
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        final List<ProductModel> stored = [];
+        for (final item in decoded) {
+          if (item is Map<String, dynamic>) {
+            stored.add(ProductModel.fromJson(item));
+          }
+        }
+        if (stored.isNotEmpty) return stored;
+      }
     } catch (_) {}
 
-    return _fallbackProducts;
+    return AdminProductsNotifier.initialCatalogProducts;
   }
 
   // Fallback initial categories

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../config/theme/app_colors.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 
 class SubscriptionsScreen extends ConsumerStatefulWidget {
   const SubscriptionsScreen({super.key});
@@ -247,8 +248,8 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                     child: ListTile(
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Image.asset(
-                          p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg',
+                        child: ProductImageWidget(
+                          imageUrl: p.primaryImageUrl,
                           width: 45,
                           height: 45,
                           fit: BoxFit.cover,

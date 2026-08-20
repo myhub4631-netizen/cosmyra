@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../../catalog/models/product_model.dart';
+import '../../catalog/repositories/product_repository.dart';
 import '../repositories/order_repository.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
@@ -86,10 +88,14 @@ class _VaidyamMobileOrdersScreenWidgetState extends ConsumerState<VaidyamMobileO
 
     final List<Map<String, dynamic>> combinedOrders = [];
 
+    final allProds = ref.watch(adminProductsProvider);
     for (var ro in userOrders) {
-      final String firstImg = ro.items.isNotEmpty && ro.items.first.productName.contains('Shampoo')
-          ? 'assets/images/shampoo.jpg'
-          : (ro.items.isNotEmpty && ro.items.first.productName.contains('Soap') ? 'assets/images/soap.jpg' : 'assets/images/facewash.jpg');
+      final firstItemName = ro.items.isNotEmpty ? ro.items.first.productName : '';
+      final matchedProd = allProds.firstWhere(
+        (p) => p.name.toLowerCase().contains(firstItemName.toLowerCase()) || (firstItemName.isNotEmpty && firstItemName.toLowerCase().contains(p.name.toLowerCase())),
+        orElse: () => allProds.isNotEmpty ? allProds.first : const ProductModel(id: '', brandId: '', categoryId: '', name: '', slug: '', description: '', ingredients: '', freeFromClaims: [], variants: [], imageUrls: []),
+      );
+      final String firstImg = matchedProd.primaryImageUrl;
 
       final String statusName = ro.fulfillmentStatus.substring(0, 1).toUpperCase() + ro.fulfillmentStatus.substring(1);
 

@@ -133,7 +133,7 @@ class _VaidyamHomeScreenState extends ConsumerState<VaidyamHomeScreen> {
         'discount': v.discountPercent > 0 ? '${v.discountPercent.toInt()}% OFF' : 'SPECIAL',
         'rating': 4.8,
         'reviews': '124',
-        'image': p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg',
+        'image': p.primaryImageUrl,
         'rawModel': p,
       };
     }).toList();

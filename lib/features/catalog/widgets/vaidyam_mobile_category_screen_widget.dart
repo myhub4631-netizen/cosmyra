@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../repositories/product_repository.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 
 class VaidyamMobileCategoryScreenWidget extends ConsumerStatefulWidget {
@@ -106,31 +107,37 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
       backgroundColor: _lightBg,
       bottomNavigationBar: const VaidyamMobileBottomNavBar(activeTab: 'Categories'),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Header Bar: Back Arrow + Category + Cart (2)
-              _buildHeaderBar(context, cartCount),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(adminProductsProvider.notifier).fetchFreshFromSupabase();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Header Bar: Back Arrow + Category + Cart (2)
+                _buildHeaderBar(context, cartCount),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // 2. Category Search Field Bar
-              _buildSearchFieldBar(),
+                // 2. Category Search Field Bar
+                _buildSearchFieldBar(),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // 3. Promo Carousel Banner Card (Purple Gradient)
-              _buildPromoBannerCard(context),
+                // 3. Promo Carousel Banner Card (Purple Gradient)
+                _buildPromoBannerCard(context),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // 4. Category List Cards Container
-              _buildCategoryListCard(context),
+                // 4. Category List Cards Container
+                _buildCategoryListCard(context),
 
-              const SizedBox(height: 24),
-            ],
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),

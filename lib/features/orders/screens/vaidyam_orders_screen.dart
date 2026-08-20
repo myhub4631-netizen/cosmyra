@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../../catalog/models/product_model.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../catalog/widgets/product_image_widget.dart';
 import '../repositories/order_repository.dart';
@@ -52,7 +53,12 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
 
     ordersAsync.whenData((realOrders) {
       for (var ro in realOrders) {
+        final allProds = ref.watch(adminProductsProvider);
         for (var item in ro.items) {
+          final matchedProd = allProds.firstWhere(
+            (p) => p.name.toLowerCase().contains(item.productName.toLowerCase()) || item.productName.toLowerCase().contains(p.name.toLowerCase()),
+            orElse: () => allProds.isNotEmpty ? allProds.first : ProductModel(id: item.productVariantId, brandId: 'brand-vaidyam', categoryId: 'cat-skincare', name: item.productName, slug: 'prod', description: '', ingredients: '', freeFromClaims: const [], variants: const [], imageUrls: const []),
+          );
           allOrders.add({
             'orderId': ro.orderNumber,
             'productName': item.productName,
@@ -66,7 +72,7 @@ class _VaidyamOrdersScreenState extends ConsumerState<VaidyamOrdersScreen> {
                     ro.fulfillmentStatus.substring(1)
                 : 'Processing',
             'statusDetail': 'Order Status: ${ro.fulfillmentStatus}',
-            'image': '',
+            'image': matchedProd.primaryImageUrl,
           });
         }
       }

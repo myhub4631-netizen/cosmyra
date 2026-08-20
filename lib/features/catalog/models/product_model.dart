@@ -124,6 +124,10 @@ class ProductModel {
   final List<ProductVariant> variants;
   final List<String> imageUrls;
   final bool isFeatured;
+  final int mediaVersion;
+  final int productVersion;
+  final String? updatedAt;
+  final String? mediaUpdatedAt;
 
   const ProductModel({
     required this.id,
@@ -139,7 +143,34 @@ class ProductModel {
     required this.variants,
     required this.imageUrls,
     this.isFeatured = false,
+    this.mediaVersion = 1,
+    this.productVersion = 1,
+    this.updatedAt,
+    this.mediaUpdatedAt,
   });
+
+  /// Returns canonical image URL with cache-busting version parameter
+  String appendVersionToUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty || trimmed.startsWith('data:') || trimmed.startsWith('assets/')) {
+      return trimmed;
+    }
+    final uri = Uri.parse(trimmed);
+    final queryParams = Map<String, String>.from(uri.queryParameters);
+    queryParams['v'] = mediaVersion.toString();
+    return uri.replace(queryParameters: queryParams).toString();
+  }
+
+  /// Get primary image URL with version parameter
+  String get primaryImageUrl {
+    final raw = imageUrls.isNotEmpty ? imageUrls.first : '';
+    return appendVersionToUrl(raw);
+  }
+
+  /// Get formatted image URLs with version parameters
+  List<String> get formattedImageUrls {
+    return imageUrls.map((url) => appendVersionToUrl(url)).toList();
+  }
 
   ProductVariant get defaultVariant => variants.firstWhere(
         (v) => v.isDefault,
@@ -190,6 +221,18 @@ class ProductModel {
       }).where((img) => img.isNotEmpty).toList();
     }
 
+    if (imgs.isEmpty) {
+      final singleImg = json['primary_image'] ??
+          json['primaryImage'] ??
+          json['image'] ??
+          json['imageUrl'] ??
+          json['featured_image'] ??
+          json['featuredImage'];
+      if (singleImg != null && singleImg.toString().trim().isNotEmpty) {
+        imgs = [singleImg.toString().trim()];
+      }
+    }
+
     if (vars.isEmpty) {
       final fallbackPrice = (json['price'] as num?)?.toDouble() ?? 399.0;
       final fallbackMrp = (json['mrp'] as num?)?.toDouble() ?? 499.0;
@@ -221,6 +264,10 @@ class ProductModel {
       variants: vars,
       imageUrls: imgs,
       isFeatured: json['is_featured'] ?? json['isFeatured'] ?? false,
+      mediaVersion: (json['media_version'] ?? json['mediaVersion'] as num?)?.toInt() ?? 1,
+      productVersion: (json['product_version'] ?? json['productVersion'] as num?)?.toInt() ?? 1,
+      updatedAt: json['updated_at']?.toString() ?? json['updatedAt']?.toString(),
+      mediaUpdatedAt: json['media_updated_at']?.toString() ?? json['mediaUpdatedAt']?.toString(),
     );
   }
 
@@ -238,6 +285,10 @@ class ProductModel {
         'product_variants': variants.map((v) => v.toJson()).toList(),
         'product_images': imageUrls.asMap().entries.map((e) => {'image_url': e.value, 'display_order': e.key}).toList(),
         'is_featured': isFeatured,
+        'media_version': mediaVersion,
+        'product_version': productVersion,
+        'updated_at': updatedAt,
+        'media_updated_at': mediaUpdatedAt,
       };
 
   ProductModel copyWith({
@@ -254,6 +305,10 @@ class ProductModel {
     List<ProductVariant>? variants,
     List<String>? imageUrls,
     bool? isFeatured,
+    int? mediaVersion,
+    int? productVersion,
+    String? updatedAt,
+    String? mediaUpdatedAt,
   }) {
     return ProductModel(
       id: id ?? this.id,
@@ -269,6 +324,10 @@ class ProductModel {
       variants: variants ?? this.variants,
       imageUrls: imageUrls ?? this.imageUrls,
       isFeatured: isFeatured ?? this.isFeatured,
+      mediaVersion: mediaVersion ?? this.mediaVersion,
+      productVersion: productVersion ?? this.productVersion,
+      updatedAt: updatedAt ?? this.updatedAt,
+      mediaUpdatedAt: mediaUpdatedAt ?? this.mediaUpdatedAt,
     );
   }
 }

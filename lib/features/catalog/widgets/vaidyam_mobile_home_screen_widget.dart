@@ -94,8 +94,13 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
       backgroundColor: _lightBg,
       bottomNavigationBar: const VaidyamMobileBottomNavBar(activeTab: 'Home'),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(adminProductsProvider.notifier).fetchFreshFromSupabase();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 0. Top Announcement Marquee Bar (Managed via Mobile App Panel)
@@ -167,7 +172,8 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   // 1. Top Location Header
@@ -734,7 +740,7 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
               final product = featuredProducts[index];
               final variant = product.defaultVariant;
               final bool isWishlisted = wishlist.contains(product.id);
-              final String imageUrl = product.imageUrls.isNotEmpty ? product.imageUrls.first : '';
+              final String imageUrl = product.primaryImageUrl;
               final double discountPct = variant.mrp > variant.price
                   ? (((variant.mrp - variant.price) / variant.mrp) * 100)
                   : 0;

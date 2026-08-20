@@ -362,7 +362,7 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
                 width: 90,
                 height: 90,
                 child: ProductImageWidget(
-                  imageUrl: p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg',
+                  imageUrl: p.primaryImageUrl,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -647,7 +647,7 @@ class _ShopGridCardStatefulState extends ConsumerState<_ShopGridCardStateful> {
     final p = widget.product;
     final v = p.defaultVariant;
     final discountPct = v.mrp > v.price ? (((v.mrp - v.price) / v.mrp) * 100).round() : 0;
-    final String imageUrl = p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg';
+    final String imageUrl = p.primaryImageUrl;
 
     void openDetails() {
       context.push('/product/${p.id}', extra: p);

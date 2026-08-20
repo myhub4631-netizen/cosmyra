@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -213,7 +214,11 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
     final brandSettings = ref.watch(brandSettingsProvider);
     final totalCartCount = cartState.totalItemCount;
 
-    final p = widget.product;
+    final allProducts = ref.watch(adminProductsProvider);
+    final p = allProducts.firstWhere(
+      (prod) => prod.id.trim() == widget.product.id.trim() || prod.slug.trim().toLowerCase() == widget.product.slug.trim().toLowerCase(),
+      orElse: () => widget.product,
+    );
     final variants = p.variants.isNotEmpty ? p.variants : [p.defaultVariant];
     final v = variants[_selectedVariantIndex.clamp(0, variants.length - 1)];
 
@@ -222,9 +227,9 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
     final int discountPct = (((mrp - price) / mrp) * 100).round();
     final bool isWishlisted = wishlist.contains(p.id);
 
-    final imageUrls = p.imageUrls.isNotEmpty
-        ? p.imageUrls
-        : ['assets/images/facewash.jpg', 'assets/images/shampoo.jpg', 'assets/images/soap.jpg'];
+    final imageUrls = p.formattedImageUrls.isNotEmpty
+        ? p.formattedImageUrls
+        : p.imageUrls;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
@@ -319,6 +324,27 @@ class _VaidyamProductDetailScreenState extends ConsumerState<VaidyamProductDetai
       body: SingleChildScrollView(
         child: Column(
           children: [
+            if (kDebugMode)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFFCA5A5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('🔍 Live Product Media Diagnostic (Debug Mode)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF991B1B))),
+                    const SizedBox(height: 4),
+                    Text('Product ID: ${p.id} | SKU: ${v.sku}', style: const TextStyle(fontSize: 10, color: Color(0xFF7F1D1D))),
+                    Text('Media Version: v${p.mediaVersion} | Product Version: v${p.productVersion}', style: const TextStyle(fontSize: 10, color: Color(0xFF7F1D1D))),
+                    Text('Rendered Image URL: ${p.primaryImageUrl}', style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Color(0xFF7F1D1D)), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
             // 0. Announcement Bar
             Container(
               width: double.infinity,

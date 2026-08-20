@@ -693,7 +693,7 @@ class _VaidyamMobileWishlistScreenWidgetState extends ConsumerState<VaidyamMobil
         final double price = variant?.price ?? 0.0;
         final double mrp = variant?.mrp ?? price;
         final double savings = mrp > price ? mrp - price : 0;
-        final String image = p.imageUrls.isNotEmpty ? p.imageUrls.first : 'assets/images/shampoo.jpg';
+        final String image = p.primaryImageUrl;
         final String brand = 'Cosmyra';
 
         return Container(

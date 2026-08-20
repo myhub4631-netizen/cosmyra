@@ -28,19 +28,21 @@ class _VaidyamCartScreenState extends ConsumerState<VaidyamCartScreen> {
     // Build cart items list strictly from cartState.items
     final List<Map<String, dynamic>> itemsList = cartState.items.asMap().entries.map((entry) {
       final item = entry.value;
+      final canonicalProd = products.firstWhere(
+        (p) => p.id.trim() == item.product.id.trim(),
+        orElse: () => item.product,
+      );
       return <String, dynamic>{
-        'id': item.product.id,
-        'name': item.product.name,
-        'category': item.product.categoryId,
+        'id': canonicalProd.id,
+        'name': canonicalProd.name,
+        'category': canonicalProd.categoryId,
         'variant': item.variant.sizeLabel.isNotEmpty
             ? item.variant.sizeLabel
             : 'Default Variant',
         'price': item.variant.price,
         'mrp': item.variant.mrp,
         'quantity': item.quantity,
-        'image': item.product.imageUrls.isNotEmpty
-            ? item.product.imageUrls.first
-            : '',
+        'image': canonicalProd.primaryImageUrl,
         'rawItem': item,
         'index': entry.key,
       };

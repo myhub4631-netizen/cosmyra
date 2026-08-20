@@ -8,6 +8,7 @@ import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
+import '../../catalog/widgets/product_image_widget.dart';
 import '../../navigation/widgets/vaidyam_footer_widget.dart';
 import '../../navigation/widgets/vaidyam_header_widget.dart';
 import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
@@ -1270,9 +1271,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                             width: double.infinity,
                             decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(8)),
                             child: Center(
-                              child: p.imageUrls.isNotEmpty
-                                  ? Image.asset(p.imageUrls.first, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.spa, size: 40, color: Color(0xFF10B981)))
-                                  : const Icon(Icons.spa, size: 40, color: Color(0xFF10B981)),
+                              child: ProductImageWidget(imageUrl: p.primaryImageUrl, fit: BoxFit.contain),
                             ),
                           ),
                           Positioned(

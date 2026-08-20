@@ -82,17 +82,22 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 950;
 
+    final allProducts = ref.watch(adminProductsProvider);
     final List<Map<String, dynamic>> itemsList = cartState.items.asMap().entries.map((entry) {
       final item = entry.value;
+      final canonicalProd = allProducts.firstWhere(
+        (p) => p.id.trim() == item.product.id.trim(),
+        orElse: () => item.product,
+      );
       return <String, dynamic>{
-        'id': item.product.id,
-        'name': item.product.name,
-        'category': item.product.categoryId,
+        'id': canonicalProd.id,
+        'name': canonicalProd.name,
+        'category': canonicalProd.categoryId,
         'variant': item.variant.sizeLabel.isNotEmpty ? item.variant.sizeLabel : 'Standard Pack',
         'price': item.variant.price,
         'mrp': item.variant.mrp,
         'quantity': item.quantity,
-        'image': item.product.imageUrls.isNotEmpty ? item.product.imageUrls.first : 'assets/images/shampoo.jpg',
+        'image': canonicalProd.primaryImageUrl.isNotEmpty ? canonicalProd.primaryImageUrl : 'assets/images/shampoo.jpg',
         'index': entry.key,
       };
     }).toList();
