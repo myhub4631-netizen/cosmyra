@@ -235,10 +235,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         'free_from_claims': p.freeFromClaims,
         'is_featured': p.isFeatured,
         'is_active': true,
-        'media_version': p.mediaVersion,
-        'product_version': p.productVersion,
         'updated_at': DateTime.now().toIso8601String(),
-        'media_updated_at': p.mediaUpdatedAt ?? DateTime.now().toIso8601String(),
       };
 
       await supabase.from('products').upsert(productData);
@@ -275,8 +272,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
           'id': uuidImageId,
           'product_id': uuidProdId,
           'image_url': url,
+          'alt_text': '${p.name} image $i',
           'display_order': i,
-          'version': p.mediaVersion,
           'is_primary': i == 0,
         };
         await supabase.from('product_images').upsert(imgData);
