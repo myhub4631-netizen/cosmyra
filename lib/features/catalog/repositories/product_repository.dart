@@ -143,7 +143,18 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          resultMap[key] = rp;
+          if (resultMap.containsKey(key)) {
+            final existing = resultMap[key]!;
+            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
+            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
+            if (existingHasCustomImg && !rpHasCustomImg) {
+              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            } else {
+              resultMap[key] = rp;
+            }
+          } else {
+            resultMap[key] = rp;
+          }
         }
         state = resultMap.values.toList();
         await _saveProductsToStorage();
@@ -340,7 +351,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       // Save resolved image URLs to local state & storage and evict image cache
       if (resolvedUrls.isNotEmpty) {
         final updatedProduct = p.copyWith(id: p.id, imageUrls: resolvedUrls);
-        final index = state.indexWhere((prod) => prod.slug.trim().toLowerCase() == p.slug.trim().toLowerCase());
+        final index = state.indexWhere((prod) => 
+          prod.id.trim() == p.id.trim() || 
+          prod.slug.trim().toLowerCase() == p.slug.trim().toLowerCase() ||
+          prod.name.trim().toLowerCase() == p.name.trim().toLowerCase()
+        );
         if (index != -1) {
           final List<ProductModel> updated = List.from(state);
           updated[index] = updatedProduct;
