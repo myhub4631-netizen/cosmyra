@@ -338,16 +338,14 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         } catch (_) {}
 
         for (int i = 0; i < httpUrls.length; i++) {
-          final String imageId = _formatAsUuid('img-$prodId-$i');
           final imgData = {
-            'id': imageId,
             'product_id': prodId,
             'image_url': httpUrls[i],
             'alt_text': '${p.name} image $i',
             'display_order': i,
             'is_primary': i == 0,
           };
-          await supabase.from('product_images').upsert(imgData);
+          await supabase.from('product_images').insert(imgData);
         }
       }
 
