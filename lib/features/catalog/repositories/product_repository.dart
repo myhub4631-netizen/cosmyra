@@ -393,7 +393,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     }
   }
 
-  void addProduct(ProductModel product) {
+  Future<void> addProduct(ProductModel product) async {
     final nowStr = DateTime.now().toIso8601String();
     final newProd = product.copyWith(
       mediaVersion: 1,
@@ -403,7 +403,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     );
     upsertProductLocally(newProd);
     _broadcastProductChange('product_upserted', {'product': newProd.toJson()});
-    _syncProductToSupabase(newProd);
+    await _syncProductToSupabase(newProd);
   }
 
   Future<void> updateProduct(ProductModel product) async {

@@ -21,6 +21,7 @@ class AdminProductEditorDialog extends ConsumerStatefulWidget {
 
 class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDialog> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isSaving = false;
 
   // Tab 1: Basic & Pricing
   late TextEditingController _nameController;
@@ -803,98 +804,104 @@ class _AdminProductEditorDialogState extends ConsumerState<AdminProductEditorDia
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  onPressed: () async {
-                    try {
-                      final pendingUrl = _newImageUrlController.text.trim();
-                      final finalImageUrls = List<String>.from(_imageUrls);
-                      if (pendingUrl.isNotEmpty && !finalImageUrls.contains(pendingUrl)) {
-                        finalImageUrls.insert(0, pendingUrl);
-                      }
-                      if (_primaryImageIndex > 0 && _primaryImageIndex < finalImageUrls.length) {
-                        final primaryUrl = finalImageUrls.removeAt(_primaryImageIndex);
-                        finalImageUrls.insert(0, primaryUrl);
-                      }
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          setState(() => _isSaving = true);
+                          try {
+                            final pendingUrl = _newImageUrlController.text.trim();
+                            final finalImageUrls = List<String>.from(_imageUrls);
+                            if (pendingUrl.isNotEmpty && !finalImageUrls.contains(pendingUrl)) {
+                              finalImageUrls.insert(0, pendingUrl);
+                            }
+                            if (_primaryImageIndex > 0 && _primaryImageIndex < finalImageUrls.length) {
+                              final primaryUrl = finalImageUrls.removeAt(_primaryImageIndex);
+                              finalImageUrls.insert(0, primaryUrl);
+                            }
 
-                      final name = _nameController.text.trim().isEmpty ? (widget.product?.name ?? 'New Botanical Product') : _nameController.text.trim();
-                      final price = double.tryParse(_priceController.text) ?? (widget.product?.defaultVariant.price ?? 399.0);
-                      final mrp = double.tryParse(_mrpController.text) ?? (widget.product?.defaultVariant.mrp ?? 499.0);
-                      final stock = int.tryParse(_stockController.text) ?? (widget.product?.defaultVariant.stock ?? 100);
-                      final sku = _skuController.text.trim().isEmpty
-                          ? (widget.product?.defaultVariant.sku ?? 'VDY-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}')
-                          : _skuController.text.trim();
-                      final size = _sizeController.text.trim().isEmpty ? (widget.product?.defaultVariant.sizeLabel ?? '200 ml') : _sizeController.text.trim();
-                      final prodId = (widget.product?.id ?? '').trim().isEmpty ? 'prod-${DateTime.now().millisecondsSinceEpoch}' : widget.product!.id.trim();
+                            final name = _nameController.text.trim().isEmpty ? (widget.product?.name ?? 'New Botanical Product') : _nameController.text.trim();
+                            final price = double.tryParse(_priceController.text) ?? (widget.product?.defaultVariant.price ?? 399.0);
+                            final mrp = double.tryParse(_mrpController.text) ?? (widget.product?.defaultVariant.mrp ?? 499.0);
+                            final stock = int.tryParse(_stockController.text) ?? (widget.product?.defaultVariant.stock ?? 100);
+                            final sku = _skuController.text.trim().isEmpty
+                                ? (widget.product?.defaultVariant.sku ?? 'VDY-SKU-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}')
+                                : _skuController.text.trim();
+                            final size = _sizeController.text.trim().isEmpty ? (widget.product?.defaultVariant.sizeLabel ?? '200 ml') : _sizeController.text.trim();
+                            final prodId = (widget.product?.id ?? '').trim().isEmpty ? 'prod-${DateTime.now().millisecondsSinceEpoch}' : widget.product!.id.trim();
 
-                      final variant = ProductVariant(
-                        id: widget.product?.defaultVariant.id ?? 'var-${DateTime.now().millisecondsSinceEpoch}',
-                        productId: prodId,
-                        sku: sku,
-                        sizeLabel: size,
-                        price: price,
-                        mrp: mrp,
-                        stock: stock,
-                        isDefault: true,
-                      );
+                            final variant = ProductVariant(
+                              id: widget.product?.defaultVariant.id ?? 'var-${DateTime.now().millisecondsSinceEpoch}',
+                              productId: prodId,
+                              sku: sku,
+                              sizeLabel: size,
+                              price: price,
+                              mrp: mrp,
+                              stock: stock,
+                              isDefault: true,
+                            );
 
-                      final updatedProd = ProductModel(
-                        id: prodId,
-                        brandId: widget.product?.brandId ?? 'brand-vaidyam',
-                        categoryId: _selectedCategory,
-                        name: name,
-                        slug: _slugController.text.trim().isEmpty ? (widget.product?.slug ?? 'botanical-product') : _slugController.text.trim(),
-                        tagline: _taglineController.text.trim(),
-                        description: _descController.text.trim().isEmpty ? (widget.product?.description ?? 'Pure botanical formulation.') : _descController.text.trim(),
-                        ingredients: _ingredientsController.text.trim().isEmpty ? (widget.product?.ingredients ?? 'Aqua, Botanical Extracts.') : _ingredientsController.text.trim(),
-                        howToUse: _howToUseController.text.trim(),
-                        freeFromClaims: widget.product?.freeFromClaims ?? const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
-                        variants: [variant],
-                        imageUrls: finalImageUrls,
-                        isFeatured: _isFeatured,
-                      );
+                            final updatedProd = ProductModel(
+                              id: prodId,
+                              brandId: widget.product?.brandId ?? 'brand-vaidyam',
+                              categoryId: _selectedCategory,
+                              name: name,
+                              slug: _slugController.text.trim().isEmpty ? (widget.product?.slug ?? 'botanical-product') : _slugController.text.trim(),
+                              tagline: _taglineController.text.trim(),
+                              description: _descController.text.trim().isEmpty ? (widget.product?.description ?? 'Pure botanical formulation.') : _descController.text.trim(),
+                              ingredients: _ingredientsController.text.trim().isEmpty ? (widget.product?.ingredients ?? 'Aqua, Botanical Extracts.') : _ingredientsController.text.trim(),
+                              howToUse: _howToUseController.text.trim(),
+                              freeFromClaims: widget.product?.freeFromClaims ?? const ['Sulfate Free', 'Paraben Free', 'Cruelty Free'],
+                              variants: [variant],
+                              imageUrls: finalImageUrls,
+                              isFeatured: _isFeatured,
+                            );
 
-                      if (isEditing) {
-                        ref.read(adminProductsProvider.notifier).updateProduct(updatedProd);
-                        ref.read(cartProvider.notifier).refreshProductData(updatedProd);
-                      } else {
-                        ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
-                      }
+                            if (isEditing) {
+                              await ref.read(adminProductsProvider.notifier).updateProduct(updatedProd);
+                              ref.read(cartProvider.notifier).refreshProductData(updatedProd);
+                            } else {
+                              await ref.read(adminProductsProvider.notifier).addProduct(updatedProd);
+                            }
 
-                      ref.invalidate(productsFutureProvider);
-                      ref.invalidate(filteredProductsProvider);
+                            ref.invalidate(productsFutureProvider);
+                            ref.invalidate(filteredProductsProvider);
 
-                      if (context.mounted) {
-                        Navigator.of(context).pop(updatedProd);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(isEditing ? '✓ Saved "$name" & Synced Live!' : '✓ Published "$name" Live to Store!'),
+                            if (context.mounted) {
+                              Navigator.of(context).pop(updatedProd);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(isEditing ? '✓ Saved "$name" & Synced Live!' : '✓ Published "$name" Live to Store!'),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: const Color(0xFF059669),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 3),
                                 ),
-                              ],
-                            ),
-                            backgroundColor: const Color(0xFF059669),
-                            behavior: SnackBarBehavior.floating,
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error saving product: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              setState(() => _isSaving = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error saving product: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.forestSage, foregroundColor: AppColors.softWhite),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text(isEditing ? 'Save Product & SEO Specs' : 'Publish Product'),
+                  icon: _isSaving
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check_circle_outline, size: 18),
+                  label: Text(_isSaving ? 'Uploading & Syncing...' : (isEditing ? 'Save Product & SEO Specs' : 'Publish Product')),
                 ),
               ],
             ),
