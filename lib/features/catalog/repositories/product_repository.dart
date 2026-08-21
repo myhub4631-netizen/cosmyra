@@ -156,7 +156,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     List<ProductModel> localProducts = [];
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v3');
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         for (final item in decoded) {
@@ -216,7 +216,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = state.map((p) => p.toJson()).toList();
-      await prefs.setString('cosmyra_admin_products_v2', jsonEncode(jsonList));
+      await prefs.setString('cosmyra_admin_products_v3', jsonEncode(jsonList));
     } catch (_) {}
   }
 
@@ -602,7 +602,7 @@ class ProductRepository {
     // 2. Load stored local admin products from SharedPreferences
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v3');
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
         for (final item in decoded) {
