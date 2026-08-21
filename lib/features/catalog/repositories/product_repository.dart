@@ -154,64 +154,24 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
   Future<void> _loadProductsFromStorage() async {
     await _loadDeletedIds();
-    List<ProductModel> localProducts = [];
     try {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cosmyra_admin_products_v1');
+      await prefs.remove('cosmyra_admin_products_v2');
       await prefs.remove('cosmyra_admin_products_v3');
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v4');
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonStr);
-        for (final item in decoded) {
-          try {
-            if (item is Map<String, dynamic>) {
-              final p = ProductModel.fromJson(item);
-              if (!_deletedProductIds.contains(p.id.trim()) && !_deletedProductIds.contains(p.slug.trim().toLowerCase())) {
-                localProducts.add(p);
-              }
-            }
-          } catch (_) {}
-        }
-      }
+      await prefs.remove('cosmyra_admin_products_v4');
     } catch (_) {}
 
-    final Map<String, ProductModel> initialMap = {};
-    for (final fp in ProductRepository._fallbackProducts) {
-      if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-        initialMap[fp.slug.trim().toLowerCase()] = fp;
-      }
-    }
-    for (final lp in localProducts) {
-      initialMap[lp.slug.trim().toLowerCase()] = lp;
-    }
-    state = initialMap.values.toList();
+    await fetchFreshFromSupabase();
 
-    if (SupabaseConfig.isConfigured) {
-      try {
-        final remoteProducts = await ProductRepository().getProducts();
-        final validRemote = remoteProducts.where((p) => 
-          !_deletedProductIds.contains(p.id.trim()) && 
-          !_deletedProductIds.contains(p.slug.trim().toLowerCase())
-        ).toList();
-
-        final Map<String, ProductModel> resultMap = {};
-        for (final fp in ProductRepository._fallbackProducts) {
-          if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-            resultMap[fp.slug.trim().toLowerCase()] = fp;
-          }
+    if (state.isEmpty) {
+      final Map<String, ProductModel> fallbackMap = {};
+      for (final fp in ProductRepository._fallbackProducts) {
+        if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
+          fallbackMap[fp.slug.trim().toLowerCase()] = fp;
         }
-        for (final lp in localProducts) {
-          resultMap[lp.slug.trim().toLowerCase()] = lp;
-        }
-        for (final rp in validRemote) {
-          final key = rp.slug.trim().toLowerCase();
-          resultMap[key] = rp;
-        }
-        ProductImageWidget.clearAllCaches();
-        state = resultMap.values.toList();
-        _saveProductsToStorage();
-      } catch (e) {
-        print('Error fetching real products from Supabase: $e');
       }
+      state = fallbackMap.values.toList();
     }
   }
 
@@ -219,7 +179,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = state.map((p) => p.toJson()).toList();
-      await prefs.setString('cosmyra_admin_products_v4', jsonEncode(jsonList));
+      await prefs.setString('cosmyra_admin_products_v5', jsonEncode(jsonList));
     } catch (_) {}
   }
 
