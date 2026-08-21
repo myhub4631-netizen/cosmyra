@@ -350,6 +350,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
 
   // 4. Category List Cards Container
   Widget _buildCategoryListCard(BuildContext context) {
+    final allProducts = ref.watch(adminProductsProvider);
     final search = _searchController.text.trim().toLowerCase();
     final filteredCategories = _categoriesList.where((cat) {
       if (search.isEmpty) return true;
@@ -373,6 +374,13 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
         children: filteredCategories.asMap().entries.map((entry) {
           final idx = entry.key;
           final cat = entry.value;
+          final String catId = cat['id'] as String;
+
+          final int matchingCount = allProducts.where((p) {
+            final pCat = p.categoryId.replaceAll('cat-', '').toLowerCase();
+            return pCat.contains(catId.toLowerCase()) || catId.toLowerCase().contains(pCat);
+          }).length;
+          final String dynamicCountStr = matchingCount > 0 ? '$matchingCount products' : (cat['itemsCount'] as String);
 
           return Column(
             children: [
@@ -394,7 +402,7 @@ class _VaidyamMobileCategoryScreenWidgetState extends ConsumerState<VaidyamMobil
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _textDark),
                 ),
                 subtitle: Text(
-                  cat['itemsCount'] as String,
+                  dynamicCountStr,
                   style: const TextStyle(fontSize: 11, color: _textMuted),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: _textMuted, size: 22),

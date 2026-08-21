@@ -130,13 +130,13 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         ).toList();
 
         final Map<String, ProductModel> resultMap = {};
-        for (final rp in validRemote) {
-          resultMap[rp.id.trim()] = rp;
-        }
         for (final localP in state) {
           if (!_deletedProductIds.contains(localP.id.trim()) && !_deletedProductIds.contains(localP.slug.trim().toLowerCase())) {
             resultMap[localP.id.trim()] = localP;
           }
+        }
+        for (final rp in validRemote) {
+          resultMap[rp.id.trim()] = rp;
         }
         state = resultMap.values.toList();
         await _saveProductsToStorage();
@@ -180,11 +180,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         ).toList();
 
         final Map<String, ProductModel> resultMap = {};
-        for (final rp in validRemote) {
-          resultMap[rp.id.trim()] = rp;
-        }
         for (final lp in localProducts) {
           resultMap[lp.id.trim()] = lp;
+        }
+        for (final rp in validRemote) {
+          resultMap[rp.id.trim()] = rp;
         }
         ProductImageWidget.clearAllCaches();
         state = resultMap.values.toList();
@@ -208,73 +208,39 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   Future<String> _uploadBase64ToStorage(String dataUri, String productId, int index) async {
     if (!dataUri.startsWith('data:')) return dataUri;
     try {
-      // Extract mime type and base64 data
-      final mimeMatch = RegExp(r'data:image/([a-zA-Z]+);base64,').firstMatch(dataUri);
+      final mimeMatch = RegExp(r'data:image/([a-zA-Z0-9+\-]+);base64,').firstMatch(dataUri);
       final extension = mimeMatch?.group(1) ?? 'png';
       final base64Str = dataUri.split(',').last.replaceAll(RegExp(r'[\r\n\s]+'), '');
       final Uint8List bytes = base64Decode(base64Str);
 
-      final filePath = 'product-images/$productId/img_${index}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final cleanProductId = productId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
+      final filePath = '$cleanProductId/img_${index}_${DateTime.now().millisecondsSinceEpoch}.$extension';
 
-      // Upload to Supabase Storage bucket 'product-images'
       await supabase.storage.from('product-images').uploadBinary(
         filePath,
         bytes,
         fileOptions: FileOptions(contentType: 'image/$extension', upsert: true),
       );
 
-      // Get the public URL
       final publicUrl = supabase.storage.from('product-images').getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
       print('Error uploading image to Supabase Storage: $e');
-      return dataUri; // Fallback: keep the base64 data URI
+      return dataUri;
     }
-  }
-
-  static String _formatAsUuid(String input) {
-    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(input)) {
-      return input;
-    }
-    final clean = input.replaceAll(RegExp(r'[^a-fA-F0-9]'), '');
-    final padded = clean.padRight(32, '0');
-    final hex = padded.length > 32 ? padded.substring(0, 32) : padded;
-    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-4${hex.substring(13, 16)}-a${hex.substring(17, 20)}-${hex.substring(20, 32)}';
-  }
-
-  static String _resolveCategoryId(String categoryIdOrSlug) {
-    final clean = categoryIdOrSlug.toLowerCase().replaceAll('cat-', '').trim();
-    if (clean.contains('hair')) {
-      return 'e12a1332-bfcb-4179-bdf8-52ecb5d7ee54'; // Haircare Category UUID
-    } else if (clean.contains('skin')) {
-      return 'b481633d-9952-410e-90e9-f93cec2b5b9e'; // Skincare Category UUID
-    } else if (clean.contains('well')) {
-      return 'd8743d43-e440-4372-a0f4-68fa1cfe3651'; // Wellness Category UUID
-    }
-    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(categoryIdOrSlug)) {
-      return categoryIdOrSlug;
-    }
-    return 'b481633d-9952-410e-90e9-f93cec2b5b9e';
-  }
-
-  static String _resolveBrandId(String brandIdOrSlug) {
-    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(brandIdOrSlug)) {
-      return brandIdOrSlug;
-    }
-    return '6242b75a-f2b3-4895-8927-95ce0e24fa3c'; // Vaidyam Brand UUID
   }
 
   Future<void> _syncProductToSupabase(ProductModel p) async {
     if (!SupabaseConfig.isConfigured) return;
     try {
-      final String uuidProdId = _formatAsUuid(p.id);
-      final String uuidBrandId = _resolveBrandId(p.brandId);
-      final String uuidCategoryId = _resolveCategoryId(p.categoryId);
+      final String prodId = p.id.trim();
+      final String brandId = p.brandId.trim().isEmpty ? 'brand-vaidyam' : p.brandId.trim();
+      final String categoryId = p.categoryId.trim().isEmpty ? 'cat-skincare' : p.categoryId.trim();
 
       final productData = {
-        'id': uuidProdId,
-        'brand_id': uuidBrandId,
-        'category_id': uuidCategoryId,
+        'id': prodId,
+        'brand_id': brandId,
+        'category_id': categoryId,
         'name': p.name,
         'slug': p.slug,
         'tagline': p.tagline,
@@ -290,10 +256,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       await supabase.from('products').upsert(productData);
 
       for (final v in p.variants) {
-        final String uuidVariantId = _formatAsUuid(v.id);
+        final String variantId = v.id.trim().isEmpty ? 'var-$prodId' : v.id.trim();
         final variantData = {
-          'id': uuidVariantId,
-          'product_id': uuidProdId,
+          'id': variantId,
+          'product_id': prodId,
           'sku': v.sku,
           'size_label': v.sizeLabel,
           'price_inr': v.price,
@@ -307,19 +273,19 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
       // Purge old image entries in Supabase so updated images become primary
       try {
-        await supabase.from('product_images').delete().eq('product_id', uuidProdId);
+        await supabase.from('product_images').delete().eq('product_id', prodId);
       } catch (_) {}
 
       // Upload base64 images to Supabase Storage and save public URLs
       final List<String> resolvedUrls = [];
       for (int i = 0; i < p.imageUrls.length; i++) {
-        final url = await _uploadBase64ToStorage(p.imageUrls[i], uuidProdId, i);
+        final url = await _uploadBase64ToStorage(p.imageUrls[i], prodId, i);
         resolvedUrls.add(url);
 
-        final String uuidImageId = _formatAsUuid('img-${p.id}-$i');
+        final String imageId = 'img-$prodId-$i';
         final imgData = {
-          'id': uuidImageId,
-          'product_id': uuidProdId,
+          'id': imageId,
+          'product_id': prodId,
           'image_url': url,
           'alt_text': '${p.name} image $i',
           'display_order': i,
@@ -332,8 +298,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       if (resolvedUrls.any((url) => url.startsWith('http'))) {
         final hasChanges = resolvedUrls.asMap().entries.any((e) => e.value != p.imageUrls[e.key]);
         if (hasChanges) {
-          final updatedProduct = p.copyWith(id: uuidProdId, imageUrls: resolvedUrls);
-          final index = state.indexWhere((prod) => prod.id.trim() == p.id.trim() || prod.id.trim() == uuidProdId);
+          final updatedProduct = p.copyWith(id: prodId, imageUrls: resolvedUrls);
+          final index = state.indexWhere((prod) => prod.id.trim() == prodId);
           if (index != -1) {
             final List<ProductModel> updated = List.from(state);
             updated[index] = updatedProduct;
