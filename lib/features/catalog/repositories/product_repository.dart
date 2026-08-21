@@ -142,18 +142,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          if (resultMap.containsKey(key)) {
-            final existing = resultMap[key]!;
-            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
-            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
-            if (existingHasCustomImg && !rpHasCustomImg) {
-              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
-            } else {
-              resultMap[key] = rp;
-            }
-          } else {
-            resultMap[key] = rp;
-          }
+          resultMap[key] = rp;
         }
         state = resultMap.values.toList();
         await _saveProductsToStorage();
@@ -215,18 +204,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          if (resultMap.containsKey(key)) {
-            final existing = resultMap[key]!;
-            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
-            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
-            if (existingHasCustomImg && !rpHasCustomImg) {
-              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
-            } else {
-              resultMap[key] = rp;
-            }
-          } else {
-            resultMap[key] = rp;
-          }
+          resultMap[key] = rp;
         }
         ProductImageWidget.clearAllCaches();
         state = resultMap.values.toList();
