@@ -142,9 +142,15 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+          if (resultMap.containsKey(key)) {
             final existing = resultMap[key]!;
-            resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
+            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
+            if (existingHasCustomImg && !rpHasCustomImg) {
+              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            } else {
+              resultMap[key] = rp;
+            }
           } else {
             resultMap[key] = rp;
           }
@@ -208,9 +214,15 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+          if (resultMap.containsKey(key)) {
             final existing = resultMap[key]!;
-            resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
+            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
+            if (existingHasCustomImg && !rpHasCustomImg) {
+              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            } else {
+              resultMap[key] = rp;
+            }
           } else {
             resultMap[key] = rp;
           }
@@ -685,9 +697,15 @@ class ProductRepository {
           for (final rp in fetched) {
             final key = rp.slug.trim().toLowerCase();
             if (!deletedIds.contains(rp.id.trim()) && !deletedIds.contains(key)) {
-              if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+              if (resultMap.containsKey(key)) {
                 final existing = resultMap[key]!;
-                resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+                final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
+                final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
+                if (existingHasCustomImg && !rpHasCustomImg) {
+                  resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+                } else {
+                  resultMap[key] = rp;
+                }
               } else {
                 resultMap[key] = rp;
               }
