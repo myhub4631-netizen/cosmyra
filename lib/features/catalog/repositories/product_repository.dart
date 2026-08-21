@@ -295,7 +295,18 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   Future<void> _syncProductToSupabase(ProductModel p) async {
     if (!SupabaseConfig.isConfigured) return;
     try {
-      final String prodId = _formatAsUuid(p.id);
+      String prodId = _formatAsUuid(p.id);
+      try {
+        final existing = await supabase
+            .from('products')
+            .select('id')
+            .eq('slug', p.slug.trim())
+            .maybeSingle();
+        if (existing != null && existing['id'] != null) {
+          prodId = existing['id'].toString();
+        }
+      } catch (_) {}
+
       final String brandId = _resolveBrandId(p.brandId);
       final String categoryId = _resolveCategoryId(p.categoryId);
 
@@ -667,7 +678,8 @@ class ProductRepository {
         final response = await supabase
             .from('products')
             .select('*, product_variants(*), product_images(*)')
-            .eq('is_active', true);
+            .eq('is_active', true)
+            .order('updated_at', ascending: false);
         if (response.isNotEmpty) {
           final List<ProductModel> fetched = (response as List).map((json) => ProductModel.fromJson(json)).toList();
           for (final rp in fetched) {
