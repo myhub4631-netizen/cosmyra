@@ -112,10 +112,15 @@ class ProductImageWidget extends StatelessWidget {
       );
     }
 
+    // Native Android / iOS Build: Fetch fresh live images from Supabase Storage
+    final String liveNativeUrl = trimmedUrl.startsWith('http')
+        ? (trimmedUrl.contains('?') ? '$trimmedUrl&t=${DateTime.now().millisecondsSinceEpoch ~/ 300000}' : '$trimmedUrl?t=${DateTime.now().millisecondsSinceEpoch ~/ 300000}')
+        : trimmedUrl;
+
     return CachedNetworkImage(
-      key: ValueKey('net_$trimmedUrl'),
-      imageUrl: trimmedUrl,
-      cacheKey: trimmedUrl,
+      key: ValueKey('native_net_${liveNativeUrl.hashCode}'),
+      imageUrl: liveNativeUrl,
+      cacheKey: liveNativeUrl,
       width: width,
       height: height,
       fit: fit,

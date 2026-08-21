@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +27,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
   Future<void> _initCatalog() async {
     await _loadDeletedIds();
-    await _loadProductsFromStorage();
+    if (!kIsWeb) {
+      await fetchFreshFromSupabase();
+    } else {
+      await _loadProductsFromStorage();
+    }
     _subscribeToSupabaseRealtime();
   }
 
@@ -644,26 +649,7 @@ class ProductRepository {
       }
     }
 
-    // 2. Load stored local admin products from SharedPreferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v4');
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonStr);
-        for (final item in decoded) {
-          try {
-            if (item is Map<String, dynamic>) {
-              final p = ProductModel.fromJson(item);
-              if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
-                resultMap[p.slug.trim().toLowerCase()] = p;
-              }
-            }
-          } catch (_) {}
-        }
-      }
-    } catch (_) {}
-
-    // 3. Load remote live products from Supabase database
+    // 2. Load remote live products from Supabase database (Top Priority)
     try {
       if (SupabaseConfig.isConfigured) {
         final response = await supabase
@@ -676,24 +662,34 @@ class ProductRepository {
           for (final rp in fetched) {
             final key = rp.slug.trim().toLowerCase();
             if (!deletedIds.contains(rp.id.trim()) && !deletedIds.contains(key)) {
-              if (resultMap.containsKey(key)) {
-                final existing = resultMap[key]!;
-                final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
-                final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
-                if (existingHasCustomImg && !rpHasCustomImg) {
-                  resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
-                } else {
-                  resultMap[key] = rp;
-                }
-              } else {
-                resultMap[key] = rp;
-              }
+              resultMap[key] = rp;
             }
           }
         }
       }
     } catch (e) {
       print('Supabase fetch failed: $e');
+    }
+
+    // 3. Fallback to local stored products if remote database is unavailable
+    if (resultMap.isEmpty) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final String? jsonStr = prefs.getString('cosmyra_admin_products_v5');
+        if (jsonStr != null && jsonStr.isNotEmpty) {
+          final List<dynamic> decoded = jsonDecode(jsonStr);
+          for (final item in decoded) {
+            try {
+              if (item is Map<String, dynamic>) {
+                final p = ProductModel.fromJson(item);
+                if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
+                  resultMap[p.slug.trim().toLowerCase()] = p;
+                }
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
     }
 
     return resultMap.values.toList();
