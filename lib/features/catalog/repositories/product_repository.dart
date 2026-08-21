@@ -356,19 +356,17 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         await supabase.from('product_images').upsert(imgData);
       }
 
-      // If any base64 images were converted to public URLs, update local state too
-      if (resolvedUrls.any((url) => url.startsWith('http'))) {
-        final hasChanges = resolvedUrls.asMap().entries.any((e) => e.value != p.imageUrls[e.key]);
-        if (hasChanges) {
-          final updatedProduct = p.copyWith(id: p.id, imageUrls: resolvedUrls);
-          final index = state.indexWhere((prod) => prod.slug.trim().toLowerCase() == p.slug.trim().toLowerCase());
-          if (index != -1) {
-            final List<ProductModel> updated = List.from(state);
-            updated[index] = updatedProduct;
-            state = updated;
-            _saveProductsToStorage();
-          }
+      // Save resolved image URLs to local state & storage and evict image cache
+      if (resolvedUrls.isNotEmpty) {
+        final updatedProduct = p.copyWith(id: p.id, imageUrls: resolvedUrls);
+        final index = state.indexWhere((prod) => prod.slug.trim().toLowerCase() == p.slug.trim().toLowerCase());
+        if (index != -1) {
+          final List<ProductModel> updated = List.from(state);
+          updated[index] = updatedProduct;
+          state = updated;
+          await _saveProductsToStorage();
         }
+        ProductImageWidget.clearAllCaches();
       }
     } catch (e) {
       print('Sync product to Supabase error: $e');
@@ -655,7 +653,7 @@ class ProductRepository {
             if (item is Map<String, dynamic>) {
               final p = ProductModel.fromJson(item);
               if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
-                resultMap[p.id.trim()] = p;
+                resultMap[p.slug.trim().toLowerCase()] = p;
               }
             }
           } catch (_) {}
@@ -672,9 +670,15 @@ class ProductRepository {
             .eq('is_active', true);
         if (response.isNotEmpty) {
           final List<ProductModel> fetched = (response as List).map((json) => ProductModel.fromJson(json)).toList();
-          for (final p in fetched) {
-            if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
-              resultMap[p.id.trim()] = p;
+          for (final rp in fetched) {
+            final key = rp.slug.trim().toLowerCase();
+            if (!deletedIds.contains(rp.id.trim()) && !deletedIds.contains(key)) {
+              if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+                final existing = resultMap[key]!;
+                resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+              } else {
+                resultMap[key] = rp;
+              }
             }
           }
         }
