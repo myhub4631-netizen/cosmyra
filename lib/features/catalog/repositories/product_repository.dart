@@ -590,6 +590,35 @@ class ProductRepository {
       }
     } catch (_) {}
 
+    final Map<String, ProductModel> resultMap = {};
+
+    // 1. Seed fallback products as baseline
+    for (final fp in _fallbackProducts) {
+      if (!deletedIds.contains(fp.id.trim()) && !deletedIds.contains(fp.slug.trim().toLowerCase())) {
+        resultMap[fp.id.trim()] = fp;
+      }
+    }
+
+    // 2. Load stored local admin products from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        for (final item in decoded) {
+          try {
+            if (item is Map<String, dynamic>) {
+              final p = ProductModel.fromJson(item);
+              if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
+                resultMap[p.id.trim()] = p;
+              }
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    // 3. Load remote live products from Supabase database
     try {
       if (SupabaseConfig.isConfigured) {
         final response = await supabase
@@ -598,35 +627,18 @@ class ProductRepository {
             .eq('is_active', true);
         if (response.isNotEmpty) {
           final List<ProductModel> fetched = (response as List).map((json) => ProductModel.fromJson(json)).toList();
-          return fetched.where((p) => !deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())).toList();
+          for (final p in fetched) {
+            if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
+              resultMap[p.id.trim()] = p;
+            }
+          }
         }
       }
     } catch (e) {
       print('Supabase fetch failed: $e');
     }
 
-    // Try loading saved admin products from SharedPreferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString('cosmyra_admin_products_v2');
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(jsonStr);
-        final List<ProductModel> stored = [];
-        for (final item in decoded) {
-          try {
-            if (item is Map<String, dynamic>) {
-              final p = ProductModel.fromJson(item);
-              if (!deletedIds.contains(p.id.trim()) && !deletedIds.contains(p.slug.trim().toLowerCase())) {
-                stored.add(p);
-              }
-            }
-          } catch (_) {}
-        }
-        if (stored.isNotEmpty) return stored;
-      }
-    } catch (_) {}
-
-    return [];
+    return resultMap.values.toList();
   }
 
   // Fallback initial categories
