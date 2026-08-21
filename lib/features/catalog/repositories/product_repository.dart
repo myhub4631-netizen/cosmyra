@@ -143,14 +143,14 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         }
         for (final rp in validRemote) {
           final key = rp.slug.trim().toLowerCase();
-          if (resultMap.containsKey(key)) {
+          final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
+          if (rpHasCustomImg) {
+            resultMap[key] = rp;
+          } else if (resultMap.containsKey(key)) {
             final existing = resultMap[key]!;
             final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
             if (existingHasCustomImg) {
-              resultMap[key] = rp.copyWith(
-                imageUrls: existing.imageUrls,
-                mediaVersion: existing.mediaVersion,
-              );
+              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
             } else {
               resultMap[key] = rp;
             }
