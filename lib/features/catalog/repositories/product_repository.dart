@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
@@ -222,21 +223,33 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     if (!dataUri.startsWith('data:')) return dataUri;
     try {
       final mimeMatch = RegExp(r'data:image/([a-zA-Z0-9+\-]+);base64,').firstMatch(dataUri);
-      final extension = mimeMatch?.group(1) ?? 'png';
+      var extension = mimeMatch?.group(1) ?? 'png';
+      if (extension == 'jpeg') extension = 'jpg';
       final base64Str = dataUri.split(',').last.replaceAll(RegExp(r'[\r\n\s]+'), '');
       final Uint8List bytes = base64Decode(base64Str);
 
       final cleanProductId = productId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
       final filePath = '$cleanProductId/img_${index}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final uploadUrl = Uri.parse('${SupabaseConfig.url}/storage/v1/object/product-images/$filePath');
 
-      await supabase.storage.from('product-images').uploadBinary(
-        filePath,
-        bytes,
-        fileOptions: FileOptions(contentType: 'image/$extension', upsert: true),
+      final response = await http.post(
+        uploadUrl,
+        headers: {
+          'apikey': SupabaseConfig.anonKey,
+          'Authorization': 'Bearer ${SupabaseConfig.anonKey}',
+          'Content-Type': 'image/$extension',
+          'x-upsert': 'true',
+        },
+        body: bytes,
       );
 
-      final publicUrl = supabase.storage.from('product-images').getPublicUrl(filePath);
-      return publicUrl;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final publicUrl = '${SupabaseConfig.url}/storage/v1/object/public/product-images/$filePath';
+        return publicUrl;
+      } else {
+        print('HTTP upload failed with status ${response.statusCode}: ${response.body}');
+        return dataUri;
+      }
     } catch (e) {
       print('Failed to upload image to Supabase Storage: $e');
       return dataUri;
@@ -295,27 +308,33 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         await supabase.from('product_variants').upsert(variantData);
       }
 
-      // Purge old image entries in Supabase so updated images become primary
-      try {
-        await supabase.from('product_images').delete().eq('product_id', prodId);
-      } catch (_) {}
-
-      // Upload base64 images to Supabase Storage and save public URLs
+      // Upload base64 images to Supabase Storage and resolve public URLs
       final List<String> resolvedUrls = [];
       for (int i = 0; i < p.imageUrls.length; i++) {
         final url = await _uploadBase64ToStorage(p.imageUrls[i], prodId, i);
         resolvedUrls.add(url);
+      }
 
-        final String imageId = _formatAsUuid('img-$prodId-$i');
-        final imgData = {
-          'id': imageId,
-          'product_id': prodId,
-          'image_url': url,
-          'alt_text': '${p.name} image $i',
-          'display_order': i,
-          'is_primary': i == 0,
-        };
-        await supabase.from('product_images').upsert(imgData);
+      final List<String> httpUrls = resolvedUrls.where((url) => url.startsWith('http')).toList();
+
+      // Only purge & update Supabase product_images table if we have valid public HTTP URLs
+      if (httpUrls.isNotEmpty) {
+        try {
+          await supabase.from('product_images').delete().eq('product_id', prodId);
+        } catch (_) {}
+
+        for (int i = 0; i < httpUrls.length; i++) {
+          final String imageId = _formatAsUuid('img-$prodId-$i');
+          final imgData = {
+            'id': imageId,
+            'product_id': prodId,
+            'image_url': httpUrls[i],
+            'alt_text': '${p.name} image $i',
+            'display_order': i,
+            'is_primary': i == 0,
+          };
+          await supabase.from('product_images').upsert(imgData);
+        }
       }
 
       // Save resolved image URLs to local state & storage and evict image cache
