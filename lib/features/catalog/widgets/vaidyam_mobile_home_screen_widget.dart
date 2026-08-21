@@ -684,7 +684,9 @@ class _VaidyamMobileHomeScreenWidgetState extends ConsumerState<VaidyamMobileHom
   // 4. ⭐ 4 Featured Products 2x2 Grid Section (Right where marked in Red Box!)
   Widget _buildFeaturedProducts2x2Grid(BuildContext context, Set<String> wishlist) {
     final allProducts = ref.watch(adminProductsProvider);
-    final featuredProducts = allProducts.take(4).toList();
+    final featuredList = allProducts.where((p) => p.isFeatured).toList();
+    final nonFeaturedList = allProducts.where((p) => !p.isFeatured).toList();
+    final featuredProducts = [...featuredList, ...nonFeaturedList].take(4).toList();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),

@@ -130,6 +130,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         ).toList();
 
         final Map<String, ProductModel> resultMap = {};
+        for (final fp in ProductRepository._fallbackProducts) {
+          if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
+            resultMap[fp.id.trim()] = fp;
+          }
+        }
         for (final localP in state) {
           if (!_deletedProductIds.contains(localP.id.trim()) && !_deletedProductIds.contains(localP.slug.trim().toLowerCase())) {
             resultMap[localP.id.trim()] = localP;
@@ -167,9 +172,16 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       }
     } catch (_) {}
 
-    if (localProducts.isNotEmpty) {
-      state = localProducts;
+    final Map<String, ProductModel> initialMap = {};
+    for (final fp in ProductRepository._fallbackProducts) {
+      if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
+        initialMap[fp.id.trim()] = fp;
+      }
     }
+    for (final lp in localProducts) {
+      initialMap[lp.id.trim()] = lp;
+    }
+    state = initialMap.values.toList();
 
     if (SupabaseConfig.isConfigured) {
       try {
@@ -180,6 +192,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         ).toList();
 
         final Map<String, ProductModel> resultMap = {};
+        for (final fp in ProductRepository._fallbackProducts) {
+          if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
+            resultMap[fp.id.trim()] = fp;
+          }
+        }
         for (final lp in localProducts) {
           resultMap[lp.id.trim()] = lp;
         }
@@ -637,5 +654,162 @@ class ProductRepository {
     ),
   ];
 
-  static final List<ProductModel> _fallbackProducts = [];
+  static final List<ProductModel> _fallbackProducts = [
+    const ProductModel(
+      id: 'prod-vaidyam-shampoo-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-haircare',
+      name: 'Bhringraj & Neem Botanical Shampoo',
+      slug: 'bhringraj-neem-botanical-shampoo',
+      tagline: 'Deep Scalp Cleans & Hairfall Control',
+      description: 'Handcrafted Ayurvedic formulation infused with pure Bhringraj, Neem, and Amla extracts to strengthen roots and stop hair fall naturally.',
+      ingredients: 'Organic Bhringraj, Neem Leaf Extract, Amla, Reetha, Shikakai, Virgin Coconut Oil, Purified Aqua.',
+      howToUse: 'Apply 5-10ml on wet scalp, massage gently into rich lather for 2 minutes and rinse thoroughly with lukewarm water.',
+      freeFromClaims: ['Paraben Free', 'Sulfate Free', 'Cruelty Free', '100% Vegan'],
+      imageUrls: ['assets/images/shampoo.jpg'],
+      isFeatured: true,
+      variants: [
+        ProductVariant(
+          id: 'var-shampoo-1',
+          productId: 'prod-vaidyam-shampoo-1',
+          sku: 'VDY-SHMP-200',
+          sizeLabel: '200 ml',
+          price: 399.0,
+          mrp: 549.0,
+          stock: 150,
+          isDefault: true,
+        ),
+      ],
+    ),
+    const ProductModel(
+      id: 'prod-vaidyam-facewash-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Saffron & Kumkumadi Radiance Face Wash',
+      slug: 'saffron-kumkumadi-radiance-facewash',
+      tagline: 'Golden Glow & Dark Spot Reduction',
+      description: 'Enriched with Kashmiri Saffron and 26 herbal extracts for clear, even-toned, and radiant Indian skin.',
+      ingredients: 'Kashmiri Saffron (Kesar), Kumkumadi Tailam, Aloe Vera Gel, Manjistha, Sandalwood Extract, Lotus Water.',
+      howToUse: 'Squeeze small amount onto palms. Work into mild lather and massage on damp face in circular motions.',
+      freeFromClaims: ['Soap Free', 'Paraben Free', 'Synthetic Color Free', 'Dermatologically Tested'],
+      imageUrls: ['assets/images/facewash.jpg'],
+      isFeatured: true,
+      variants: [
+        ProductVariant(
+          id: 'var-facewash-1',
+          productId: 'prod-vaidyam-facewash-1',
+          sku: 'VDY-FW-100',
+          sizeLabel: '100 ml',
+          price: 299.0,
+          mrp: 399.0,
+          stock: 200,
+          isDefault: true,
+        ),
+      ],
+    ),
+    const ProductModel(
+      id: 'prod-vaidyam-soap-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Cold-Pressed Herbal De-Tan Soap Bar',
+      slug: 'cold-pressed-herbal-detan-soap',
+      tagline: 'Exfoliating Neem & Turmeric Bar',
+      description: 'Traditional cold-processed soap made with raw coconut oil, wild turmeric, and neem for deep skin detoxification.',
+      ingredients: 'Cold-Pressed Coconut Oil, Wild Turmeric (Kasturi Manjal), Neem Leaves, Vetiver Root Oil, Pure Glycerin.',
+      howToUse: 'Lather gently over wet body during shower. Leave on skin for 1 minute before rinsing clean.',
+      freeFromClaims: ['Palm Oil Free', 'Chemical Free', '100% Handcrafted', 'Biodegradable'],
+      imageUrls: ['assets/images/soap.jpg'],
+      isFeatured: true,
+      variants: [
+        ProductVariant(
+          id: 'var-soap-1',
+          productId: 'prod-vaidyam-soap-1',
+          sku: 'VDY-SOAP-125',
+          sizeLabel: '125 g',
+          price: 199.0,
+          mrp: 249.0,
+          stock: 300,
+          isDefault: true,
+        ),
+      ],
+    ),
+    const ProductModel(
+      id: 'prod-vaidyam-serum-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-skincare',
+      name: 'Kumkumadi Tailam & Saffron Night Serum',
+      slug: 'kumkumadi-tailam-saffron-night-serum',
+      tagline: '100% Pure Youth Elixir & Overnight Repair',
+      description: 'Precious Ayurvedic miracle elixir formulation distilled with saffron stigmas, goat milk, and 26 botanicals for ageless radiance.',
+      ingredients: 'Saffron (Kesar), Goat Milk, Sandalwood (Chandan), Vetiver, Licorice (Yasthimadhu), Manjistha, Sesame Oil.',
+      howToUse: 'Apply 3-4 drops on cleansed face before bedtime. Gently press into face and neck using fingertips until absorbed.',
+      freeFromClaims: ['100% Organic', 'Mineral Oil Free', 'No Artificial Fragrance', 'Cruelty Free'],
+      imageUrls: ['assets/images/facewash.jpg'],
+      isFeatured: true,
+      variants: [
+        ProductVariant(
+          id: 'var-serum-1',
+          productId: 'prod-vaidyam-serum-1',
+          sku: 'VDY-SER-30',
+          sizeLabel: '30 ml',
+          price: 699.0,
+          mrp: 899.0,
+          stock: 100,
+          isDefault: true,
+        ),
+      ],
+    ),
+    const ProductModel(
+      id: 'prod-vaidyam-bodyoil-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-wellness',
+      name: 'Nalpamaradi Clarifying Body Thailam',
+      slug: 'nalpamaradi-clarifying-body-thailam',
+      tagline: 'Brightening & Anti-Pigmentation Oil',
+      description: 'Heritage Ayurvedic skin oil made with 4 Ficus barks and turmeric to clarify complexion, reduce tan, and restore natural glow.',
+      ingredients: 'Bark of 4 Ficus Trees (Nalpamara), Turmeric, Sesame Oil, Vetiver, Banyan Bark, Peepal Bark.',
+      howToUse: 'Massage gently over body 30 minutes before bathing. Wash off with warm water and herbal soap.',
+      freeFromClaims: ['100% Herbal', 'No Synthetic Colors', 'Ayurvedic Pharmacopoeia Grade'],
+      imageUrls: ['assets/images/soap.jpg'],
+      isFeatured: false,
+      variants: [
+        ProductVariant(
+          id: 'var-bodyoil-1',
+          productId: 'prod-vaidyam-bodyoil-1',
+          sku: 'VDY-OIL-200',
+          sizeLabel: '200 ml',
+          price: 499.0,
+          mrp: 649.0,
+          stock: 120,
+          isDefault: true,
+        ),
+      ],
+    ),
+    const ProductModel(
+      id: 'prod-vaidyam-aloegel-1',
+      brandId: 'brand-vaidyam',
+      categoryId: 'cat-wellness',
+      name: 'Organic Aloe Vera & Neem Hydrating Gel',
+      slug: 'organic-aloe-vera-neem-hydrating-gel',
+      tagline: 'Cooling Hydration for Face & Hair',
+      description: '99% pure cold-pressed aloe vera gel with organic neem water for multi-purpose skin soothing, scalp hydration, and acne control.',
+      ingredients: 'Cold-Pressed Aloe Vera Leaf Juice, Organic Neem Water, Green Tea Extract, Natural Vegetable Glycerin.',
+      howToUse: 'Apply directly onto face, scalp, or skin after sun exposure or daily cleansing for instant cooling hydration.',
+      freeFromClaims: ['Alcohol Free', 'Silicone Free', 'Non-Sticky', '100% Pure Gel'],
+      imageUrls: ['assets/images/shampoo.jpg'],
+      isFeatured: false,
+      variants: [
+        ProductVariant(
+          id: 'var-aloegel-1',
+          productId: 'prod-vaidyam-aloegel-1',
+          sku: 'VDY-ALOE-150',
+          sizeLabel: '150 g',
+          price: 249.0,
+          mrp: 349.0,
+          stock: 180,
+          isDefault: true,
+        ),
+      ],
+    ),
+  ];
 }
