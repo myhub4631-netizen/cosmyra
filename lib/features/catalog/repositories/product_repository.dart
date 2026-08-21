@@ -496,13 +496,18 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
   Future<void> resetToDefaultCatalog() async {
     ProductImageWidget.clearAllCaches();
+    _deletedProductIds.clear();
     try {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cosmyra_admin_products_v1');
       await prefs.remove('cosmyra_admin_products_v2');
-      await prefs.remove('cosmyra_homepage_cms_sections_v2');
+      await prefs.remove('cosmyra_admin_products_v3');
+      await prefs.remove('cosmyra_admin_products_v4');
+      await prefs.remove('cosmyra_deleted_product_ids_v1');
     } catch (_) {}
-    state = [];
+    state = List.from(ProductRepository._fallbackProducts);
     await _saveProductsToStorage();
+    await fetchFreshFromSupabase();
   }
 
   void restockProduct(String productId, int addAmount) {
