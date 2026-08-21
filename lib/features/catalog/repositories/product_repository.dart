@@ -146,9 +146,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
           if (resultMap.containsKey(key)) {
             final existing = resultMap[key]!;
             final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
-            final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
-            if (existingHasCustomImg && !rpHasCustomImg) {
-              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+            if (existingHasCustomImg) {
+              resultMap[key] = rp.copyWith(
+                imageUrls: existing.imageUrls,
+                mediaVersion: existing.mediaVersion,
+              );
             } else {
               resultMap[key] = rp;
             }
@@ -201,19 +203,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     }
     final clean = input.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
     final padded = clean.padRight(32, '0').substring(0, 32);
-    final part1 = padded.substring(0, 8);
-    final part2 = padded.substring(8, 12);
-    final part3 = padded.substring(12, 16);
-    final part4 = padded.substring(16, 20);
-    final part5 = padded.substring(20, 32);
-    return '$part1-$part2-$part3-$part4-$part5';
+    return '${padded.substring(0, 8)}-${padded.substring(8, 12)}-${padded.substring(12, 16)}-${padded.substring(16, 20)}-${padded.substring(20, 32)}';
   }
 
   String _resolveBrandId(String brandId) {
-    if (brandId.trim().isEmpty || brandId.contains('vaidyam')) {
-      return '6242b75a-f2b3-4895-8927-95ce0e24fa3c';
-    }
-    return _formatAsUuid(brandId);
+    return '6242b75a-f2b3-4895-8927-95ce0e24fa3c';
   }
 
   String _resolveCategoryId(String catId) {
@@ -241,8 +235,20 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
 
       final cleanProductId = productId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
       final filePath = '$cleanProductId/img_${index}_${DateTime.now().millisecondsSinceEpoch}.$extension';
-      final uploadUrl = Uri.parse('${SupabaseConfig.url}/storage/v1/object/product-images/$filePath');
 
+      // 1. Try SDK upload
+      try {
+        await supabase.storage.from('product-images').uploadBinary(
+          filePath,
+          bytes,
+          fileOptions: FileOptions(contentType: 'image/$extension', upsert: true),
+        );
+        final publicUrl = supabase.storage.from('product-images').getPublicUrl(filePath);
+        if (publicUrl.startsWith('http')) return publicUrl;
+      } catch (_) {}
+
+      // 2. Fallback to direct HTTP POST upload
+      final uploadUrl = Uri.parse('${SupabaseConfig.url}/storage/v1/object/product-images/$filePath');
       final response = await http.post(
         uploadUrl,
         headers: {
@@ -257,14 +263,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final publicUrl = '${SupabaseConfig.url}/storage/v1/object/public/product-images/$filePath';
         return publicUrl;
-      } else {
-        print('HTTP upload failed with status ${response.statusCode}: ${response.body}');
-        return dataUri;
       }
     } catch (e) {
       print('Failed to upload image to Supabase Storage: $e');
-      return dataUri;
     }
+    return dataUri;
   }
 
   Future<void> _syncProductToSupabase(ProductModel p) async {
