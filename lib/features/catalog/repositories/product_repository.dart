@@ -132,16 +132,22 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         final Map<String, ProductModel> resultMap = {};
         for (final fp in ProductRepository._fallbackProducts) {
           if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-            resultMap[fp.id.trim()] = fp;
+            resultMap[fp.slug.trim().toLowerCase()] = fp;
           }
         }
         for (final localP in state) {
           if (!_deletedProductIds.contains(localP.id.trim()) && !_deletedProductIds.contains(localP.slug.trim().toLowerCase())) {
-            resultMap[localP.id.trim()] = localP;
+            resultMap[localP.slug.trim().toLowerCase()] = localP;
           }
         }
         for (final rp in validRemote) {
-          resultMap[rp.id.trim()] = rp;
+          final key = rp.slug.trim().toLowerCase();
+          if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+            final existing = resultMap[key]!;
+            resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+          } else {
+            resultMap[key] = rp;
+          }
         }
         state = resultMap.values.toList();
         await _saveProductsToStorage();
@@ -175,11 +181,11 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
     final Map<String, ProductModel> initialMap = {};
     for (final fp in ProductRepository._fallbackProducts) {
       if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-        initialMap[fp.id.trim()] = fp;
+        initialMap[fp.slug.trim().toLowerCase()] = fp;
       }
     }
     for (final lp in localProducts) {
-      initialMap[lp.id.trim()] = lp;
+      initialMap[lp.slug.trim().toLowerCase()] = lp;
     }
     state = initialMap.values.toList();
 
@@ -194,14 +200,20 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         final Map<String, ProductModel> resultMap = {};
         for (final fp in ProductRepository._fallbackProducts) {
           if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-            resultMap[fp.id.trim()] = fp;
+            resultMap[fp.slug.trim().toLowerCase()] = fp;
           }
         }
         for (final lp in localProducts) {
-          resultMap[lp.id.trim()] = lp;
+          resultMap[lp.slug.trim().toLowerCase()] = lp;
         }
         for (final rp in validRemote) {
-          resultMap[rp.id.trim()] = rp;
+          final key = rp.slug.trim().toLowerCase();
+          if (resultMap.containsKey(key) && rp.imageUrls.isEmpty) {
+            final existing = resultMap[key]!;
+            resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
+          } else {
+            resultMap[key] = rp;
+          }
         }
         ProductImageWidget.clearAllCaches();
         state = resultMap.values.toList();
@@ -218,6 +230,39 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       final jsonList = state.map((p) => p.toJson()).toList();
       await prefs.setString('cosmyra_admin_products_v3', jsonEncode(jsonList));
     } catch (_) {}
+  }
+
+  String _formatAsUuid(String input) {
+    if (RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$').hasMatch(input)) {
+      return input;
+    }
+    final clean = input.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+    final padded = clean.padRight(32, '0').substring(0, 32);
+    final part1 = padded.substring(0, 8);
+    final part2 = padded.substring(8, 12);
+    final part3 = padded.substring(12, 16);
+    final part4 = padded.substring(16, 20);
+    final part5 = padded.substring(20, 32);
+    return '$part1-$part2-$part3-$part4-$part5';
+  }
+
+  String _resolveBrandId(String brandId) {
+    if (brandId.trim().isEmpty || brandId.contains('vaidyam')) {
+      return '6242b75a-f2b3-4895-8927-95ce0e24fa3c';
+    }
+    return _formatAsUuid(brandId);
+  }
+
+  String _resolveCategoryId(String catId) {
+    final clean = catId.toLowerCase();
+    if (clean.contains('hair')) {
+      return 'e12a1332-bfcb-4179-bdf8-52ecb5d7ee54';
+    } else if (clean.contains('skin') || clean.contains('face')) {
+      return 'b481633d-9952-410e-90e9-f93cec2b5b9e';
+    } else if (clean.contains('well') || clean.contains('body')) {
+      return 'd8743d43-e440-4372-a0f4-68fa1cfe3651';
+    }
+    return 'b481633d-9952-410e-90e9-f93cec2b5b9e';
   }
 
   /// Upload a base64 data URI to Supabase Storage and return the public URL.
@@ -242,7 +287,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       final publicUrl = supabase.storage.from('product-images').getPublicUrl(filePath);
       return publicUrl;
     } catch (e) {
-      print('Error uploading image to Supabase Storage: $e');
+      print('Failed to upload image to Supabase Storage: $e');
       return dataUri;
     }
   }
@@ -250,9 +295,9 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
   Future<void> _syncProductToSupabase(ProductModel p) async {
     if (!SupabaseConfig.isConfigured) return;
     try {
-      final String prodId = p.id.trim();
-      final String brandId = p.brandId.trim().isEmpty ? 'brand-vaidyam' : p.brandId.trim();
-      final String categoryId = p.categoryId.trim().isEmpty ? 'cat-skincare' : p.categoryId.trim();
+      final String prodId = _formatAsUuid(p.id);
+      final String brandId = _resolveBrandId(p.brandId);
+      final String categoryId = _resolveCategoryId(p.categoryId);
 
       final productData = {
         'id': prodId,
@@ -273,7 +318,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       await supabase.from('products').upsert(productData);
 
       for (final v in p.variants) {
-        final String variantId = v.id.trim().isEmpty ? 'var-$prodId' : v.id.trim();
+        final String variantId = _formatAsUuid(v.id.trim().isEmpty ? 'var-$prodId' : v.id);
         final variantData = {
           'id': variantId,
           'product_id': prodId,
@@ -299,7 +344,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
         final url = await _uploadBase64ToStorage(p.imageUrls[i], prodId, i);
         resolvedUrls.add(url);
 
-        final String imageId = 'img-$prodId-$i';
+        final String imageId = _formatAsUuid('img-$prodId-$i');
         final imgData = {
           'id': imageId,
           'product_id': prodId,
@@ -315,8 +360,8 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       if (resolvedUrls.any((url) => url.startsWith('http'))) {
         final hasChanges = resolvedUrls.asMap().entries.any((e) => e.value != p.imageUrls[e.key]);
         if (hasChanges) {
-          final updatedProduct = p.copyWith(id: prodId, imageUrls: resolvedUrls);
-          final index = state.indexWhere((prod) => prod.id.trim() == prodId);
+          final updatedProduct = p.copyWith(id: p.id, imageUrls: resolvedUrls);
+          final index = state.indexWhere((prod) => prod.slug.trim().toLowerCase() == p.slug.trim().toLowerCase());
           if (index != -1) {
             final List<ProductModel> updated = List.from(state);
             updated[index] = updatedProduct;

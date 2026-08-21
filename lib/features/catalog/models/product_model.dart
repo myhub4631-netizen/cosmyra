@@ -239,6 +239,10 @@ class ProductModel {
           imgs = ['assets/images/soap.jpg'];
         } else if (slug.contains('face') || slug.contains('cleanser') || name.contains('face') || name.contains('cleanser')) {
           imgs = ['assets/images/facewash.jpg'];
+        } else if (slug.contains('serum') || name.contains('serum') || slug.contains('kumkumadi') || name.contains('kumkumadi')) {
+          imgs = ['assets/images/facewash.jpg'];
+        } else if (slug.contains('oil') || name.contains('oil') || slug.contains('thailam') || name.contains('thailam')) {
+          imgs = ['assets/images/soap.jpg'];
         } else {
           imgs = ['assets/images/shampoo.jpg'];
         }
