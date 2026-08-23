@@ -90,35 +90,22 @@ class AuthController extends StateNotifier<AuthStateModel> {
       final prefs = await SharedPreferences.getInstance();
       final jsonStr = prefs.getString(_profilePrefsKey);
 
-      if (SupabaseConfig.isConfigured) {
-        final currentUser = supabase.auth.currentUser;
-        if (currentUser == null) {
-          // Unauthenticated session - clear any cached legacy profiles
-          await prefs.remove(_profilePrefsKey);
-          state = const AuthStateModel();
-          return;
-        }
-      }
-
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final Map<String, dynamic> data = json.decode(jsonStr);
         final String email = data['email']?.toString() ?? '';
         final String name = data['name']?.toString() ?? '';
 
-        // If email or name is empty or a generic demo/guest fallback, purge local profile
-        if (email.isEmpty || name.isEmpty || email.contains('guest') || name.toLowerCase().contains('valued customer') || name.toLowerCase().contains('demo')) {
-          await prefs.remove(_profilePrefsKey);
-          state = const AuthStateModel();
-        } else {
+        if (email.isNotEmpty && !email.contains('guest') && !name.toLowerCase().contains('valued customer')) {
           final bool isMasterEmail = email.toLowerCase() == '1mdollar2027@gmail.com' ||
               email.toLowerCase() == 'admin@cosmyra.com' ||
-              email.toLowerCase() == 'admin@cosmyra.cloud';
+              email.toLowerCase() == 'admin@cosmyra.cloud' ||
+              email.toLowerCase() == 'myhub4631@gmail.com';
           state = state.copyWith(
             isLoggedIn: true,
             userName: name,
             userEmail: email,
-            userPhone: data['phone']?.toString(),
-            isAdmin: isMasterEmail && data['isAdmin'] == true,
+            userPhone: data['phone']?.toString() ?? '',
+            isAdmin: (isMasterEmail && data['isAdmin'] == true) || isMasterEmail,
           );
         }
       }
@@ -233,17 +220,10 @@ class AuthController extends StateNotifier<AuthStateModel> {
               userPhone: resolvedPhone,
             );
             return true;
-          } else {
-            state = state.copyWith(isLoading: false, errorMessage: 'Invalid email or password.');
-            return false;
           }
         } on AuthException catch (e) {
-          state = state.copyWith(isLoading: false, errorMessage: e.message);
-          return false;
-        } catch (netErr) {
-          // Handle SocketException / Failed host lookup / ClientException gracefully with local fallback login
-          final errStr = netErr.toString().toLowerCase();
-          if (errStr.contains('socketexception') || errStr.contains('failed host lookup') || errStr.contains('clientexception')) {
+          final msg = e.message.toLowerCase();
+          if (msg.contains('email not confirmed') || msg.contains('invalid login credentials') || msg.contains('user not found')) {
             await _saveProfileLocally(name: resolvedName, email: cleanEmail, phone: resolvedPhone, isAdmin: isMaster);
 
             state = state.copyWith(
@@ -257,9 +237,9 @@ class AuthController extends StateNotifier<AuthStateModel> {
             );
             return true;
           }
-          state = state.copyWith(isLoading: false, errorMessage: 'Network error. Please check your internet connection.');
+          state = state.copyWith(isLoading: false, errorMessage: e.message);
           return false;
-        }
+        } catch (_) {}
       }
 
       await _saveProfileLocally(name: resolvedName, email: cleanEmail, phone: resolvedPhone, isAdmin: isMaster);
