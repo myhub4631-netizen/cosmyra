@@ -188,33 +188,18 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
         ),
 
         // Brand Logo
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: _primaryPurple,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.local_florist, color: Colors.white, size: 18),
+        InkWell(
+          onTap: () => context.go('/'),
+          child: Image.asset(
+            'assets/images/cosmyra_full_logo.png',
+            height: 38,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Image.asset(
+              'assets/images/cosmyra_logo.png',
+              height: 38,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text(
-                  'Cosmyra',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: _textDark),
-                ),
-                Text(
-                  'Pure Ayurveda. Real Results.',
-                  style: TextStyle(fontSize: 9, color: _textMuted),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
 
         // 100% Secure Badge
@@ -548,9 +533,16 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Shipping ℹ️', style: TextStyle(fontSize: 12, color: _textMuted)),
-              Text('FREE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF16A34A))),
+            children: [
+              const Text('Shipping ℹ️', style: TextStyle(fontSize: 12, color: _textMuted)),
+              Text(
+                widget.shippingFee == 0 ? 'FREE' : '₹${widget.shippingFee.toInt()}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: widget.shippingFee == 0 ? const Color(0xFF16A34A) : _textDark,
+                ),
+              ),
             ],
           ),
 
@@ -852,42 +844,239 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
     );
   }
 
-  // Modal to select coupons
+  // Modal to apply/select coupons
   void _showCouponSelectionModal(BuildContext context) {
+    final couponCtrl = TextEditingController();
+    final allCoupons = ref.read(couponProvider);
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Select Coupon', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: const Icon(Icons.local_offer_rounded, color: _primaryPurple),
-                title: const Text('WELCOME100 (FLAT ₹100 OFF)'),
-                subtitle: const Text('Valid on orders over ₹499'),
-                onTap: () {
-                  ref.read(cartProvider.notifier).applyCoupon('WELCOME100');
-                  Navigator.pop(ctx);
-                },
+        return StatefulBuilder(
+          builder: (modalCtx, setModalState) {
+            final currentCart = ref.watch(cartProvider);
+            final bool hasApplied = currentCart.appliedCouponCode != null && currentCart.appliedCouponCode!.isNotEmpty;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
               ),
-              ListTile(
-                leading: const Icon(Icons.local_offer_rounded, color: _primaryPurple),
-                title: const Text('BOTANICAL20 (20% OFF)'),
-                subtitle: const Text('Special Ayurvedic Discount'),
-                onTap: () {
-                  ref.read(cartProvider.notifier).applyCoupon('BOTANICAL20');
-                  Navigator.pop(ctx);
-                },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Apply Coupon Code', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 20, color: _textMuted),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Coupon Input Box
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: couponCtrl,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            hintText: 'Enter Coupon Code (e.g. VAIDYAM20)',
+                            hintStyle: const TextStyle(fontSize: 12, color: _textMuted),
+                            filled: true,
+                            fillColor: const Color(0xFFF8FAFC),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          final code = couponCtrl.text.trim();
+                          if (code.isEmpty) return;
+                          final applied = ref.read(cartProvider.notifier).applyCoupon(code, availableCoupons: allCoupons);
+                          if (applied) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Coupon "$code" applied successfully!'),
+                                backgroundColor: const Color(0xFF16A34A),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Invalid or ineligible coupon code "$code"!'),
+                                backgroundColor: Colors.red.shade700,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('APPLY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                    ],
+                  ),
+
+                  if (hasApplied) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Active: ${currentCart.appliedCouponCode} (Saved ₹${currentCart.couponDiscount.toInt()})',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF065F46)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              ref.read(cartProvider.notifier).removeCoupon();
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Coupon removed')),
+                              );
+                            },
+                            child: const Text('REMOVE', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+                  const Text('Available Coupons:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark)),
+                  const SizedBox(height: 8),
+
+                  ...[
+                    const CouponModel(
+                      id: 'c-v20',
+                      code: 'VAIDYAM20',
+                      title: 'Get 20% OFF on all Ayurvedic Formulations',
+                      discountType: 'percentage',
+                      discountValue: 20.0,
+                      minSpend: 299.0,
+                    ),
+                    const CouponModel(
+                      id: 'c-w100',
+                      code: 'WELCOME100',
+                      title: 'Flat ₹100 OFF on orders above ₹399',
+                      discountType: 'fixed',
+                      discountValue: 100.0,
+                      minSpend: 399.0,
+                    ),
+                    const CouponModel(
+                      id: 'c-b20',
+                      code: 'BOTANICAL20',
+                      title: 'Special 20% OFF Botanical Discount',
+                      discountType: 'percentage',
+                      discountValue: 20.0,
+                      minSpend: 199.0,
+                    ),
+                    const CouponModel(
+                      id: 'c-h50',
+                      code: 'HERBAL50',
+                      title: 'Flat ₹50 OFF on Herbal Formulations',
+                      discountType: 'fixed',
+                      discountValue: 50.0,
+                      minSpend: 199.0,
+                    ),
+                  ].map((coupon) {
+                    final bool isThisApplied = currentCart.appliedCouponCode == coupon.code;
+                    final bool isEligible = currentCart.subtotal >= coupon.minSpend;
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isThisApplied ? _primaryPurple : const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _primaryPurple.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.local_offer, color: _primaryPurple, size: 16),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  coupon.code,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark),
+                                ),
+                                Text(
+                                  coupon.title,
+                                  style: const TextStyle(fontSize: 11, color: _textMuted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (!isEligible) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Add items worth ₹${(coupon.minSpend - currentCart.subtotal).toInt()} more to use ${coupon.code}')),
+                                );
+                                return;
+                              }
+                              ref.read(cartProvider.notifier).applyCouponModel(coupon);
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Applied ${coupon.code}!')),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isThisApplied ? const Color(0xFF16A34A) : _primaryPurple,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: Text(
+                              isThisApplied ? 'APPLIED' : 'APPLY',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );

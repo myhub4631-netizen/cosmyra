@@ -31,7 +31,7 @@ class CartState {
     return (subtotal * (couponDiscountPercent / 100.0)).roundToDouble();
   }
 
-  double get shippingFee => (subtotal - couponDiscount) >= 499.0 || items.isEmpty ? 0.0 : 49.0;
+  double get shippingFee => (subtotal - couponDiscount) >= 399.0 || items.isEmpty ? 0.0 : 49.0;
 
   double get finalTotal => (subtotal - couponDiscount + shippingFee).clamp(0.0, double.infinity);
 
@@ -133,12 +133,47 @@ class CartNotifier extends StateNotifier<CartState> {
     return true;
   }
 
-  bool applyCoupon(String code) {
+  bool applyCoupon(String code, {List<CouponModel>? availableCoupons}) {
     final cleanCode = code.trim().toUpperCase();
-    if (cleanCode == 'VAIDYAM20' || cleanCode == 'COSMYRA10') {
+    if (cleanCode.isEmpty) return false;
+
+    if (availableCoupons != null && availableCoupons.isNotEmpty) {
+      for (final c in availableCoupons) {
+        if (c.isActive && c.code.trim().toUpperCase() == cleanCode) {
+          return applyCouponModel(c);
+        }
+      }
+    }
+
+    // Standard Preset Promo Codes
+    if (cleanCode == 'VAIDYAM20' || cleanCode == 'BOTANICAL20' || cleanCode == 'COSMYRA20') {
       state = state.copyWith(
         appliedCouponCode: cleanCode,
-        couponDiscountPercent: cleanCode == 'VAIDYAM20' ? 20.0 : 10.0,
+        couponDiscountPercent: 20.0,
+        fixedDiscountAmount: 0.0,
+      );
+      return true;
+    }
+    if (cleanCode == 'WELCOME100' || cleanCode == 'ORGANIC100') {
+      state = state.copyWith(
+        appliedCouponCode: cleanCode,
+        couponDiscountPercent: 0.0,
+        fixedDiscountAmount: 100.0,
+      );
+      return true;
+    }
+    if (cleanCode == 'HERBAL50' || cleanCode == 'FLAT50') {
+      state = state.copyWith(
+        appliedCouponCode: cleanCode,
+        couponDiscountPercent: 0.0,
+        fixedDiscountAmount: 50.0,
+      );
+      return true;
+    }
+    if (cleanCode == 'COSMYRA10' || cleanCode == 'WELCOME10' || cleanCode == 'SAVE10') {
+      state = state.copyWith(
+        appliedCouponCode: cleanCode,
+        couponDiscountPercent: 10.0,
         fixedDiscountAmount: 0.0,
       );
       return true;
