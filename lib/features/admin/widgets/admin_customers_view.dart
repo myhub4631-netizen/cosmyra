@@ -210,6 +210,448 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
     }
   }
 
+  Future<void> _syncProfilesToStorageAndSupabase() async {
+    try {
+      final String anonKey = SupabaseConfig.anonKey;
+      final Uri postUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json');
+      await http.post(
+        postUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-upsert': 'true',
+          'apikey': anonKey,
+          'Authorization': 'Bearer $anonKey',
+        },
+        body: json.encode(_registeredProfiles),
+      );
+    } catch (_) {}
+  }
+
+  void _showEditUserDialog(Map<String, dynamic> user) {
+    final nameCtrl = TextEditingController(text: user['name']?.toString() ?? '');
+    final emailCtrl = TextEditingController(text: user['email']?.toString() ?? '');
+    final phoneCtrl = TextEditingController(text: user['phone']?.toString() ?? '');
+    final passwordCtrl = TextEditingController(text: user['password']?.toString() ?? '');
+    final addressCtrl = TextEditingController(text: user['address']?.toString() ?? 'Flat 402, Green Glen Heights, Bellandur');
+    final cityCtrl = TextEditingController(text: user['city']?.toString() ?? 'Bengaluru');
+    final pincodeCtrl = TextEditingController(text: user['pincode']?.toString() ?? '560103');
+
+    String roleVal = user['role']?.toString() ?? 'Customer';
+    String statusVal = user['status']?.toString() ?? 'Active';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDlgState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  const Icon(Icons.edit_outlined, color: Color(0xFF4F46E5)),
+                  const SizedBox(width: 8),
+                  Text('Edit User Account (${user['id']})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                ],
+              ),
+              content: SizedBox(
+                width: 520,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Personal Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: nameCtrl,
+                        decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline)),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: emailCtrl,
+                              decoration: const InputDecoration(labelText: 'Email Address', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email_outlined)),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: phoneCtrl,
+                              decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone_outlined)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Account Role & Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: roleVal,
+                              decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
+                              items: ['Customer', 'Moderator', 'Admin', 'Master Admin']
+                                  .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                                  .toList(),
+                              onChanged: (val) => setDlgState(() => roleVal = val ?? 'Customer'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: statusVal,
+                              decoration: const InputDecoration(labelText: 'Account Status', border: OutlineInputBorder()),
+                              items: ['Active', 'Inactive', 'Blocked']
+                                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                  .toList(),
+                              onChanged: (val) => setDlgState(() => statusVal = val ?? 'Active'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Address Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: addressCtrl,
+                        decoration: const InputDecoration(labelText: 'Street Address', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_on_outlined)),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder()))),
+                          const SizedBox(width: 8),
+                          Expanded(child: TextField(controller: pincodeCtrl, decoration: const InputDecoration(labelText: 'Pincode', border: OutlineInputBorder()))),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Security Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: passwordCtrl,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Set New Password (Optional)',
+                          hintText: 'Leave blank to keep current password',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock_outline),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.save_outlined, size: 16),
+                  label: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    if (nameCtrl.text.trim().isEmpty || emailCtrl.text.trim().isEmpty) return;
+
+                    setState(() {
+                      user['name'] = nameCtrl.text.trim();
+                      user['email'] = emailCtrl.text.trim();
+                      user['phone'] = phoneCtrl.text.trim();
+                      user['role'] = roleVal;
+                      user['status'] = statusVal;
+                      user['address'] = addressCtrl.text.trim();
+                      user['city'] = cityCtrl.text.trim();
+                      user['pincode'] = pincodeCtrl.text.trim();
+                      if (passwordCtrl.text.trim().isNotEmpty) {
+                        user['password'] = passwordCtrl.text.trim();
+                      }
+                      if (_selectedUser != null && _selectedUser!['id'] == user['id']) {
+                        _selectedUser = user;
+                      }
+                    });
+
+                    _syncProfilesToStorageAndSupabase();
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('User profile for ${user['name']} updated successfully! ✏️')),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showResetPasswordDialog(Map<String, dynamic> user) {
+    final newPasswordCtrl = TextEditingController(text: 'Cosmyra@${DateTime.now().year}');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.lock_reset_outlined, color: Color(0xFFD97706)),
+              SizedBox(width: 8),
+              Text('Reset User Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Resetting password for user ${user['name']} (${user['email']}).'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: newPasswordCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.key_outlined),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Provide this temporary password to the user to log in.', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.check, size: 16),
+              label: const Text('Reset Password'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD97706),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final newPass = newPasswordCtrl.text.trim();
+                if (newPass.isNotEmpty) {
+                  setState(() {
+                    user['password'] = newPass;
+                  });
+                  _syncProfilesToStorageAndSupabase();
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Password for ${user['name']} reset to: $newPass 🔑')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _toggleDeactivateUser(Map<String, dynamic> user) {
+    final bool isActive = user['status'] == 'Active';
+    final String nextStatus = isActive ? 'Inactive' : 'Active';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(isActive ? 'Deactivate Account?' : 'Activate Account?', style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(
+            isActive
+                ? 'Are you sure you want to deactivate ${user['name']}\'s account? They will be unable to log in until re-activated.'
+                : 'Are you sure you want to re-activate ${user['name']}\'s account?',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isActive ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                setState(() {
+                  user['status'] = nextStatus;
+                  if (_selectedUser != null && _selectedUser!['id'] == user['id']) {
+                    _selectedUser!['status'] = nextStatus;
+                  }
+                });
+                _syncProfilesToStorageAndSupabase();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('User ${user['name']} is now $nextStatus.')),
+                );
+              },
+              child: Text(isActive ? 'Deactivate' : 'Activate'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteUser(Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.delete_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete User Account?', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to permanently delete ${user['name']} (${user['email']})? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _registeredProfiles.removeWhere((u) => u['id'] == user['id']);
+                  if (_selectedUser != null && _selectedUser!['id'] == user['id']) {
+                    _selectedUser = _registeredProfiles.isNotEmpty ? _registeredProfiles[0] : null;
+                  }
+                });
+                _syncProfilesToStorageAndSupabase();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('User ${user['name']} deleted successfully. 🗑️')),
+                );
+              },
+              child: const Text('Delete Permanently'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showUserActivityDialog(Map<String, dynamic> user) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.analytics_outlined, color: Color(0xFF4F46E5)),
+              const SizedBox(width: 8),
+              Text('${user['name']}\'s Account Activity Log', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+          content: SizedBox(
+            width: 500,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFE0E7FF),
+                        child: Text(user['name'].toString().substring(0, 1).toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(user['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          Text('${user['email']} • ${user['phone']}', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Recent Activity Timeline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827))),
+                const SizedBox(height: 10),
+                _buildActivityLogItem(Icons.login, 'User Logged In', 'Last session started from 157.48.21.90 (Mac OS X - Chrome)', user['lastLogin'] ?? 'Just now'),
+                _buildActivityLogItem(Icons.shopping_bag_outlined, 'Orders Activity', 'Total Orders: ${user['orders']} | Total Spent: ₹${_formatCurrency(user['totalSpent'])}', 'Realtime'),
+                _buildActivityLogItem(Icons.location_on_outlined, 'Address Updated', 'Saved delivery address updated', '24 Aug 2026'),
+                _buildActivityLogItem(Icons.person_add_outlined, 'Account Created', 'Registered as ${user['role']} account', user['joinedOn'] ?? '24 Aug 2026'),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildActivityLogItem(IconData icon, String title, String desc, String time) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(6)),
+            child: Icon(icon, size: 16, color: const Color(0xFF4F46E5)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF111827))),
+                Text(desc, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+              ],
+            ),
+          ),
+          Text(time, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF))),
+        ],
+      ),
+    );
+  }
+
+  void _loginAsUser(Map<String, dynamic> user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profile = {
+        'id': user['id'],
+        'name': user['name'],
+        'email': user['email'],
+        'phone': user['phone'],
+        'isAdmin': user['role'] == 'Master Admin',
+        'role': user['role'],
+      };
+      await prefs.setString('cosmyra_user_profile_v2', json.encode(profile));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Switched session to ${user['name']} (${user['email']}) 👤')),
+      );
+    } catch (_) {}
+  }
+
   void _showAddUserDialog() {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
@@ -290,21 +732,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                     SnackBar(content: Text('User ${nameCtrl.text} added successfully!')),
                   );
 
-                  // Sync newly added user to remote Supabase Storage (settings/users.json)
-                  try {
-                    final String anonKey = SupabaseConfig.anonKey;
-                    final Uri postUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json');
-                    await http.post(
-                      postUrl,
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'x-upsert': 'true',
-                        'apikey': anonKey,
-                        'Authorization': 'Bearer $anonKey',
-                      },
-                      body: json.encode(_registeredProfiles),
-                    );
-                  } catch (_) {}
+                  _syncProfilesToStorageAndSupabase();
                 }
               },
               child: const Text('Save User'),
@@ -750,11 +1178,26 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                                         ),
                                         IconButton(
                                           icon: const Icon(Icons.edit_outlined, size: 16, color: Color(0xFF6B7280)),
-                                          onPressed: () {},
+                                          onPressed: () => _showEditUserDialog(user),
                                         ),
-                                        IconButton(
+                                        PopupMenuButton<String>(
                                           icon: const Icon(Icons.more_vert, size: 16, color: Color(0xFF6B7280)),
-                                          onPressed: () {},
+                                          onSelected: (val) {
+                                            if (val == 'edit') _showEditUserDialog(user);
+                                            if (val == 'reset') _showResetPasswordDialog(user);
+                                            if (val == 'login') _loginAsUser(user);
+                                            if (val == 'deactivate') _toggleDeactivateUser(user);
+                                            if (val == 'activity') _showUserActivityDialog(user);
+                                            if (val == 'delete') _confirmDeleteUser(user);
+                                          },
+                                          itemBuilder: (context) => [
+                                            const PopupMenuItem(value: 'edit', child: Text('✏️ Edit Details')),
+                                            const PopupMenuItem(value: 'reset', child: Text('🔑 Reset Password')),
+                                            const PopupMenuItem(value: 'login', child: Text('👤 Switch Session')),
+                                            PopupMenuItem(value: 'deactivate', child: Text(user['status'] == 'Active' ? '🚫 Deactivate Account' : '✅ Activate Account')),
+                                            const PopupMenuItem(value: 'activity', child: Text('📊 View Activity Log')),
+                                            const PopupMenuItem(value: 'delete', child: Text('🗑️ Delete Account', style: TextStyle(color: Colors.red))),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -978,7 +1421,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _showEditUserDialog(user),
                   icon: const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF4F46E5)),
                   label: const Text('Edit User', style: TextStyle(fontSize: 11, color: Color(0xFF4F46E5))),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFC7D2FE))),
@@ -987,7 +1430,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _showResetPasswordDialog(user),
                   icon: const Icon(Icons.lock_reset_outlined, size: 14, color: Color(0xFFD97706)),
                   label: const Text('Reset Password', style: TextStyle(fontSize: 11, color: Color(0xFFD97706))),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFFDE68A))),
@@ -1002,7 +1445,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _loginAsUser(user),
                   icon: const Icon(Icons.person_search_outlined, size: 14, color: Color(0xFF2563EB)),
                   label: const Text('Login as User', style: TextStyle(fontSize: 11, color: Color(0xFF2563EB))),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFBFDBFE))),
@@ -1011,10 +1454,10 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.block_outlined, size: 14, color: Color(0xFFDC2626)),
-                  label: const Text('Deactivate User', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
-                  style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFFECACA))),
+                  onPressed: () => _toggleDeactivateUser(user),
+                  icon: Icon(user['status'] == 'Active' ? Icons.block_outlined : Icons.check_circle_outline, size: 14, color: user['status'] == 'Active' ? const Color(0xFFDC2626) : const Color(0xFF059669)),
+                  label: Text(user['status'] == 'Active' ? 'Deactivate User' : 'Activate User', style: TextStyle(fontSize: 11, color: user['status'] == 'Active' ? const Color(0xFFDC2626) : const Color(0xFF059669))),
+                  style: OutlinedButton.styleFrom(side: BorderSide(color: user['status'] == 'Active' ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0))),
                 ),
               ),
             ],
@@ -1025,7 +1468,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () => _showUserActivityDialog(user),
               style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFE5E7EB))),
               child: const Text('View User Activity', style: TextStyle(fontSize: 12, color: Color(0xFF4F46E5), fontWeight: FontWeight.bold)),
             ),
@@ -1050,7 +1493,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _confirmDeleteUser(user),
                   icon: const Icon(Icons.delete_outline, size: 14, color: Color(0xFFDC2626)),
                   label: const Text('Delete User', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
                   style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFFECACA))),
