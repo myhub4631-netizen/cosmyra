@@ -233,8 +233,10 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
                   const SizedBox(height: 6),
                   TextField(
                     controller: nameController,
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       hintText: 'Enter full name',
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                       prefixIcon: const Icon(Icons.person_outline_rounded, color: _darkGreen, size: 20),
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
@@ -249,8 +251,10 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
                   TextField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
+                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: InputDecoration(
                       hintText: 'Enter mobile number',
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                       prefixIcon: const Icon(Icons.phone_android_rounded, color: _darkGreen, size: 20),
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
@@ -266,8 +270,10 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
                     controller: emailController,
                     readOnly: true,
                     enabled: false,
+                    style: const TextStyle(color: Color(0xFF475569), fontSize: 14, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
                       hintText: 'Email address',
+                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
                       prefixIcon: const Icon(Icons.email_outlined, color: _textMuted, size: 20),
                       filled: true,
                       fillColor: const Color(0xFFF1F5F9),

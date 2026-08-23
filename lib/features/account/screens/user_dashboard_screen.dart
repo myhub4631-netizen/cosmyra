@@ -793,11 +793,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
+            TextField(controller: nameCtrl, style: const TextStyle(color: Color(0xFF111827), fontSize: 14, fontWeight: FontWeight.w600), decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            TextField(controller: emailCtrl, readOnly: true, decoration: const InputDecoration(labelText: 'Email Address (Account ID)', border: OutlineInputBorder(), fillColor: Color(0xFFF3F4F6), filled: true)),
+            TextField(controller: emailCtrl, readOnly: true, style: const TextStyle(color: Color(0xFF4B5563), fontSize: 14, fontWeight: FontWeight.w500), decoration: const InputDecoration(labelText: 'Email Address (Account ID)', border: OutlineInputBorder(), fillColor: Color(0xFFF3F4F6), filled: true)),
             const SizedBox(height: 12),
-            TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder())),
+            TextField(controller: phoneCtrl, style: const TextStyle(color: Color(0xFF111827), fontSize: 14, fontWeight: FontWeight.w600), decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder())),
           ],
         ),
         actions: [
