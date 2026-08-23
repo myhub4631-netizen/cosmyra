@@ -287,7 +287,7 @@ class _AdminCouponsViewState extends ConsumerState<AdminCouponsView> {
                               Row(
                                 children: [
                                   Text(
-                                    c.title,
+                                    c.effectiveTitle,
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1E293B)),
                                   ),
                                   const SizedBox(width: 8),

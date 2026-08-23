@@ -26,6 +26,18 @@ class CouponModel {
     this.isActive = true,
   });
 
+  String get effectiveTitle {
+    String text = title;
+    if (discountType == 'percentage') {
+      text = text.replaceAll(RegExp(r'\d+%\s*OFF', caseSensitive: false), '${discountValue.toInt()}% OFF');
+      text = text.replaceAll(RegExp(r'Flat\s*₹\d+\s*OFF', caseSensitive: false), 'Flat ${discountValue.toInt()}% OFF');
+    } else {
+      text = text.replaceAll(RegExp(r'Rs\s*\d+', caseSensitive: false), 'Rs ${discountValue.toInt()}');
+      text = text.replaceAll(RegExp(r'₹\d+\s*OFF', caseSensitive: false), '₹${discountValue.toInt()} OFF');
+    }
+    return text;
+  }
+
   double calculateDiscount(double subtotal) {
     if (!isActive || subtotal < minSpend) return 0.0;
     if (discountType == 'percentage') {
@@ -87,50 +99,50 @@ class CouponNotifier extends StateNotifier<List<CouponModel>> {
     const CouponModel(
       id: 'c-mega50',
       code: 'MEGA50',
-      title: 'Rs 50 Discount',
-      discountType: 'percentage',
-      discountValue: 50.0,
-      minSpend: 150.0,
+      title: 'Rs 66 Discount',
+      discountType: 'fixed',
+      discountValue: 66.0,
+      minSpend: 160.0,
       isVisibleAtCheckout: true,
       isActive: true,
     ),
     const CouponModel(
       id: 'c-v20',
       code: 'VAIDYAM20',
-      title: 'Get 20% OFF on all Ayurvedic Botanicals',
+      title: 'Get 15% OFF on all Ayurvedic Botanicals',
       discountType: 'percentage',
-      discountValue: 20.0,
-      minSpend: 299.0,
-      isVisibleAtCheckout: false,
-      isActive: false, // Disabled by Admin
+      discountValue: 15.0,
+      minSpend: 180.0,
+      isVisibleAtCheckout: true,
+      isActive: true,
     ),
     const CouponModel(
       id: 'c-org100',
       code: 'ORGANIC100',
-      title: 'Flat ₹100 OFF on orders above ₹499',
-      discountType: 'fixed',
-      discountValue: 100.0,
-      minSpend: 499.0,
+      title: 'Flat 10% OFF on orders above ₹169',
+      discountType: 'percentage',
+      discountValue: 10.0,
+      minSpend: 169.0,
       isVisibleAtCheckout: true,
       isActive: true,
     ),
     const CouponModel(
       id: 'c-herb50',
       code: 'HERBAL50',
-      title: 'Flat ₹50 OFF on first purchase',
+      title: 'Flat ₹59 OFF on first purchase',
       discountType: 'fixed',
-      discountValue: 50.0,
-      minSpend: 199.0,
+      discountValue: 59.0,
+      minSpend: 299.0,
       isVisibleAtCheckout: true,
       isActive: true,
     ),
     const CouponModel(
       id: 'c-sec25',
       code: 'SECRET25',
-      title: 'Exclusive 25% OFF VIP Coupon',
+      title: 'Exclusive 22% OFF VIP Coupon',
       discountType: 'percentage',
-      discountValue: 25.0,
-      minSpend: 599.0,
+      discountValue: 22.0,
+      minSpend: 199.0,
       isVisibleAtCheckout: true,
       isActive: true,
     ),

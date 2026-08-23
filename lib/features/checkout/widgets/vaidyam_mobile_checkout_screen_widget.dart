@@ -1047,7 +1047,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                                     ],
                                   ),
                                   Text(
-                                    coupon.title,
+                                    coupon.effectiveTitle,
                                     style: const TextStyle(fontSize: 11, color: _textMuted),
                                   ),
                                 ],
