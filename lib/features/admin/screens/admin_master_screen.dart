@@ -13,6 +13,7 @@ import '../widgets/admin_branding_view.dart';
 import '../widgets/admin_coupons_view.dart';
 import '../widgets/admin_media_view.dart';
 import '../widgets/admin_mobile_app_view.dart';
+import '../widgets/admin_settings_view.dart';
 import '../widgets/admin_website_content_manager_view.dart';
 
 class AdminMasterScreen extends ConsumerStatefulWidget {
@@ -88,6 +89,7 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
       const AdminBrandingView(),
       AdminMobileAppView(key: ValueKey('mobile_app_tab_$_mobileAppSubTab'), initialSubTab: _mobileAppSubTab),
       const AdminMediaView(),
+      const AdminSettingsView(),
     ];
 
     return Scaffold(
@@ -418,9 +420,10 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
 
                 const SizedBox(height: 14),
                 _groupHeader('SETTINGS'),
-                _navItem('General Settings', Icons.settings_outlined, 9),
+                _navItem('Store & Logistics Config', Icons.tune_rounded, 12),
+                _navItem('Shipping Settings', Icons.local_shipping_outlined, 12),
+                _navItem('General Branding Settings', Icons.settings_outlined, 9),
                 _navItem('Payment Methods', Icons.payment_rounded, -1),
-                _navItem('Shipping Settings', Icons.local_shipping_outlined, -1),
 
                 const SizedBox(height: 20),
               ],

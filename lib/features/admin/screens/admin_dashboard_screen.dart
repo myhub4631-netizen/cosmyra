@@ -684,16 +684,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _buildQuickBtn('Add New Product', Icons.add_shopping_cart_rounded, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => widget.onNavigateToView?.call(1)),
               _buildQuickBtn('Add New Page', Icons.note_add_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => widget.onNavigateToView?.call(7)),
               _buildQuickBtn('Add New Category', Icons.category_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => widget.onNavigateToView?.call(1)),
-              _buildQuickBtn('Send Notification', Icons.send_rounded, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () {}),
+              _buildQuickBtn('Shipping Charges', Icons.local_shipping_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => widget.onNavigateToView?.call(12)),
               _buildQuickBtn('View All Orders', Icons.shopping_bag_outlined, const Color(0xFFEEF2FF), const Color(0xFF4F46E5), () => widget.onNavigateToView?.call(2)),
             ],
           ),
           const SizedBox(height: 20),
           Center(
             child: OutlinedButton.icon(
-              onPressed: () => widget.onNavigateToView?.call(9),
+              onPressed: () => widget.onNavigateToView?.call(12),
               icon: const Icon(Icons.settings, size: 16, color: Color(0xFF4F46E5)),
-              label: const Text('System Settings', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13)),
+              label: const Text('Store & Shipping Settings', style: TextStyle(color: Color(0xFF4F46E5), fontWeight: FontWeight.bold, fontSize: 13)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFE2E8F0)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
