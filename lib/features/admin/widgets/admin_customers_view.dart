@@ -48,69 +48,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       }
     } catch (_) {}
 
-    // 2. Fetch settings/orders.json to extract users from all placed orders
-    try {
-      final Uri ordersUri = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/orders.json?t=${DateTime.now().millisecondsSinceEpoch}');
-      final response = await http.get(ordersUri);
-      if (response.statusCode == 200) {
-        final List decoded = json.decode(response.body);
-        for (var ord in decoded) {
-          final email = (ord['customerEmail'] ?? ord['customer_email'] ?? '').toString().trim();
-          final name = (ord['customerName'] ?? ord['customer_name'] ?? '').toString().trim();
-          final phone = (ord['customerPhone'] ?? ord['customer_phone'] ?? '').toString().trim();
-          final double amount = (ord['totalAmount'] ?? ord['total_amount'] ?? 0).toDouble();
-
-          if (email.isNotEmpty) {
-            final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email.toLowerCase());
-            if (idx >= 0) {
-              allFetchedUsers[idx]['orders'] = ((allFetchedUsers[idx]['orders'] as int? ?? 0) + 1);
-              allFetchedUsers[idx]['totalSpent'] = ((allFetchedUsers[idx]['totalSpent'] as double? ?? 0.0) + amount);
-            } else {
-              allFetchedUsers.add({
-                'id': '#USR-000${allFetchedUsers.length + 1}',
-                'name': name.isNotEmpty ? name : email.split('@').first,
-                'email': email,
-                'phone': phone.isNotEmpty ? phone : '+91 94730 40903',
-                'role': 'Customer',
-                'status': 'Active',
-                'isVip': true,
-                'isYou': false,
-                'orders': 1,
-                'totalSpent': amount,
-                'joinedOn': '20 Aug 2026',
-                'lastLogin': '24 Aug 2026',
-                'emailVerified': true,
-                'phoneVerified': true,
-                'addresses': 1,
-              });
-            }
-          }
-        }
-      }
-    } catch (_) {}
-
-    // 3. Ensure myhub4632@gmail.com is present!
-    if (!allFetchedUsers.any((u) => u['email']?.toString().toLowerCase() == 'myhub4632@gmail.com')) {
-      allFetchedUsers.add({
-        'id': '#USR-0002',
-        'name': 'MyHub User',
-        'email': 'myhub4632@gmail.com',
-        'phone': '+91 94730 40903',
-        'role': 'Customer',
-        'status': 'Active',
-        'isVip': false,
-        'isYou': false,
-        'orders': 0,
-        'totalSpent': 0.0,
-        'joinedOn': '24 Aug 2026 02:00 AM',
-        'lastLogin': '24 Aug 2026 02:00 AM',
-        'emailVerified': true,
-        'phoneVerified': true,
-        'addresses': 1,
-      });
-    }
-
-    // 4. Fetch Supabase profiles table
+    // 2. Fetch Supabase profiles table
     if (SupabaseConfig.isConfigured) {
       try {
         final data = await supabase.from('profiles').select('*');
@@ -135,9 +73,9 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                   'status': 'Active',
                   'isVip': isMaster,
                   'isYou': isMaster,
-                  'orders': isMaster ? 4 : 0,
-                  'totalSpent': isMaster ? 1455.0 : 0.0,
-                  'joinedOn': row['created_at']?.toString().substring(0, 10) ?? '15 Aug 2026',
+                  'orders': 0,
+                  'totalSpent': 0.0,
+                  'joinedOn': row['created_at']?.toString().substring(0, 10) ?? '24 Aug 2026',
                   'lastLogin': '24 Aug 2026',
                   'emailVerified': true,
                   'phoneVerified': true,
@@ -150,7 +88,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       } catch (_) {}
     }
 
-    // 5. Read local SharedPreferences profile to ensure newly registered local user is included
+    // 3. Read local SharedPreferences profile to ensure newly registered local user is included
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString('cosmyra_user_profile_v2');
@@ -184,6 +122,78 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               'phoneVerified': true,
               'addresses': 1,
             });
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 4. Ensure myhub4632@gmail.com is present
+    if (!allFetchedUsers.any((u) => u['email']?.toString().toLowerCase() == 'myhub4632@gmail.com')) {
+      allFetchedUsers.add({
+        'id': '#USR-0002',
+        'name': 'MyHub User',
+        'email': 'myhub4632@gmail.com',
+        'phone': '+91 94730 40903',
+        'role': 'Customer',
+        'status': 'Active',
+        'isVip': false,
+        'isYou': false,
+        'orders': 0,
+        'totalSpent': 0.0,
+        'joinedOn': '24 Aug 2026 02:00 AM',
+        'lastLogin': '24 Aug 2026 02:00 AM',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1,
+      });
+    }
+
+    // 5. RESET orders & totalSpent to 0 for all customer accounts before calculating real orders
+    for (var u in allFetchedUsers) {
+      if (u['role'] != 'Master Admin' && u['email']?.toString().toLowerCase() != '1mdollar2027@gmail.com') {
+        u['orders'] = 0;
+        u['totalSpent'] = 0.0;
+        u['isVip'] = false;
+      }
+    }
+
+    // 6. Fetch settings/orders.json and compute EXACT actual orders and spending for each user
+    try {
+      final Uri ordersUri = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/orders.json?t=${DateTime.now().millisecondsSinceEpoch}');
+      final response = await http.get(ordersUri);
+      if (response.statusCode == 200) {
+        final List decoded = json.decode(response.body);
+        for (var ord in decoded) {
+          final email = (ord['customerEmail'] ?? ord['customer_email'] ?? '').toString().trim().toLowerCase();
+          final double amount = (ord['totalAmount'] ?? ord['total_amount'] ?? ord['total_amount_inr'] ?? 0).toDouble();
+
+          if (email.isNotEmpty) {
+            final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email);
+            if (idx >= 0) {
+              allFetchedUsers[idx]['orders'] = ((allFetchedUsers[idx]['orders'] as int? ?? 0) + 1);
+              allFetchedUsers[idx]['totalSpent'] = ((allFetchedUsers[idx]['totalSpent'] as double? ?? 0.0) + amount);
+              if ((allFetchedUsers[idx]['orders'] as int) > 3) {
+                allFetchedUsers[idx]['isVip'] = true;
+              }
+            } else {
+              allFetchedUsers.add({
+                'id': '#USR-000${allFetchedUsers.length + 1}',
+                'name': (ord['customerName'] ?? ord['customer_name'] ?? email.split('@').first).toString().trim(),
+                'email': email,
+                'phone': (ord['customerPhone'] ?? ord['customer_phone'] ?? '+91 94730 40903').toString().trim(),
+                'role': 'Customer',
+                'status': 'Active',
+                'isVip': false,
+                'isYou': false,
+                'orders': 1,
+                'totalSpent': amount,
+                'joinedOn': '24 Aug 2026',
+                'lastLogin': '24 Aug 2026',
+                'emailVerified': true,
+                'phoneVerified': true,
+                'addresses': 1,
+              });
+            }
           }
         }
       }
