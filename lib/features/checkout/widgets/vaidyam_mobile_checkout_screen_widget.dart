@@ -46,15 +46,27 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
   static const Color _textDark = Color(0xFF0F172A);
   static const Color _textMuted = Color(0xFF64748B);
 
-  String _selectedPaymentMethod = 'UPI'; // 'UPI', 'CARD', 'NETBANKING', 'COD'
+  String _selectedPaymentMethod = 'UPI';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final coupons = ref.read(couponProvider);
+        ref.read(cartProvider.notifier).syncWithCoupons(coupons);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
-    final adminCoupons = ref.watch(couponProvider);
 
-    // Keep applied coupon synced with Admin Coupon Manager settings
-    ref.read(cartProvider.notifier).syncWithCoupons(adminCoupons);
+    // Listen to couponProvider changes safely outside build phase
+    ref.listen<List<CouponModel>>(couponProvider, (previous, next) {
+      ref.read(cartProvider.notifier).syncWithCoupons(next);
+    });
 
     return Scaffold(
       backgroundColor: _lightBg,

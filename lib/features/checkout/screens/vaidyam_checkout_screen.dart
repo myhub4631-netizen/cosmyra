@@ -32,15 +32,20 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = ref.read(currentUserProvider);
-      final auth = ref.read(authControllerProvider);
-      final name = auth.userName ?? user?.userMetadata?['full_name'] ?? (auth.isGuest ? auth.guestName : null);
-      final phone = auth.userPhone ?? user?.phone ?? (auth.isGuest ? auth.guestPhone : null);
-      if (name != null && name.isNotEmpty) {
-        _nameController.text = name;
-      }
-      if (phone != null && phone.isNotEmpty) {
-        _phoneController.text = phone;
+      if (mounted) {
+        final user = ref.read(currentUserProvider);
+        final auth = ref.read(authControllerProvider);
+        final name = auth.userName ?? user?.userMetadata?['full_name'] ?? (auth.isGuest ? auth.guestName : null);
+        final phone = auth.userPhone ?? user?.phone ?? (auth.isGuest ? auth.guestPhone : null);
+        if (name != null && name.isNotEmpty) {
+          _nameController.text = name;
+        }
+        if (phone != null && phone.isNotEmpty) {
+          _phoneController.text = phone;
+        }
+
+        final coupons = ref.read(couponProvider);
+        ref.read(cartProvider.notifier).syncWithCoupons(coupons);
       }
     });
   }
@@ -73,6 +78,11 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
     final cartState = ref.watch(cartProvider);
     final wishlist = ref.watch(wishlistProvider);
     final totalCartCount = cartState.totalItemCount;
+
+    // Listen to couponProvider changes safely outside build phase
+    ref.listen<List<CouponModel>>(couponProvider, (previous, next) {
+      ref.read(cartProvider.notifier).syncWithCoupons(next);
+    });
 
     // Calculate Real Subtotal, Coupon Discount & Total (NO Hardcoded 499 Discount!)
     final double subtotal = cartState.subtotal;
@@ -715,7 +725,6 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   Widget _buildOrderSummaryCard(BuildContext context, double subtotal, double discount, double total, int itemCounts) {
     final cartState = ref.watch(cartProvider);
     final coupons = ref.watch(couponProvider);
-    ref.read(cartProvider.notifier).syncWithCoupons(coupons);
     final visibleCoupons = coupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList();
 
     return Container(

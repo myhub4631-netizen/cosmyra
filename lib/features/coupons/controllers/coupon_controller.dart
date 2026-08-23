@@ -147,13 +147,19 @@ class CouponNotifier extends StateNotifier<List<CouponModel>> {
   }
 
   void addCoupon(CouponModel coupon) {
-    final updated = [coupon, ...state];
+    final filtered = state.where((c) => c.code.trim().toUpperCase() != coupon.code.trim().toUpperCase() && c.id != coupon.id).toList();
+    final updated = [coupon, ...filtered];
     state = updated;
     _saveToPrefs(updated);
   }
 
   void updateCoupon(CouponModel updatedCoupon) {
-    final updated = state.map((c) => c.id == updatedCoupon.id ? updatedCoupon : c).toList();
+    final updated = state.map((c) {
+      if (c.id == updatedCoupon.id || c.code.trim().toUpperCase() == updatedCoupon.code.trim().toUpperCase()) {
+        return updatedCoupon;
+      }
+      return c;
+    }).toList();
     state = updated;
     _saveToPrefs(updated);
   }
