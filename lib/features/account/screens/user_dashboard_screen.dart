@@ -885,6 +885,15 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     final user = ref.watch(currentUserProvider);
     final auth = ref.watch(authControllerProvider);
 
+    if (auth.isInitializing) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFFAF9F6),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF064E3B)),
+        ),
+      );
+    }
+
     final bool isAuthenticated = auth.isLoggedIn || user != null;
 
     if (!isAuthenticated) {
@@ -894,8 +903,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         }
       });
       return const Scaffold(
+        backgroundColor: Color(0xFFFAF9F6),
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
+          child: CircularProgressIndicator(color: Color(0xFF064E3B)),
         ),
       );
     }

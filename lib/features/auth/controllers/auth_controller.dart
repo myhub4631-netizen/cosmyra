@@ -22,6 +22,7 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthStateMo
 });
 
 class AuthStateModel {
+  final bool isInitializing;
   final bool isLoading;
   final String? errorMessage;
   final bool isGuest;
@@ -35,6 +36,7 @@ class AuthStateModel {
   final String? userPhone;
 
   const AuthStateModel({
+    this.isInitializing = true,
     this.isLoading = false,
     this.errorMessage,
     this.isGuest = false,
@@ -49,6 +51,7 @@ class AuthStateModel {
   });
 
   AuthStateModel copyWith({
+    bool? isInitializing,
     bool? isLoading,
     String? errorMessage,
     bool? isGuest,
@@ -62,6 +65,7 @@ class AuthStateModel {
     String? userPhone,
   }) {
     return AuthStateModel(
+      isInitializing: isInitializing ?? this.isInitializing,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       isGuest: isGuest ?? this.isGuest,
@@ -106,11 +110,13 @@ class AuthController extends StateNotifier<AuthStateModel> {
             userEmail: email,
             userPhone: data['phone']?.toString() ?? '',
             isAdmin: (isMasterEmail && data['isAdmin'] == true) || isMasterEmail,
+            isInitializing: false,
           );
         }
       }
     } catch (_) {}
 
+    state = state.copyWith(isInitializing: false);
     await _checkAdminStatus();
   }
 
