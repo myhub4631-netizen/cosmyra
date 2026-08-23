@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../config/supabase_config.dart';
+import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../orders/repositories/order_repository.dart';
@@ -40,28 +44,310 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
   static const Color _textDark = Color(0xFF0F172A);
   static const Color _textMuted = Color(0xFF64748B);
 
-  final List<Map<String, String>> _savedAddresses = [
-    {
-      'type': 'Home',
-      'name': 'Mahboob Hasan',
-      'address': 'Flat 402, Green Glen Heights, Bellandur',
-      'city': 'Bengaluru',
-      'state': 'Karnataka',
-      'pincode': '560103',
-      'phone': '+91 94730 40903',
-      'isDefault': 'true',
-    },
-    {
-      'type': 'Work',
-      'name': 'Mahboob Hasan',
-      'address': 'Building 4, Tech Park, Outer Ring Road',
-      'city': 'Bengaluru',
-      'state': 'Karnataka',
-      'pincode': '560103',
-      'phone': '+91 94730 40903',
-      'isDefault': 'false',
-    },
-  ];
+  final List<Map<String, dynamic>> _mobileAddresses = [];
+  String? _loadedAddressEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMobileAddresses();
+  }
+
+  String _getAccountStorageKey(String prefix) {
+    final auth = ref.read(authControllerProvider);
+    final user = ref.read(currentUserProvider);
+    final String email = (auth.userEmail ?? user?.email ?? 'guest').toLowerCase().trim();
+    final String sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return 'cosmyra_${sanitized}_$prefix';
+  }
+
+  Future<void> _loadMobileAddresses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString(_getAccountStorageKey('addresses_v3'));
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(jsonStr);
+        if (mounted) {
+          setState(() {
+            _mobileAddresses.clear();
+            _mobileAddresses.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _mobileAddresses.clear();
+          });
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveMobileAddresses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_mobileAddresses));
+    } catch (_) {}
+  }
+
+  void _showAddAddressDialog(BuildContext context, {Map<String, dynamic>? editAddress}) {
+    final nameCtrl = TextEditingController(text: editAddress?['name'] ?? '');
+    final phoneCtrl = TextEditingController(text: editAddress?['phone'] ?? '');
+    final streetCtrl = TextEditingController(text: editAddress?['street'] ?? editAddress?['address'] ?? '');
+    final cityCtrl = TextEditingController(text: editAddress?['city'] ?? 'Bangalore');
+    final stateCtrl = TextEditingController(text: editAddress?['state'] ?? 'Karnataka');
+    final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '560001');
+    String type = editAddress?['type'] ?? 'HOME';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDlgState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(editAddress == null ? 'Add New Delivery Address' : 'Edit Delivery Address', style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
+                const SizedBox(height: 10),
+                TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder())),
+                const SizedBox(height: 10),
+                TextField(controller: streetCtrl, decoration: const InputDecoration(labelText: 'Flat / House No. & Street Address', border: OutlineInputBorder())),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder()))),
+                    const SizedBox(width: 8),
+                    Expanded(child: TextField(controller: stateCtrl, decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()))),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(controller: pincodeCtrl, decoration: const InputDecoration(labelText: 'Pincode', border: OutlineInputBorder())),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Text('Address Type:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(width: 12),
+                    ChoiceChip(
+                      label: const Text('HOME'),
+                      selected: type == 'HOME' || type == 'Home',
+                      onSelected: (_) => setDlgState(() => type = 'HOME'),
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('WORK'),
+                      selected: type == 'WORK' || type == 'Work',
+                      onSelected: (_) => setDlgState(() => type = 'WORK'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isEmpty || streetCtrl.text.trim().isEmpty) return;
+                setState(() {
+                  if (editAddress != null) {
+                    editAddress['name'] = nameCtrl.text.trim();
+                    editAddress['phone'] = phoneCtrl.text.trim();
+                    editAddress['street'] = streetCtrl.text.trim();
+                    editAddress['address'] = streetCtrl.text.trim();
+                    editAddress['city'] = cityCtrl.text.trim();
+                    editAddress['state'] = stateCtrl.text.trim();
+                    editAddress['pincode'] = pincodeCtrl.text.trim();
+                    editAddress['type'] = type;
+                  } else {
+                    _mobileAddresses.add({
+                      'id': 'addr-${DateTime.now().millisecondsSinceEpoch}',
+                      'name': nameCtrl.text.trim(),
+                      'phone': phoneCtrl.text.trim(),
+                      'street': streetCtrl.text.trim(),
+                      'address': streetCtrl.text.trim(),
+                      'city': cityCtrl.text.trim(),
+                      'state': stateCtrl.text.trim(),
+                      'pincode': pincodeCtrl.text.trim(),
+                      'type': type,
+                      'isDefault': _mobileAddresses.isEmpty ? 'true' : 'false',
+                    });
+                  }
+                });
+                _saveMobileAddresses();
+                Navigator.pop(ctx);
+                showCenterActionToast(
+                  context,
+                  title: editAddress == null ? 'Address Saved! 📍' : 'Address Updated! ✏️',
+                  message: '$type address has been saved to your account.',
+                  icon: Icons.location_on_outlined,
+                  iconColor: const Color(0xFF064E3B),
+                  primaryActionLabel: null,
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: _darkGreen, foregroundColor: Colors.white),
+              child: const Text('Save Address'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteAddress(BuildContext context, int index) {
+    if (index < 0 || index >= _mobileAddresses.length) return;
+    final addr = _mobileAddresses[index];
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Address?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this address (${addr['type']})?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _mobileAddresses.removeAt(index);
+              });
+              _saveMobileAddresses();
+              Navigator.pop(ctx);
+              showCenterActionToast(
+                context,
+                title: 'Address Removed 🗑️',
+                message: 'Delivery address has been deleted.',
+                icon: Icons.delete_outline,
+                iconColor: Colors.red,
+                primaryActionLabel: null,
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // MODAL 1: Addresses Sheet
+  void _showAddressesModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalCtx, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Saved Delivery Addresses 📍', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(modalCtx)),
+                    ],
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: _mobileAddresses.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.location_off_outlined, size: 48, color: _textMuted),
+                                SizedBox(height: 12),
+                                Text('No saved addresses yet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _textDark)),
+                                SizedBox(height: 4),
+                                Text('Add a new address for faster 1-Click checkout.', style: TextStyle(fontSize: 12, color: _textMuted)),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: _mobileAddresses.length,
+                            itemBuilder: (context, index) {
+                              final addr = _mobileAddresses[index];
+                              final bool isDef = addr['isDefault'] == 'true' || addr['isDefault'] == true;
+                              final String street = (addr['street'] ?? addr['address'] ?? '').toString();
+                              final String city = (addr['city'] ?? '').toString();
+                              final String state = (addr['state'] ?? '').toString();
+                              final String pincode = (addr['pincode'] ?? '').toString();
+                              final String name = (addr['name'] ?? '').toString();
+                              final String phone = (addr['phone'] ?? '').toString();
+
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: isDef ? const Color(0xFFECFDF5) : Colors.white,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: isDef ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text((addr['type'] ?? 'HOME').toString().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
+                                        const SizedBox(width: 8),
+                                        if (isDef)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(6)),
+                                            child: const Text('DEFAULT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                          ),
+                                        const Spacer(),
+                                        IconButton(
+                                          icon: const Icon(Icons.edit_outlined, size: 18, color: _darkGreen),
+                                          onPressed: () {
+                                            Navigator.pop(modalCtx);
+                                            _showAddAddressDialog(context, editAddress: addr);
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                          onPressed: () {
+                                            Navigator.pop(modalCtx);
+                                            _confirmDeleteAddress(context, index);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text('$name • $phone', style: const TextStyle(fontSize: 12, color: _textMuted, fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Text('$street, $city - $pincode, $state', style: const TextStyle(fontSize: 12, color: _textDark)),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(modalCtx);
+                        _showAddAddressDialog(context);
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add New Address', style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(backgroundColor: _darkGreen, foregroundColor: Colors.white, padding: const EdgeInsets.all(14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -732,83 +1018,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     );
   }
 
-  // MODAL 1: Addresses Sheet
-  void _showAddressesModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: MediaQuery.of(context).size.height * 0.65,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Saved Delivery Addresses 📍', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _savedAddresses.length,
-                  itemBuilder: (context, index) {
-                    final addr = _savedAddresses[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: addr['isDefault'] == 'true' ? const Color(0xFFECFDF5) : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: addr['isDefault'] == 'true' ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(addr['type']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _textDark)),
-                              const SizedBox(width: 8),
-                              if (addr['isDefault'] == 'true')
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(6)),
-                                  child: const Text('DEFAULT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text('${addr['name']} • ${addr['phone']}', style: const TextStyle(fontSize: 12, color: _textMuted)),
-                          const SizedBox(height: 2),
-                          Text('${addr['address']}, ${addr['city']} - ${addr['pincode']}, ${addr['state']}', style: const TextStyle(fontSize: 12, color: _textDark)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add New Address form opened 📍')));
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add New Address'),
-                  style: ElevatedButton.styleFrom(backgroundColor: _darkGreen, foregroundColor: Colors.white, padding: const EdgeInsets.all(12)),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   // MODAL 2: Payment Methods Sheet
   void _showPaymentMethodsModal(BuildContext context) {

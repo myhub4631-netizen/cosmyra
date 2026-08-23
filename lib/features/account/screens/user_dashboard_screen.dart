@@ -66,6 +66,8 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     {'title': 'Logout', 'icon': Icons.logout, 'route': null},
   ];
 
+  String? _loadedAddressEmail;
+
   @override
   void initState() {
     super.initState();
@@ -895,6 +897,19 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     }
 
     final bool isAuthenticated = auth.isLoggedIn || user != null;
+
+    final String currentEmail = (auth.userEmail ?? user?.email ?? '').toLowerCase().trim();
+    if (currentEmail.isNotEmpty && currentEmail != _loadedAddressEmail) {
+      _loadedAddressEmail = currentEmail;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadSavedAddresses();
+          _loadSavedPaymentMethods();
+          _loadSavedNotifications();
+          _loadSavedCoupons();
+        }
+      });
+    }
 
     if (!isAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
