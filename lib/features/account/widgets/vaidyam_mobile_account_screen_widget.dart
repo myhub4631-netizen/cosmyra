@@ -576,7 +576,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     final ordersAsync = ref.watch(userOrdersFutureProvider);
     final userOrders = ordersAsync.value ?? [];
 
-    int allCount = userOrders.isNotEmpty ? userOrders.length : widget.totalOrders;
+    int allCount = userOrders.length;
     int processingCount = 0;
     int shippedCount = 0;
     int deliveredCount = 0;

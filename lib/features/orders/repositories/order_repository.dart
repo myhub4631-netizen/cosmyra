@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../cart/models/cart_item_model.dart';
 import '../models/order_model.dart';
 
@@ -12,7 +13,11 @@ final orderRepositoryProvider = Provider<OrderRepository>((ref) {
 });
 
 final userOrdersFutureProvider = FutureProvider<List<OrderModel>>((ref) async {
-  return ref.watch(orderRepositoryProvider).getUserOrders();
+  final authState = ref.watch(authControllerProvider);
+  final user = ref.watch(currentUserProvider);
+  final email = authState.userEmail ?? authState.guestEmail ?? user?.email;
+  final userId = user?.id;
+  return ref.watch(orderRepositoryProvider).getUserOrders(email: email, userId: userId);
 });
 
 final allAdminOrdersFutureProvider = FutureProvider<List<OrderModel>>((ref) async {
@@ -218,17 +223,21 @@ class OrderRepository {
     return placedOrder;
   }
 
-  /// Get orders for current logged-in user
-  Future<List<OrderModel>> getUserOrders({String? email}) async {
+  /// Get orders for current logged-in user (filtered strictly by user email or user ID)
+  Future<List<OrderModel>> getUserOrders({String? email, String? userId}) async {
     await _ensureLoaded();
     final List<OrderModel> remoteOrders = [];
 
-    if (SupabaseConfig.isConfigured && supabase.auth.currentUser != null) {
+    final currentUser = SupabaseConfig.isConfigured ? supabase.auth.currentUser : null;
+    final targetUserId = userId ?? currentUser?.id;
+    final targetEmail = email?.trim().toLowerCase();
+
+    if (SupabaseConfig.isConfigured && targetUserId != null) {
       try {
         final response = await supabase
             .from('orders')
             .select('*, order_items(*)')
-            .eq('user_id', supabase.auth.currentUser!.id)
+            .eq('user_id', targetUserId)
             .order('created_at', ascending: false);
 
         if (response.isNotEmpty) {
@@ -240,9 +249,20 @@ class OrderRepository {
     }
 
     final Map<String, OrderModel> mergedMap = {};
-    for (var o in _localOrders) {
-      mergedMap[o.orderNumber] = o;
+
+    // Filter _localOrders strictly by target email or user ID
+    if (targetEmail != null && targetEmail.isNotEmpty) {
+      for (var o in _localOrders) {
+        final oEmail = o.customerEmail.trim().toLowerCase();
+        final matchesEmail = oEmail == targetEmail;
+        final matchesUserId = targetUserId != null && targetUserId.isNotEmpty && o.userId == targetUserId;
+
+        if (matchesEmail || matchesUserId) {
+          mergedMap[o.orderNumber] = o;
+        }
+      }
     }
+
     for (var o in remoteOrders) {
       mergedMap[o.orderNumber] = o;
     }

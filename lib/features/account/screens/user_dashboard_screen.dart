@@ -957,11 +957,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         displayName: displayName,
         email: displayEmail,
         phone: displayPhone,
-        memberSince: 'Aug 2024',
+        memberSince: 'Aug 2026',
         totalOrders: realOrdersCount,
         wishlistCount: wishlistCount,
         couponsCount: _userCoupons.length,
-        rewardPoints: 1250,
+        rewardPoints: realOrdersCount > 0 ? (realOrdersCount * 250) : 0,
         onSelectTab: (tab) {
           if (tab == 'My Orders') {
             context.push('/orders');
