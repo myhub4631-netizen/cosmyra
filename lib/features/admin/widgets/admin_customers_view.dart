@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/supabase_config.dart';
@@ -23,194 +25,138 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
   List<Map<String, dynamic>> _registeredProfiles = [];
   bool _isLoadingProfiles = true;
 
-  final List<Map<String, dynamic>> _defaultUsers = [
-    {
-      'id': '#USR-0002453',
-      'name': 'Mahboob Hasan',
-      'email': '1mdollar2027@gmail.com',
-      'phone': '+91 98765 43210',
-      'role': 'Master Admin',
-      'status': 'Active',
-      'isVip': true,
-      'isYou': true,
-      'orders': 18,
-      'totalSpent': 15450.0,
-      'joinedOn': '15 Aug 2026 10:30 AM',
-      'lastLogin': '15 Aug 2026, 06:15 PM',
-      'emailVerified': true,
-      'phoneVerified': true,
-      'addresses': 2,
-    },
-    {
-      'id': '#USR-0002454',
-      'name': 'Priya Verma',
-      'email': 'priya.verma@example.com',
-      'phone': '+91 98765 43210',
-      'role': 'Customer',
-      'status': 'Active',
-      'isVip': true,
-      'isYou': false,
-      'orders': 5,
-      'totalSpent': 2890.0,
-      'joinedOn': '12 Mar 2026 04:15 PM',
-      'lastLogin': '14 Aug 2026, 11:20 AM',
-      'emailVerified': true,
-      'phoneVerified': true,
-      'addresses': 1,
-    },
-    {
-      'id': '#USR-0002455',
-      'name': 'Ananya Roy',
-      'email': 'ananya.roy@gmail.com',
-      'phone': '+91 98123 45678',
-      'role': 'Customer',
-      'status': 'Active',
-      'isVip': false,
-      'isYou': false,
-      'orders': 3,
-      'totalSpent': 1480.0,
-      'joinedOn': '05 Apr 2026 11:20 AM',
-      'lastLogin': '10 Aug 2026, 02:45 PM',
-      'emailVerified': true,
-      'phoneVerified': true,
-      'addresses': 1,
-    },
-    {
-      'id': '#USR-0002456',
-      'name': 'Rahul Sharma',
-      'email': 'rahul.s@outlook.com',
-      'phone': '+91 97654 32109',
-      'role': 'Customer',
-      'status': 'Active',
-      'isVip': true,
-      'isYou': false,
-      'orders': 8,
-      'totalSpent': 4950.0,
-      'joinedOn': '20 Jan 2026 09:45 AM',
-      'lastLogin': '12 Aug 2026, 09:10 AM',
-      'emailVerified': true,
-      'phoneVerified': false,
-      'addresses': 3,
-    },
-    {
-      'id': '#USR-0002457',
-      'name': 'Dr. Rajesh Vaidya',
-      'email': 'admin@cosmyra.com',
-      'phone': '+91 99000 11223',
-      'role': 'Master Admin',
-      'status': 'Active',
-      'isVip': false,
-      'isYou': false,
-      'orders': 12,
-      'totalSpent': 8900.0,
-      'joinedOn': '01 Jan 2026 08:00 AM',
-      'lastLogin': '15 Aug 2026, 08:00 AM',
-      'emailVerified': true,
-      'phoneVerified': true,
-      'addresses': 1,
-    },
-    {
-      'id': '#USR-0002458',
-      'name': 'Neha Kapoor',
-      'email': 'neha.kapoor@example.com',
-      'phone': '+91 98989 12345',
-      'role': 'Customer',
-      'status': 'Inactive',
-      'isVip': false,
-      'isYou': false,
-      'orders': 1,
-      'totalSpent': 450.0,
-      'joinedOn': '28 Feb 2026 02:30 PM',
-      'lastLogin': '01 Mar 2026, 10:00 AM',
-      'emailVerified': false,
-      'phoneVerified': false,
-      'addresses': 1,
-    },
-    {
-      'id': '#USR-0002459',
-      'name': 'Aman Singh',
-      'email': 'aman.singh@example.com',
-      'phone': '+91 97111 22334',
-      'role': 'Moderator',
-      'status': 'Active',
-      'isVip': false,
-      'isYou': false,
-      'orders': 7,
-      'totalSpent': 3250.0,
-      'joinedOn': '18 May 2026 06:10 PM',
-      'lastLogin': '14 Aug 2026, 04:30 PM',
-      'emailVerified': true,
-      'phoneVerified': true,
-      'addresses': 2,
-    },
-    {
-      'id': '#USR-0002460',
-      'name': 'Saurabh Mehta',
-      'email': 'saurabh.mehta@example.com',
-      'phone': '+91 96543 87654',
-      'role': 'Customer',
-      'status': 'Blocked',
-      'isVip': false,
-      'isYou': false,
-      'orders': 0,
-      'totalSpent': 0.0,
-      'joinedOn': '10 Dec 2025 01:00 PM',
-      'lastLogin': '10 Dec 2025, 01:05 PM',
-      'emailVerified': false,
-      'phoneVerified': false,
-      'addresses': 0,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    _selectedUser = _defaultUsers[0];
     _fetchSupabaseProfiles();
   }
 
   Future<void> _fetchSupabaseProfiles() async {
-    if (!SupabaseConfig.isConfigured) {
-      setState(() => _isLoadingProfiles = false);
-      return;
-    }
+    if (mounted) setState(() => _isLoadingProfiles = true);
+    final List<Map<String, dynamic>> allFetchedUsers = [];
+
+    // 1. Fetch settings/users.json from Supabase Storage
     try {
-      final data = await supabase.from('profiles').select('*');
-      if (mounted && data is List && data.isNotEmpty) {
-        final List<Map<String, dynamic>> fetched = [];
-        for (int i = 0; i < data.length; i++) {
-          final row = data[i];
-          final email = row['email'] ?? '';
-          final name = row['full_name'] ?? (email.contains('@') ? email.split('@').first : 'User');
-          final isMaster = email.toLowerCase() == '1mdollar2027@gmail.com';
-          final role = isMaster ? 'Master Admin' : (row['role']?.toString().toUpperCase() ?? 'Customer');
-          fetched.add({
-            'id': '#USR-${1000 + i}',
-            'name': name,
-            'email': email,
-            'phone': row['phone'] ?? '+91 98765 43210',
-            'role': role,
-            'status': 'Active',
-            'isVip': isMaster || (row['is_vip'] == true),
-            'isYou': isMaster,
-            'orders': row['total_orders'] ?? (isMaster ? 18 : 1),
-            'totalSpent': (row['total_spent'] ?? (isMaster ? 15450.0 : 999.0)).toDouble(),
-            'joinedOn': row['created_at']?.toString().substring(0, 10) ?? '15 Aug 2026',
-            'lastLogin': '15 Aug 2026, 06:15 PM',
-            'emailVerified': true,
-            'phoneVerified': true,
-            'addresses': 2,
-          });
+      final Uri usersUri = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/users.json?t=${DateTime.now().millisecondsSinceEpoch}');
+      final response = await http.get(usersUri);
+      if (response.statusCode == 200) {
+        final List decoded = json.decode(response.body);
+        for (var item in decoded) {
+          allFetchedUsers.add(Map<String, dynamic>.from(item as Map));
         }
-        setState(() {
-          _registeredProfiles = fetched;
-          _isLoadingProfiles = false;
-        });
-      } else {
-        setState(() => _isLoadingProfiles = false);
       }
-    } catch (_) {
-      if (mounted) setState(() => _isLoadingProfiles = false);
+    } catch (_) {}
+
+    // 2. Fetch settings/orders.json to extract users from all placed orders
+    try {
+      final Uri ordersUri = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/orders.json?t=${DateTime.now().millisecondsSinceEpoch}');
+      final response = await http.get(ordersUri);
+      if (response.statusCode == 200) {
+        final List decoded = json.decode(response.body);
+        for (var ord in decoded) {
+          final email = (ord['customerEmail'] ?? ord['customer_email'] ?? '').toString().trim();
+          final name = (ord['customerName'] ?? ord['customer_name'] ?? '').toString().trim();
+          final phone = (ord['customerPhone'] ?? ord['customer_phone'] ?? '').toString().trim();
+          final double amount = (ord['totalAmount'] ?? ord['total_amount'] ?? 0).toDouble();
+
+          if (email.isNotEmpty) {
+            final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email.toLowerCase());
+            if (idx >= 0) {
+              allFetchedUsers[idx]['orders'] = ((allFetchedUsers[idx]['orders'] as int? ?? 0) + 1);
+              allFetchedUsers[idx]['totalSpent'] = ((allFetchedUsers[idx]['totalSpent'] as double? ?? 0.0) + amount);
+            } else {
+              allFetchedUsers.add({
+                'id': '#USR-000${allFetchedUsers.length + 1}',
+                'name': name.isNotEmpty ? name : email.split('@').first,
+                'email': email,
+                'phone': phone.isNotEmpty ? phone : '+91 94730 40903',
+                'role': 'Customer',
+                'status': 'Active',
+                'isVip': true,
+                'isYou': false,
+                'orders': 1,
+                'totalSpent': amount,
+                'joinedOn': '20 Aug 2026',
+                'lastLogin': '24 Aug 2026',
+                'emailVerified': true,
+                'phoneVerified': true,
+                'addresses': 1,
+              });
+            }
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 3. Ensure myhub4632@gmail.com is present!
+    if (!allFetchedUsers.any((u) => u['email']?.toString().toLowerCase() == 'myhub4632@gmail.com')) {
+      allFetchedUsers.add({
+        'id': '#USR-0002',
+        'name': 'MyHub User',
+        'email': 'myhub4632@gmail.com',
+        'phone': '+91 94730 40903',
+        'role': 'Customer',
+        'status': 'Active',
+        'isVip': true,
+        'isYou': false,
+        'orders': 2,
+        'totalSpent': 657.0,
+        'joinedOn': '20 Aug 2026 02:15 PM',
+        'lastLogin': '24 Aug 2026 01:40 AM',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1,
+      });
+    }
+
+    // 4. Fetch Supabase profiles table
+    if (SupabaseConfig.isConfigured) {
+      try {
+        final data = await supabase.from('profiles').select('*');
+        if (data is List) {
+          for (var row in data) {
+            final email = row['email']?.toString().trim() ?? '';
+            if (email.isNotEmpty) {
+              final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email.toLowerCase());
+              final name = row['full_name']?.toString() ?? (email.split('@').first);
+              final phone = row['phone']?.toString() ?? '+91 98765 43210';
+              if (idx >= 0) {
+                if (name.isNotEmpty) allFetchedUsers[idx]['name'] = name;
+                if (phone.isNotEmpty) allFetchedUsers[idx]['phone'] = phone;
+              } else {
+                final isMaster = email.toLowerCase() == '1mdollar2027@gmail.com';
+                allFetchedUsers.add({
+                  'id': '#USR-000${allFetchedUsers.length + 1}',
+                  'name': name,
+                  'email': email,
+                  'phone': phone,
+                  'role': isMaster ? 'Master Admin' : (row['role']?.toString().toUpperCase() ?? 'Customer'),
+                  'status': 'Active',
+                  'isVip': isMaster,
+                  'isYou': isMaster,
+                  'orders': isMaster ? 4 : 1,
+                  'totalSpent': isMaster ? 1455.0 : 459.0,
+                  'joinedOn': row['created_at']?.toString().substring(0, 10) ?? '15 Aug 2026',
+                  'lastLogin': '24 Aug 2026',
+                  'emailVerified': true,
+                  'phoneVerified': true,
+                  'addresses': 1,
+                });
+              }
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _registeredProfiles = allFetchedUsers;
+        _isLoadingProfiles = false;
+        if (allFetchedUsers.isNotEmpty) {
+          _selectedUser = allFetchedUsers[0];
+        }
+      });
     }
   }
 
@@ -265,10 +211,10 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              onPressed: () {
+              onPressed: () async {
                 if (nameCtrl.text.trim().isNotEmpty && emailCtrl.text.trim().isNotEmpty) {
                   final newUser = {
-                    'id': '#USR-000${_defaultUsers.length + 2500}',
+                    'id': '#USR-000${_registeredProfiles.length + 1}',
                     'name': nameCtrl.text.trim(),
                     'email': emailCtrl.text.trim(),
                     'phone': phoneCtrl.text.trim().isEmpty ? '+91 98765 43210' : phoneCtrl.text.trim(),
@@ -278,14 +224,14 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                     'isYou': false,
                     'orders': 0,
                     'totalSpent': 0.0,
-                    'joinedOn': '15 Aug 2026 06:30 PM',
+                    'joinedOn': '24 Aug 2026',
                     'lastLogin': 'Never',
                     'emailVerified': true,
                     'phoneVerified': false,
                     'addresses': 0,
                   };
                   setState(() {
-                    _defaultUsers.insert(0, newUser);
+                    _registeredProfiles.insert(0, newUser);
                     _selectedUser = newUser;
                     _showRightPanel = true;
                   });
@@ -293,6 +239,22 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('User ${nameCtrl.text} added successfully!')),
                   );
+
+                  // Sync newly added user to remote Supabase Storage (settings/users.json)
+                  try {
+                    final String anonKey = SupabaseConfig.anonKey;
+                    final Uri postUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json');
+                    await http.post(
+                      postUrl,
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'x-upsert': 'true',
+                        'apikey': anonKey,
+                        'Authorization': 'Bearer $anonKey',
+                      },
+                      body: json.encode(_registeredProfiles),
+                    );
+                  } catch (_) {}
                 }
               },
               child: const Text('Save User'),
@@ -307,10 +269,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final combinedUsers = [
-      ..._registeredProfiles,
-      ..._defaultUsers.where((def) => !_registeredProfiles.any((reg) => reg['email']?.toString().toLowerCase() == def['email']?.toString().toLowerCase())),
-    ];
+    final combinedUsers = _registeredProfiles;
 
     final filteredUsers = combinedUsers.where((u) {
       if (_searchQuery.isNotEmpty) {
@@ -327,6 +286,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       }
       return true;
     }).toList();
+
+    final int totalUsersCount = combinedUsers.length;
+    final int customersCount = combinedUsers.where((u) => u['role']?.toString().toLowerCase().contains('customer') == true).length;
+    final int vipCount = combinedUsers.where((u) => u['isVip'] == true).length;
+    final int adminsCount = combinedUsers.where((u) => u['role']?.toString().toLowerCase().contains('admin') == true).length;
+    final int inactiveCount = combinedUsers.where((u) => u['status']?.toString().toLowerCase() == 'inactive').length;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 1150;
@@ -408,11 +373,11 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 spacing: 16,
                 runSpacing: 16,
                 children: [
-                  _buildMetricCard('Total Users', '2,453', '↑ 12.5% this month', Icons.people_outline, const Color(0xFFE0E7FF), const Color(0xFF4F46E5), true),
-                  _buildMetricCard('Customers', '2,120', '↑ 9.3% this month', Icons.person_outline, const Color(0xFFDBEAFE), const Color(0xFF2563EB), true),
-                  _buildMetricCard('VIP Customers', '156', '↑ 15.8% this month', Icons.workspace_premium_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), true),
-                  _buildMetricCard('Admins', '24', '↑ 4.2% this month', Icons.shield_outlined, const Color(0xFFF3E8FF), const Color(0xFF9333EA), true),
-                  _buildMetricCard('Inactive Users', '153', '↓ 3.1% this month', Icons.person_off_outlined, const Color(0xFFFEE2E2), const Color(0xFFDC2626), false),
+                  _buildMetricCard('Total Users', '$totalUsersCount', 'Real time registered users', Icons.people_outline, const Color(0xFFE0E7FF), const Color(0xFF4F46E5), true),
+                  _buildMetricCard('Customers', '$customersCount', 'Active customer accounts', Icons.person_outline, const Color(0xFFDBEAFE), const Color(0xFF2563EB), true),
+                  _buildMetricCard('VIP Customers', '$vipCount', 'VIP repeat buyers', Icons.workspace_premium_outlined, const Color(0xFFFEF3C7), const Color(0xFFD97706), true),
+                  _buildMetricCard('Admins', '$adminsCount', 'Admin & staff accounts', Icons.shield_outlined, const Color(0xFFF3E8FF), const Color(0xFF9333EA), true),
+                  _buildMetricCard('Inactive Users', '$inactiveCount', 'Inactive accounts', Icons.person_off_outlined, const Color(0xFFFEE2E2), const Color(0xFFDC2626), false),
                 ],
               );
             },

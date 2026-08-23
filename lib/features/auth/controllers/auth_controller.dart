@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -381,6 +382,7 @@ class AuthController extends StateNotifier<AuthStateModel> {
     );
 
     await _saveProfileLocally(name: name, email: currentEmail, phone: phone, isAdmin: isAdmin);
+    await _syncUserToRemoteStorage(name, currentEmail, phone, isAdmin ? 'Master Admin' : 'Customer');
 
     if (SupabaseConfig.isConfigured) {
       final user = supabase.auth.currentUser;
@@ -402,6 +404,60 @@ class AuthController extends StateNotifier<AuthStateModel> {
         } catch (_) {}
       }
     }
+  }
+
+  Future<void> _syncUserToRemoteStorage(String name, String email, String phone, String role) async {
+    if (email.isEmpty) return;
+    try {
+      final String anonKey = SupabaseConfig.anonKey;
+      final Uri getUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/users.json?t=${DateTime.now().millisecondsSinceEpoch}');
+      final getRes = await http.get(getUrl);
+      List<Map<String, dynamic>> usersList = [];
+
+      if (getRes.statusCode == 200) {
+        final List decoded = json.decode(getRes.body);
+        usersList = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+
+      final cleanEmail = email.trim().toLowerCase();
+      final idx = usersList.indexWhere((u) => u['email']?.toString().toLowerCase() == cleanEmail);
+
+      final Map<String, dynamic> userRecord = {
+        'id': idx >= 0 ? usersList[idx]['id'] : '#USR-000${usersList.length + 1}',
+        'name': name.isNotEmpty ? name : (cleanEmail.contains('@') ? cleanEmail.split('@').first : 'User'),
+        'email': cleanEmail,
+        'phone': phone.isNotEmpty ? phone : (idx >= 0 ? usersList[idx]['phone'] ?? '' : ''),
+        'role': role,
+        'status': 'Active',
+        'isVip': role.contains('Admin') || (idx >= 0 ? usersList[idx]['isVip'] == true : false),
+        'isYou': false,
+        'orders': idx >= 0 ? (usersList[idx]['orders'] ?? 1) : 1,
+        'totalSpent': idx >= 0 ? (usersList[idx]['totalSpent'] ?? 0.0) : 0.0,
+        'joinedOn': idx >= 0 ? usersList[idx]['joinedOn'] : '24 Aug 2026',
+        'lastLogin': '24 Aug 2026',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1,
+      };
+
+      if (idx >= 0) {
+        usersList[idx] = userRecord;
+      } else {
+        usersList.add(userRecord);
+      }
+
+      final Uri postUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json');
+      await http.post(
+        postUrl,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-upsert': 'true',
+          'apikey': anonKey,
+          'Authorization': 'Bearer $anonKey',
+        },
+        body: json.encode(usersList),
+      );
+    } catch (_) {}
   }
 
   Future<void> signOut() async {
