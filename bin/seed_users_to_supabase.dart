@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() async {
-  print('=== SEEDING REAL USERS TO SUPABASE STORAGE (settings/users.json) ===');
+  print('=== RE-SEEDING CLEAN REAL USERS TO SUPABASE STORAGE (settings/users.json) ===');
 
   final String anonKey = 'sb_publishable_8qq6FNGeCch_xx3kWM9wcw_jmoleoON';
 
@@ -31,12 +31,12 @@ void main() async {
       'phone': '+91 94730 40903',
       'role': 'Customer',
       'status': 'Active',
-      'isVip': true,
+      'isVip': false,
       'isYou': false,
-      'orders': 2,
-      'totalSpent': 657.0,
-      'joinedOn': '20 Aug 2026 02:15 PM',
-      'lastLogin': '24 Aug 2026 01:40 AM',
+      'orders': 0,
+      'totalSpent': 0.0,
+      'joinedOn': '24 Aug 2026 02:00 AM',
+      'lastLogin': '24 Aug 2026 02:00 AM',
       'emailVerified': true,
       'phoneVerified': true,
       'addresses': 1,
@@ -95,7 +95,7 @@ void main() async {
   print('Upload Response: ${response.body}');
 
   if (response.statusCode == 200 || response.statusCode == 201) {
-    print('SUCCESS! Real users file settings/users.json seeded to Supabase Storage.');
+    print('SUCCESS! Real users file settings/users.json re-seeded to Supabase Storage with ZERO demo orders.');
   } else {
     print('FAILED to upload settings/users.json');
   }

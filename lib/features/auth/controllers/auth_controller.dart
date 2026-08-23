@@ -432,7 +432,7 @@ class AuthController extends StateNotifier<AuthStateModel> {
         'status': 'Active',
         'isVip': role.contains('Admin') || (idx >= 0 ? usersList[idx]['isVip'] == true : false),
         'isYou': false,
-        'orders': idx >= 0 ? (usersList[idx]['orders'] ?? 1) : 1,
+        'orders': idx >= 0 ? (usersList[idx]['orders'] ?? 0) : 0,
         'totalSpent': idx >= 0 ? (usersList[idx]['totalSpent'] ?? 0.0) : 0.0,
         'joinedOn': idx >= 0 ? usersList[idx]['joinedOn'] : '24 Aug 2026',
         'lastLogin': '24 Aug 2026',

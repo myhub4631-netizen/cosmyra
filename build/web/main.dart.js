@@ -57166,7 +57166,7 @@ s=10
 break
 case 7:s=1
 break
-case 10:if(!J.bmK(n,new A.aIg()))J.eW(n,A.u(["id","#USR-0002","name","MyHub User","email","myhub4632@gmail.com","phone","+91 94730 40903","role","Customer","status","Active","isVip",!0,"isYou",!1,"orders",2,"totalSpent",657,"joinedOn","20 Aug 2026 02:15 PM","lastLogin","24 Aug 2026 01:40 AM","emailVerified",!0,"phoneVerified",!0,"addresses",1],t.N,t.z))
+case 10:if(!J.bmK(n,new A.aIg()))J.eW(n,A.u(["id","#USR-0002","name","MyHub User","email","myhub4632@gmail.com","phone","+91 94730 40903","role","Customer","status","Active","isVip",!1,"isYou",!1,"orders",0,"totalSpent",0,"joinedOn","24 Aug 2026 02:00 AM","lastLogin","24 Aug 2026 02:00 AM","emailVerified",!0,"phoneVerified",!0,"addresses",1],t.N,t.z))
 s=A.dO()?12:13
 break
 case 12:q=15
@@ -57192,8 +57192,8 @@ b8=J.b6(n)
 if(a6)c0="Master Admin"
 else{c0=J.Q(a1,"role")
 c0=c0==null?null:J.a7(c0).toUpperCase()
-if(c0==null)c0="Customer"}c1=a6?4:1
-c2=a6?1455:459
+if(c0==null)c0="Customer"}c1=a6?4:0
+c2=a6?1455:0
 c3=J.Q(a1,"created_at")
 c3=c3==null?null:B.d.a_(J.a7(c3),0,10)
 if(c3==null)c3="15 Aug 2026"
@@ -57225,7 +57225,7 @@ if(J.b6(b2)!==0)J.cx(J.Q(n,b4),"phone",b2)}else{b5=J.b6(n)
 b6=J.b6(b1)!==0?b1:B.f.gZ(J.yO(b0,"@"))
 b7=J.b6(b2)!==0?b2:"+91 98765 43210"
 b8=b3?"Master Admin":"Customer"
-J.Sp(n,0,A.u(["id","#USR-000"+(b5+1),"name",b6,"email",b0,"phone",b7,"role",b8,"status","Active","isVip",b3,"isYou",!0,"orders",1,"totalSpent",199,"joinedOn","24 Aug 2026","lastLogin","Just now","emailVerified",!0,"phoneVerified",!0,"addresses",1],t.N,t.z))}}}q=1
+J.Sp(n,0,A.u(["id","#USR-000"+(b5+1),"name",b6,"email",b0,"phone",b7,"role",b8,"status","Active","isVip",b3,"isYou",!0,"orders",0,"totalSpent",0,"joinedOn","24 Aug 2026","lastLogin","Just now","emailVerified",!0,"phoneVerified",!0,"addresses",1],t.N,t.z))}}}q=1
 s=22
 break
 case 20:q=19
@@ -61624,7 +61624,7 @@ if(b==null)b=""}else b=""
 if(!B.d.n(a9,"Admin"))a=h>=0&&J.d(J.Q(J.Q(k,h),"isVip"),!0)
 else a=!0
 if(h>=0){a0=J.Q(J.Q(k,h),"orders")
-if(a0==null)a0=1}else a0=1
+if(a0==null)a0=0}else a0=0
 if(h>=0){a1=J.Q(J.Q(k,h),"totalSpent")
 if(a1==null)a1=0}else a1=0
 a2=h>=0?J.Q(J.Q(k,h),"joinedOn"):"24 Aug 2026"
