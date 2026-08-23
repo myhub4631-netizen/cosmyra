@@ -51,6 +51,10 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
+    final adminCoupons = ref.watch(couponProvider);
+
+    // Keep applied coupon synced with Admin Coupon Manager settings
+    ref.read(cartProvider.notifier).syncWithCoupons(adminCoupons);
 
     return Scaffold(
       backgroundColor: _lightBg,
@@ -973,40 +977,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                   const Text('Available Coupons:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark)),
                   const SizedBox(height: 8),
 
-                  ...[
-                    const CouponModel(
-                      id: 'c-v20',
-                      code: 'VAIDYAM20',
-                      title: 'Get 20% OFF on all Ayurvedic Formulations',
-                      discountType: 'percentage',
-                      discountValue: 20.0,
-                      minSpend: 299.0,
-                    ),
-                    const CouponModel(
-                      id: 'c-w100',
-                      code: 'WELCOME100',
-                      title: 'Flat ₹100 OFF on orders above ₹399',
-                      discountType: 'fixed',
-                      discountValue: 100.0,
-                      minSpend: 399.0,
-                    ),
-                    const CouponModel(
-                      id: 'c-b20',
-                      code: 'BOTANICAL20',
-                      title: 'Special 20% OFF Botanical Discount',
-                      discountType: 'percentage',
-                      discountValue: 20.0,
-                      minSpend: 199.0,
-                    ),
-                    const CouponModel(
-                      id: 'c-h50',
-                      code: 'HERBAL50',
-                      title: 'Flat ₹50 OFF on Herbal Formulations',
-                      discountType: 'fixed',
-                      discountValue: 50.0,
-                      minSpend: 199.0,
-                    ),
-                  ].map((coupon) {
+                  ...allCoupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList().map((coupon) {
                     final bool isThisApplied = currentCart.appliedCouponCode == coupon.code;
                     final bool isEligible = currentCart.subtotal >= coupon.minSpend;
 

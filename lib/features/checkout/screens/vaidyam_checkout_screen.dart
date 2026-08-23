@@ -715,6 +715,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   Widget _buildOrderSummaryCard(BuildContext context, double subtotal, double discount, double total, int itemCounts) {
     final cartState = ref.watch(cartProvider);
     final coupons = ref.watch(couponProvider);
+    ref.read(cartProvider.notifier).syncWithCoupons(coupons);
     final visibleCoupons = coupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList();
 
     return Container(

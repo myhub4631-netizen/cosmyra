@@ -185,6 +185,35 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(clearCoupon: true);
   }
 
+  void syncWithCoupons(List<CouponModel> coupons) {
+    if (state.appliedCouponCode == null || state.appliedCouponCode!.isEmpty) return;
+    final code = state.appliedCouponCode!.trim().toUpperCase();
+    final matchedList = coupons.where((c) => c.code.trim().toUpperCase() == code).toList();
+
+    if (matchedList.isEmpty) return;
+    final matched = matchedList.first;
+
+    if (!matched.isActive || state.subtotal < matched.minSpend) {
+      state = state.copyWith(clearCoupon: true);
+    } else {
+      if (matched.discountType == 'percentage') {
+        if (state.couponDiscountPercent != matched.discountValue || state.fixedDiscountAmount != 0.0) {
+          state = state.copyWith(
+            couponDiscountPercent: matched.discountValue,
+            fixedDiscountAmount: 0.0,
+          );
+        }
+      } else {
+        if (state.fixedDiscountAmount != matched.discountValue || state.couponDiscountPercent != 0.0) {
+          state = state.copyWith(
+            couponDiscountPercent: 0.0,
+            fixedDiscountAmount: matched.discountValue,
+          );
+        }
+      }
+    }
+  }
+
   void refreshProductData(ProductModel updatedProduct) {
     if (state.items.isEmpty) return;
     final updatedList = state.items.map((item) {
