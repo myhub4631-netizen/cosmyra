@@ -7,6 +7,7 @@ import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
 import '../../coupons/controllers/coupon_controller.dart';
 import '../../orders/repositories/order_repository.dart';
+import '../../shipping/controllers/shipping_settings_controller.dart';
 import '../widgets/vaidyam_mobile_checkout_screen_widget.dart';
 
 class VaidyamCheckoutScreen extends ConsumerStatefulWidget {
@@ -725,7 +726,11 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   Widget _buildOrderSummaryCard(BuildContext context, double subtotal, double discount, double total, int itemCounts) {
     final cartState = ref.watch(cartProvider);
     final coupons = ref.watch(couponProvider);
+    final shippingSettings = ref.watch(shippingSettingsProvider);
     final visibleCoupons = coupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList();
+
+    final currentShippingFee = cartState.calculateShippingFee(shippingSettings);
+    final currentFinalTotal = cartState.calculateFinalTotal(shippingSettings);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -747,6 +752,102 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
           const Text('Order Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
           const SizedBox(height: 20),
 
+          // ── DELIVERY SPEED & SHIPPING METHOD SELECTOR ──
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Delivery Speed Option:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+                const SizedBox(height: 10),
+
+                // Standard Shipping Option
+                InkWell(
+                  onTap: () => ref.read(cartProvider.notifier).toggleSuperfastDelivery(false),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: !cartState.isSuperfastSelected ? const Color(0xFFF0FDF4) : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: !cartState.isSuperfastSelected ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        Radio<bool>(
+                          value: false,
+                          groupValue: cartState.isSuperfastSelected,
+                          activeColor: const Color(0xFF10B981),
+                          onChanged: (val) => ref.read(cartProvider.notifier).toggleSuperfastDelivery(false),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Standard Delivery', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                              Text(
+                                (shippingSettings.freeShippingThreshold == 0 || (cartState.subtotal - cartState.couponDiscount) >= shippingSettings.freeShippingThreshold)
+                                    ? 'FREE'
+                                    : '₹${shippingSettings.standardShippingFee.toInt()}',
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF15803D)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                if (shippingSettings.isSuperfastEnabled) ...[
+                  const SizedBox(height: 8),
+                  // Superfast Express Option
+                  InkWell(
+                    onTap: () => ref.read(cartProvider.notifier).toggleSuperfastDelivery(true),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: cartState.isSuperfastSelected ? const Color(0xFFEEF2FF) : Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: cartState.isSuperfastSelected ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Radio<bool>(
+                            value: true,
+                            groupValue: cartState.isSuperfastSelected,
+                            activeColor: const Color(0xFF4F46E5),
+                            onChanged: (val) => ref.read(cartProvider.notifier).toggleSuperfastDelivery(true),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('⚡ Superfast Express Delivery', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                Text(
+                                  'Rs ${shippingSettings.superfastDeliveryFee.toInt()}',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // ── COUPON CODE INPUT & APPLY ──
           const Text('Apply Coupon Code:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
           const SizedBox(height: 8),
@@ -766,7 +867,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                       const Icon(Icons.confirmation_number_outlined, color: Color(0xFF059669), size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        'Applied: ${cartState.appliedCouponCode} (-₹${discount.toInt()})',
+                        'Applied: ${cartState.appliedCouponCode} (-₹${cartState.couponDiscount.toInt()})',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF065F46)),
                       ),
                     ],
@@ -817,7 +918,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                       );
                       return;
                     }
-                    if (subtotal < coupon.minSpend) {
+                    if (cartState.subtotal < coupon.minSpend) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Minimum order spend of ₹${coupon.minSpend.toInt()} required for ${coupon.code}!')),
                       );
@@ -851,7 +952,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
             Column(
               children: visibleCoupons.map((c) {
                 final discountText = c.discountType == 'percentage' ? '${c.discountValue.toInt()}% OFF' : '₹${c.discountValue.toInt()} OFF';
-                final isEligible = subtotal >= c.minSpend;
+                final isEligible = cartState.subtotal >= c.minSpend;
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -881,7 +982,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '$discountText - ${c.title}',
+                              '$discountText - ${c.effectiveTitle}',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -898,7 +999,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                         onTap: () {
                           if (!isEligible) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Add items worth ₹${(c.minSpend - subtotal).toInt()} more to use ${c.code}')),
+                              SnackBar(content: Text('Add items worth ₹${(c.minSpend - cartState.subtotal).toInt()} more to use ${c.code}')),
                             );
                             return;
                           }
@@ -927,13 +1028,13 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
           const Divider(color: Color(0xFFE5E7EB)),
           const SizedBox(height: 16),
 
-          _buildSummaryRow('Subtotal ($itemCounts Items)', '₹${subtotal.toInt()}'),
+          _buildSummaryRow('Subtotal ($itemCounts Items)', '₹${cartState.subtotal.toInt()}'),
           const SizedBox(height: 12),
-          if (discount > 0) ...[
-            _buildSummaryRow('Coupon Discount', '- ₹${discount.toInt()}', isDiscount: true),
+          if (cartState.couponDiscount > 0) ...[
+            _buildSummaryRow('Coupon Discount', '- ₹${cartState.couponDiscount.toInt()}', isDiscount: true),
             const SizedBox(height: 12),
           ],
-          _buildSummaryRow('Shipping', cartState.shippingFee == 0 ? 'Free' : '₹${cartState.shippingFee.toInt()}', isDiscount: cartState.shippingFee == 0),
+          _buildSummaryRow('Shipping', currentShippingFee == 0 ? 'Free' : '₹${currentShippingFee.toInt()}', isDiscount: currentShippingFee == 0),
 
           const SizedBox(height: 16),
           const Divider(color: Color(0xFFE5E7EB)),
@@ -953,7 +1054,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
                   Text('(Inclusive of all taxes)', style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
                 ],
               ),
-              Text('₹${total.toInt()}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
+              Text('₹${currentFinalTotal.toInt()}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF111827))),
             ],
           ),
 

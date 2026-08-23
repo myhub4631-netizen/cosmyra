@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../shipping/controllers/shipping_settings_controller.dart';
 
 class AdminSettingsView extends ConsumerStatefulWidget {
   const AdminSettingsView({super.key});
@@ -10,18 +11,72 @@ class AdminSettingsView extends ConsumerStatefulWidget {
 }
 
 class _AdminSettingsViewState extends ConsumerState<AdminSettingsView> {
-  final _freeShippingThresholdController = TextEditingController(text: '499');
-  final _flatShippingFeeController = TextEditingController(text: '49');
-  final _gstRateController = TextEditingController(text: '18');
+  late TextEditingController _freeShippingThresholdController;
+  late TextEditingController _flatShippingFeeController;
+  late TextEditingController _superfastFeeController;
+  late TextEditingController _gstRateController;
 
   bool _shiprocketActive = true;
   bool _delhiveryActive = true;
   bool _indiaPostActive = true;
   bool _bluedartActive = false;
+  bool _isSuperfastActive = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = ref.read(shippingSettingsProvider);
+    _freeShippingThresholdController = TextEditingController(text: settings.freeShippingThreshold.toInt().toString());
+    _flatShippingFeeController = TextEditingController(text: settings.standardShippingFee.toInt().toString());
+    _superfastFeeController = TextEditingController(text: settings.superfastDeliveryFee.toInt().toString());
+    _gstRateController = TextEditingController(text: '18');
+    _isSuperfastActive = settings.isSuperfastEnabled;
+  }
+
+  @override
+  void dispose() {
+    _freeShippingThresholdController.dispose();
+    _flatShippingFeeController.dispose();
+    _superfastFeeController.dispose();
+    _gstRateController.dispose();
+    super.dispose();
+  }
+
+  void _saveSettings() {
+    final standardFee = double.tryParse(_flatShippingFeeController.text) ?? 0.0;
+    final freeThreshold = double.tryParse(_freeShippingThresholdController.text) ?? 399.0;
+    final superfastFee = double.tryParse(_superfastFeeController.text) ?? 60.0;
+
+    final updated = ShippingSettings(
+      standardShippingFee: standardFee,
+      freeShippingThreshold: freeThreshold,
+      isSuperfastEnabled: _isSuperfastActive,
+      superfastDeliveryFee: superfastFee,
+    );
+
+    ref.read(shippingSettingsProvider.notifier).updateSettings(updated);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Successfully updated shipping charges & delivery settings!'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    ref.listen<ShippingSettings>(shippingSettingsProvider, (prev, next) {
+      if (mounted) {
+        _freeShippingThresholdController.text = next.freeShippingThreshold.toInt().toString();
+        _flatShippingFeeController.text = next.standardShippingFee.toInt().toString();
+        _superfastFeeController.text = next.superfastDeliveryFee.toInt().toString();
+        setState(() {
+          _isSuperfastActive = next.isSuperfastEnabled;
+        });
+      }
+    });
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -46,7 +101,7 @@ class _AdminSettingsViewState extends ConsumerState<AdminSettingsView> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Multi-courier API credentials, shipping thresholds, tax rules & store settings.',
+                    'Manage shipping fees (Free / ₹0), superfast delivery charge (Rs 60), tax rules & courier integrations.',
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? AppColors.textLightSecondary : AppColors.textDarkSecondary,
@@ -55,26 +110,121 @@ class _AdminSettingsViewState extends ConsumerState<AdminSettingsView> {
                 ],
               ),
               ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Saved store configuration settings.')),
-                  );
-                },
+                onPressed: _saveSettings,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.forestSage,
                   foregroundColor: AppColors.softWhite,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 ),
                 icon: const Icon(Icons.save_outlined, size: 18),
-                label: const Text('Save Settings'),
+                label: const Text('Save Settings', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
 
           const SizedBox(height: 20),
 
+          // Shipping Rates & Superfast Delivery Management Card
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.local_shipping_outlined, color: Color(0xFF4F46E5), size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Shipping Fee & Express Delivery Manager 🚚',
+                        style: TextStyle(fontFamily: 'serif', fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Set standard delivery charge to 0 (Free), configure free shipping thresholds, and set Superfast Delivery fee (Rs 60).',
+                    style: TextStyle(fontSize: 12, color: isDark ? AppColors.textLightSecondary : AppColors.textDarkSecondary),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _flatShippingFeeController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Standard Shipping Fee (₹)',
+                            hintText: '0 for Free Delivery',
+                            helperText: 'Set 0 for Free Delivery across all orders below threshold',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.currency_rupee),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _freeShippingThresholdController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Free Shipping Minimum Spend (₹)',
+                            helperText: 'Orders above this subtotal qualify for ₹0 Free Delivery (Set 0 for sitewide Free)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.shopping_bag_outlined),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: _superfastFeeController,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Superfast Express Delivery Fee (₹)',
+                            helperText: 'Custom fee for 24-48h superfast express delivery (Default: Rs 60)',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.bolt, color: Colors.amber),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: SwitchListTile(
+                      title: const Text(
+                        'Enable ⚡ Superfast Express Delivery Option at Checkout',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      subtitle: const Text(
+                        'Allows customers to choose 24-48 hr priority dispatch for Rs 60 during checkout',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      ),
+                      value: _isSuperfastActive,
+                      activeColor: const Color(0xFF4F46E5),
+                      onChanged: (val) => setState(() => _isSuperfastActive = val),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // Logistics & Multi-Courier API Gateways Card
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -129,60 +279,10 @@ class _AdminSettingsViewState extends ConsumerState<AdminSettingsView> {
 
           const SizedBox(height: 20),
 
-          // Shipping & Tax Parameters Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Shipping Rates & Tax Parameters',
-                    style: TextStyle(fontFamily: 'serif', fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _freeShippingThresholdController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Free Shipping Threshold (₹)',
-                            helperText: 'Orders above this amount qualify for ₹0 shipping fee',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: _flatShippingFeeController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Standard Shipping Fee (₹)',
-                            helperText: 'Applied to orders below free shipping threshold',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: _gstRateController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'GST Rate (%)', helperText: 'Standard Indian cosmetics GST slab'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
           // Botanical Store Profile Card
           Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -207,3 +307,4 @@ class _AdminSettingsViewState extends ConsumerState<AdminSettingsView> {
     );
   }
 }
+

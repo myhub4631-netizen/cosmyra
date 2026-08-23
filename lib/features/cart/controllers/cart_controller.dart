@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../catalog/models/product_model.dart';
 import '../../coupons/controllers/coupon_controller.dart';
+import '../../shipping/controllers/shipping_settings_controller.dart';
 import '../models/cart_item_model.dart';
 
 final cartProvider = StateNotifierProvider<CartNotifier, CartState>((ref) {
@@ -12,12 +13,14 @@ class CartState {
   final String? appliedCouponCode;
   final double couponDiscountPercent;
   final double fixedDiscountAmount;
+  final bool isSuperfastSelected;
 
   const CartState({
     this.items = const [],
     this.appliedCouponCode,
     this.couponDiscountPercent = 0.0,
     this.fixedDiscountAmount = 0.0,
+    this.isSuperfastSelected = false,
   });
 
   int get totalItemCount => items.fold(0, (sum, item) => sum + item.quantity);
@@ -31,15 +34,32 @@ class CartState {
     return (subtotal * (couponDiscountPercent / 100.0)).roundToDouble();
   }
 
-  double get shippingFee => (subtotal - couponDiscount) >= 399.0 || items.isEmpty ? 0.0 : 49.0;
+  double calculateShippingFee(ShippingSettings settings) {
+    if (items.isEmpty) return 0.0;
+    if (isSuperfastSelected && settings.isSuperfastEnabled) {
+      return settings.superfastDeliveryFee;
+    }
+    final netSubtotal = subtotal - couponDiscount;
+    if (settings.freeShippingThreshold == 0.0 || netSubtotal >= settings.freeShippingThreshold) {
+      return 0.0;
+    }
+    return settings.standardShippingFee;
+  }
 
-  double get finalTotal => (subtotal - couponDiscount + shippingFee).clamp(0.0, double.infinity);
+  double get shippingFee => calculateShippingFee(const ShippingSettings());
+
+  double calculateFinalTotal(ShippingSettings settings) {
+    return (subtotal - couponDiscount + calculateShippingFee(settings)).clamp(0.0, double.infinity);
+  }
+
+  double get finalTotal => calculateFinalTotal(const ShippingSettings());
 
   CartState copyWith({
     List<CartItem>? items,
     String? appliedCouponCode,
     double? couponDiscountPercent,
     double? fixedDiscountAmount,
+    bool? isSuperfastSelected,
     bool clearCoupon = false,
   }) {
     return CartState(
@@ -47,12 +67,17 @@ class CartState {
       appliedCouponCode: clearCoupon ? null : (appliedCouponCode ?? this.appliedCouponCode),
       couponDiscountPercent: clearCoupon ? 0.0 : (couponDiscountPercent ?? this.couponDiscountPercent),
       fixedDiscountAmount: clearCoupon ? 0.0 : (fixedDiscountAmount ?? this.fixedDiscountAmount),
+      isSuperfastSelected: isSuperfastSelected ?? this.isSuperfastSelected,
     );
   }
 }
 
 class CartNotifier extends StateNotifier<CartState> {
   CartNotifier() : super(const CartState());
+
+  void toggleSuperfastDelivery(bool isSuperfast) {
+    state = state.copyWith(isSuperfastSelected: isSuperfast);
+  }
 
   void addItem({
     required ProductModel product,
