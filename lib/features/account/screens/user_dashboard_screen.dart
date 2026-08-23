@@ -639,6 +639,140 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '560001');
     String type = editAddress?['type'] ?? 'HOME';
 
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => StatefulBuilder(
+          builder: (context, setDlgState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: bottomInset + 20,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        editAddress == null ? 'Add New Delivery Address 📍' : 'Edit Delivery Address ✏️',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+                      ),
+                      IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                    ],
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline))),
+                          const SizedBox(height: 12),
+                          TextField(controller: phoneCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Mobile Number *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone_outlined))),
+                          const SizedBox(height: 12),
+                          TextField(controller: streetCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Flat / House No. & Street Address *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_city_outlined))),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(child: TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City *', border: OutlineInputBorder()))),
+                              const SizedBox(width: 10),
+                              Expanded(child: TextField(controller: stateCtrl, decoration: const InputDecoration(labelText: 'State *', border: OutlineInputBorder()))),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(controller: pincodeCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Pincode *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.pin_drop_outlined))),
+                          const SizedBox(height: 16),
+                          const Text('Address Type:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF111827))),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              ChoiceChip(
+                                label: const Text('HOME 🏠'),
+                                selected: type == 'HOME' || type == 'Home',
+                                selectedColor: const Color(0xFFEEF2FF),
+                                onSelected: (_) => setDlgState(() => type = 'HOME'),
+                              ),
+                              const SizedBox(width: 12),
+                              ChoiceChip(
+                                label: const Text('WORK 🏢'),
+                                selected: type == 'WORK' || type == 'Work',
+                                selectedColor: const Color(0xFFEEF2FF),
+                                onSelected: (_) => setDlgState(() => type = 'WORK'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (nameCtrl.text.trim().isEmpty || streetCtrl.text.trim().isEmpty) return;
+                        setState(() {
+                          if (editAddress != null) {
+                            editAddress['name'] = nameCtrl.text.trim();
+                            editAddress['phone'] = phoneCtrl.text.trim();
+                            editAddress['street'] = streetCtrl.text.trim();
+                            editAddress['city'] = cityCtrl.text.trim();
+                            editAddress['state'] = stateCtrl.text.trim();
+                            editAddress['pincode'] = pincodeCtrl.text.trim();
+                            editAddress['type'] = type;
+                          } else {
+                            _userAddresses.add({
+                              'id': 'addr-${DateTime.now().millisecondsSinceEpoch}',
+                              'name': nameCtrl.text.trim(),
+                              'phone': phoneCtrl.text.trim(),
+                              'street': streetCtrl.text.trim(),
+                              'city': cityCtrl.text.trim(),
+                              'state': stateCtrl.text.trim(),
+                              'pincode': pincodeCtrl.text.trim(),
+                              'type': type,
+                              'isDefault': _userAddresses.isEmpty,
+                            });
+                          }
+                        });
+                        _saveAddressesToStorage();
+                        Navigator.pop(ctx);
+                        showCenterActionToast(
+                          context,
+                          title: editAddress == null ? 'Address Saved! 📍' : 'Address Updated! ✏️',
+                          message: '$type address has been saved to your account.',
+                          icon: Icons.location_on_outlined,
+                          iconColor: const Color(0xFF4F46E5),
+                          primaryActionLabel: null,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      child: Text(editAddress == null ? 'Save Address' : 'Update Address', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -671,13 +805,13 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                     const SizedBox(width: 12),
                     ChoiceChip(
                       label: const Text('HOME'),
-                      selected: type == 'HOME',
+                      selected: type == 'HOME' || type == 'Home',
                       onSelected: (_) => setDlgState(() => type = 'HOME'),
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
                       label: const Text('WORK'),
-                      selected: type == 'WORK',
+                      selected: type == 'WORK' || type == 'Work',
                       onSelected: (_) => setDlgState(() => type = 'WORK'),
                     ),
                   ],

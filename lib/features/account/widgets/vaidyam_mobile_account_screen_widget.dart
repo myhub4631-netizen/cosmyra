@@ -99,98 +99,194 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '560001');
     String type = editAddress?['type'] ?? 'HOME';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setDlgState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(editAddress == null ? 'Add New Delivery Address' : 'Edit Delivery Address', style: const TextStyle(fontWeight: FontWeight.bold)),
-          content: SingleChildScrollView(
+        builder: (context, setDlgState) {
+          final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: bottomInset + 20,
+            ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
-                const SizedBox(height: 10),
-                TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder())),
-                const SizedBox(height: 10),
-                TextField(controller: streetCtrl, decoration: const InputDecoration(labelText: 'Flat / House No. & Street Address', border: OutlineInputBorder())),
-                const SizedBox(height: 10),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder()))),
-                    const SizedBox(width: 8),
-                    Expanded(child: TextField(controller: stateCtrl, decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()))),
+                    Text(
+                      editAddress == null ? 'Add New Delivery Address 📍' : 'Edit Delivery Address ✏️',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark),
+                    ),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
                   ],
                 ),
-                const SizedBox(height: 10),
-                TextField(controller: pincodeCtrl, decoration: const InputDecoration(labelText: 'Pincode', border: OutlineInputBorder())),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Text('Address Type:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(width: 12),
-                    ChoiceChip(
-                      label: const Text('HOME'),
-                      selected: type == 'HOME' || type == 'Home',
-                      onSelected: (_) => setDlgState(() => type = 'HOME'),
+                const Divider(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: nameCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Full Name *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.person_outline),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: phoneCtrl,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Mobile Number *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.phone_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: streetCtrl,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Flat / House No. & Street Address *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.location_city_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: cityCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'City *',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextField(
+                                controller: stateCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'State *',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: pincodeCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Pincode *',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.pin_drop_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Address Type:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _textDark)),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            ChoiceChip(
+                              label: const Text('HOME 🏠'),
+                              selected: type == 'HOME' || type == 'Home',
+                              selectedColor: const Color(0xFFD1FAE5),
+                              onSelected: (_) => setDlgState(() => type = 'HOME'),
+                            ),
+                            const SizedBox(width: 12),
+                            ChoiceChip(
+                              label: const Text('WORK 🏢'),
+                              selected: type == 'WORK' || type == 'Work',
+                              selectedColor: const Color(0xFFD1FAE5),
+                              onSelected: (_) => setDlgState(() => type = 'WORK'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('WORK'),
-                      selected: type == 'WORK' || type == 'Work',
-                      onSelected: (_) => setDlgState(() => type = 'WORK'),
+                  ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (nameCtrl.text.trim().isEmpty || streetCtrl.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please fill in Full Name and Address fields.')),
+                        );
+                        return;
+                      }
+                      setState(() {
+                        if (editAddress != null) {
+                          editAddress['name'] = nameCtrl.text.trim();
+                          editAddress['phone'] = phoneCtrl.text.trim();
+                          editAddress['street'] = streetCtrl.text.trim();
+                          editAddress['address'] = streetCtrl.text.trim();
+                          editAddress['city'] = cityCtrl.text.trim();
+                          editAddress['state'] = stateCtrl.text.trim();
+                          editAddress['pincode'] = pincodeCtrl.text.trim();
+                          editAddress['type'] = type;
+                        } else {
+                          _mobileAddresses.add({
+                            'id': 'addr-${DateTime.now().millisecondsSinceEpoch}',
+                            'name': nameCtrl.text.trim(),
+                            'phone': phoneCtrl.text.trim(),
+                            'street': streetCtrl.text.trim(),
+                            'address': streetCtrl.text.trim(),
+                            'city': cityCtrl.text.trim(),
+                            'state': stateCtrl.text.trim(),
+                            'pincode': pincodeCtrl.text.trim(),
+                            'type': type,
+                            'isDefault': _mobileAddresses.isEmpty ? 'true' : 'false',
+                          });
+                        }
+                      });
+                      _saveMobileAddresses();
+                      Navigator.pop(ctx);
+                      showCenterActionToast(
+                        context,
+                        title: editAddress == null ? 'Address Saved! 📍' : 'Address Updated! ✏️',
+                        message: '$type address has been saved to your account.',
+                        icon: Icons.location_on_outlined,
+                        iconColor: const Color(0xFF064E3B),
+                        primaryActionLabel: null,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _darkGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                  ],
+                    child: Text(
+                      editAddress == null ? 'Save Address' : 'Update Address',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.trim().isEmpty || streetCtrl.text.trim().isEmpty) return;
-                setState(() {
-                  if (editAddress != null) {
-                    editAddress['name'] = nameCtrl.text.trim();
-                    editAddress['phone'] = phoneCtrl.text.trim();
-                    editAddress['street'] = streetCtrl.text.trim();
-                    editAddress['address'] = streetCtrl.text.trim();
-                    editAddress['city'] = cityCtrl.text.trim();
-                    editAddress['state'] = stateCtrl.text.trim();
-                    editAddress['pincode'] = pincodeCtrl.text.trim();
-                    editAddress['type'] = type;
-                  } else {
-                    _mobileAddresses.add({
-                      'id': 'addr-${DateTime.now().millisecondsSinceEpoch}',
-                      'name': nameCtrl.text.trim(),
-                      'phone': phoneCtrl.text.trim(),
-                      'street': streetCtrl.text.trim(),
-                      'address': streetCtrl.text.trim(),
-                      'city': cityCtrl.text.trim(),
-                      'state': stateCtrl.text.trim(),
-                      'pincode': pincodeCtrl.text.trim(),
-                      'type': type,
-                      'isDefault': _mobileAddresses.isEmpty ? 'true' : 'false',
-                    });
-                  }
-                });
-                _saveMobileAddresses();
-                Navigator.pop(ctx);
-                showCenterActionToast(
-                  context,
-                  title: editAddress == null ? 'Address Saved! 📍' : 'Address Updated! ✏️',
-                  message: '$type address has been saved to your account.',
-                  icon: Icons.location_on_outlined,
-                  iconColor: const Color(0xFF064E3B),
-                  primaryActionLabel: null,
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: _darkGreen, foregroundColor: Colors.white),
-              child: const Text('Save Address'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
