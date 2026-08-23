@@ -199,6 +199,43 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       }
     } catch (_) {}
 
+    // 7. Read per-user saved addresses and profile from SharedPreferences to harmonize with user account dashboard
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (var u in allFetchedUsers) {
+        final email = (u['email'] ?? '').toString().toLowerCase().trim();
+        if (email.isNotEmpty) {
+          final sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+          final String? addrJson = prefs.getString('cosmyra_${sanitized}_addresses_v3');
+          if (addrJson != null && addrJson.isNotEmpty) {
+            final List decodedAddr = json.decode(addrJson);
+            if (decodedAddr.isNotEmpty) {
+              final firstAddr = Map<String, dynamic>.from(decodedAddr.first as Map);
+              final String aName = (firstAddr['name'] ?? '').toString();
+              final String aPhone = (firstAddr['phone'] ?? '').toString();
+              if (aName.isNotEmpty) u['name'] = aName;
+              if (aPhone.isNotEmpty) u['phone'] = aPhone;
+              u['street'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+              u['address'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+              u['city'] = firstAddr['city'] ?? '';
+              u['state'] = firstAddr['state'] ?? '';
+              u['pincode'] = firstAddr['pincode'] ?? '';
+              u['addresses'] = decodedAddr.length;
+            }
+          }
+
+          final String? profJson = prefs.getString('cosmyra_${sanitized}_profile_v2');
+          if (profJson != null && profJson.isNotEmpty) {
+            final Map<String, dynamic> prof = json.decode(profJson);
+            final String pName = (prof['name'] ?? '').toString();
+            final String pPhone = (prof['phone'] ?? '').toString();
+            if (pName.isNotEmpty) u['name'] = pName;
+            if (pPhone.isNotEmpty) u['phone'] = pPhone;
+          }
+        }
+      }
+    } catch (_) {}
+
     if (mounted) {
       setState(() {
         _registeredProfiles = allFetchedUsers;
@@ -232,8 +269,9 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
     final emailCtrl = TextEditingController(text: user['email']?.toString() ?? '');
     final phoneCtrl = TextEditingController(text: user['phone']?.toString() ?? '');
     final passwordCtrl = TextEditingController(text: user['password']?.toString() ?? '');
-    final addressCtrl = TextEditingController(text: user['address']?.toString() ?? 'Flat 402, Green Glen Heights, Bellandur');
+    final addressCtrl = TextEditingController(text: user['street']?.toString() ?? user['address']?.toString() ?? '');
     final cityCtrl = TextEditingController(text: user['city']?.toString() ?? 'Bengaluru');
+    final stateCtrl = TextEditingController(text: user['state']?.toString() ?? 'Karnataka');
     final pincodeCtrl = TextEditingController(text: user['pincode']?.toString() ?? '560103');
 
     String roleVal = user['role']?.toString() ?? 'Customer';
@@ -254,7 +292,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 ],
               ),
               content: SizedBox(
-                width: 520,
+                width: 540,
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -317,12 +355,14 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: addressCtrl,
-                        decoration: const InputDecoration(labelText: 'Street Address', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_on_outlined)),
+                        decoration: const InputDecoration(labelText: 'Flat / House No. & Street Address', border: OutlineInputBorder(), prefixIcon: Icon(Icons.location_on_outlined)),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         children: [
                           Expanded(child: TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder()))),
+                          const SizedBox(width: 8),
+                          Expanded(child: TextField(controller: stateCtrl, decoration: const InputDecoration(labelText: 'State', border: OutlineInputBorder()))),
                           const SizedBox(width: 8),
                           Expanded(child: TextField(controller: pincodeCtrl, decoration: const InputDecoration(labelText: 'Pincode', border: OutlineInputBorder()))),
                         ],
@@ -360,15 +400,25 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                   onPressed: () async {
                     if (nameCtrl.text.trim().isEmpty || emailCtrl.text.trim().isEmpty) return;
 
+                    final String newName = nameCtrl.text.trim();
+                    final String newEmail = emailCtrl.text.trim();
+                    final String newPhone = phoneCtrl.text.trim();
+                    final String newStreet = addressCtrl.text.trim();
+                    final String newCity = cityCtrl.text.trim();
+                    final String newState = stateCtrl.text.trim();
+                    final String newPincode = pincodeCtrl.text.trim();
+
                     setState(() {
-                      user['name'] = nameCtrl.text.trim();
-                      user['email'] = emailCtrl.text.trim();
-                      user['phone'] = phoneCtrl.text.trim();
+                      user['name'] = newName;
+                      user['email'] = newEmail;
+                      user['phone'] = newPhone;
                       user['role'] = roleVal;
                       user['status'] = statusVal;
-                      user['address'] = addressCtrl.text.trim();
-                      user['city'] = cityCtrl.text.trim();
-                      user['pincode'] = pincodeCtrl.text.trim();
+                      user['street'] = newStreet;
+                      user['address'] = newStreet;
+                      user['city'] = newCity;
+                      user['state'] = newState;
+                      user['pincode'] = newPincode;
                       if (passwordCtrl.text.trim().isNotEmpty) {
                         user['password'] = passwordCtrl.text.trim();
                       }
@@ -377,10 +427,41 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                       }
                     });
 
+                    try {
+                      final prefs = await SharedPreferences.getInstance();
+                      final String sanitized = newEmail.toLowerCase().trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+                      
+                      if (newStreet.isNotEmpty) {
+                        final addressList = [
+                          {
+                            'id': 'addr-admin-set',
+                            'name': newName,
+                            'phone': newPhone,
+                            'street': newStreet,
+                            'address': newStreet,
+                            'city': newCity,
+                            'state': newState,
+                            'pincode': newPincode,
+                            'type': 'HOME',
+                            'isDefault': 'true',
+                          }
+                        ];
+                        await prefs.setString('cosmyra_${sanitized}_addresses_v3', jsonEncode(addressList));
+                      }
+
+                      final profMap = {
+                        'name': newName,
+                        'email': newEmail,
+                        'phone': newPhone,
+                        'role': roleVal,
+                      };
+                      await prefs.setString('cosmyra_${sanitized}_profile_v2', jsonEncode(profMap));
+                    } catch (_) {}
+
                     _syncProfilesToStorageAndSupabase();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('User profile for ${user['name']} updated successfully! ✏️')),
+                      SnackBar(content: Text('User profile for $newName updated successfully! ✏️')),
                     );
                   },
                 ),

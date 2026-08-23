@@ -252,6 +252,23 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_userAddresses));
+      if (_userAddresses.isNotEmpty) {
+        final firstAddr = _userAddresses.first;
+        final String aName = (firstAddr['name'] ?? '').toString();
+        final String aPhone = (firstAddr['phone'] ?? '').toString();
+        if (aName.isNotEmpty || aPhone.isNotEmpty) {
+          final String profKey = _getAccountStorageKey('profile_v2');
+          final String? profStr = prefs.getString(profKey);
+          Map<String, dynamic> profMap = {};
+          if (profStr != null && profStr.isNotEmpty) {
+            profMap = Map<String, dynamic>.from(jsonDecode(profStr));
+          }
+          if (aName.isNotEmpty) profMap['name'] = aName;
+          if (aPhone.isNotEmpty) profMap['phone'] = aPhone;
+          await prefs.setString(profKey, jsonEncode(profMap));
+          await prefs.setString('cosmyra_user_profile_v2', jsonEncode(profMap));
+        }
+      }
     } catch (_) {}
   }
 
