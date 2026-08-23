@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/supabase_config.dart';
@@ -148,6 +149,45 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
         }
       } catch (_) {}
     }
+
+    // 5. Read local SharedPreferences profile to ensure newly registered local user is included
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? jsonStr = prefs.getString('cosmyra_user_profile_v2');
+      if (jsonStr != null && jsonStr.isNotEmpty) {
+        final Map<String, dynamic> localData = json.decode(jsonStr);
+        final String localEmail = (localData['email'] ?? '').toString().trim();
+        final String localName = (localData['name'] ?? '').toString().trim();
+        final String localPhone = (localData['phone'] ?? '').toString().trim();
+        final bool isLocalAdmin = localData['isAdmin'] == true;
+
+        if (localEmail.isNotEmpty && !localEmail.contains('guest')) {
+          final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == localEmail.toLowerCase());
+          if (idx >= 0) {
+            if (localName.isNotEmpty) allFetchedUsers[idx]['name'] = localName;
+            if (localPhone.isNotEmpty) allFetchedUsers[idx]['phone'] = localPhone;
+          } else {
+            allFetchedUsers.insert(0, {
+              'id': '#USR-000${allFetchedUsers.length + 1}',
+              'name': localName.isNotEmpty ? localName : localEmail.split('@').first,
+              'email': localEmail,
+              'phone': localPhone.isNotEmpty ? localPhone : '+91 98765 43210',
+              'role': isLocalAdmin ? 'Master Admin' : 'Customer',
+              'status': 'Active',
+              'isVip': isLocalAdmin,
+              'isYou': true,
+              'orders': 1,
+              'totalSpent': 199.0,
+              'joinedOn': '24 Aug 2026',
+              'lastLogin': 'Just now',
+              'emailVerified': true,
+              'phoneVerified': true,
+              'addresses': 1,
+            });
+          }
+        }
+      }
+    } catch (_) {}
 
     if (mounted) {
       setState(() {

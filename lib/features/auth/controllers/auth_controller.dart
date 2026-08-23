@@ -143,6 +143,7 @@ class AuthController extends StateNotifier<AuthStateModel> {
       });
       await prefs.setString(_profilePrefsKey, jsonStr);
     } catch (_) {}
+    await _syncUserToRemoteStorage(name, email, phone, isAdmin ? 'Master Admin' : 'Customer');
   }
 
   Future<void> _checkAdminStatus() async {
