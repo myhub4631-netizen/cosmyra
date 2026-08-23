@@ -926,6 +926,28 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       if (_selectedTab == 'My Orders' || widget.initialTab == 'My Orders') {
         return const VaidyamMobileOrdersScreenWidget();
       }
+      if (_selectedTab != 'Dashboard') {
+        return Scaffold(
+          backgroundColor: const Color(0xFFFAF9F6),
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 1,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF111827)),
+              onPressed: () => setState(() => _selectedTab = 'Dashboard'),
+            ),
+            title: Text(
+              _selectedTab,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF111827)),
+            ),
+          ),
+          bottomNavigationBar: const VaidyamMobileBottomNavBar(activeTab: 'Account'),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: _buildSelectedTabPanel(context, displayName, firstFirstName, displayEmail, displayPhone, referCode, false, realOrdersCount, wishlistCount),
+          ),
+        );
+      }
       return VaidyamMobileAccountScreenWidget(
         displayName: displayName,
         email: displayEmail,
