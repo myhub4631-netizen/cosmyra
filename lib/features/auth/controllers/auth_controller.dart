@@ -149,21 +149,27 @@ class AuthController extends StateNotifier<AuthStateModel> {
     final user = supabase.auth.currentUser;
     if (user != null) {
       final email = user.email?.trim().toLowerCase();
-      if (email == '1mdollar2027@gmail.com' || email == 'admin@cosmyra.com' || email == 'admin@cosmyra.cloud') {
-        state = state.copyWith(isAdmin: true);
-        return;
-      }
+      final isMaster = (email == '1mdollar2027@gmail.com' || email == 'admin@cosmyra.com' || email == 'admin@cosmyra.cloud' || email == 'myhub4631@gmail.com');
+
       try {
         final profile = await supabase.from('profiles').select('role, full_name, phone').eq('id', user.id).maybeSingle();
         if (profile != null) {
-          final isStaffOrAdmin = profile['role'] == 'admin' || profile['role'] == 'staff';
+          final isStaffOrAdmin = isMaster || profile['role'] == 'admin' || profile['role'] == 'staff';
           state = state.copyWith(
             isAdmin: isStaffOrAdmin,
-            userName: profile['full_name']?.toString() ?? state.userName,
-            userPhone: profile['phone']?.toString() ?? state.userPhone,
+            userName: (profile['full_name'] != null && profile['full_name'].toString().isNotEmpty) ? profile['full_name'].toString() : state.userName,
+            userPhone: (profile['phone'] != null && profile['phone'].toString().isNotEmpty) ? profile['phone'].toString() : state.userPhone,
           );
+        } else {
+          if (isMaster) {
+            state = state.copyWith(isAdmin: true);
+          }
         }
-      } catch (_) {}
+      } catch (_) {
+        if (isMaster) {
+          state = state.copyWith(isAdmin: true);
+        }
+      }
     }
   }
 
@@ -380,8 +386,16 @@ class AuthController extends StateNotifier<AuthStateModel> {
       final user = supabase.auth.currentUser;
       if (user != null) {
         try {
+          await supabase.auth.updateUser(UserAttributes(data: {
+            'full_name': name,
+            'phone': phone,
+          }));
+        } catch (_) {}
+
+        try {
           await supabase.from('profiles').upsert({
             'id': user.id,
+            'email': user.email ?? currentEmail,
             'full_name': name,
             'phone': phone,
           });

@@ -815,6 +815,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Profile details updated successfully!')),
                 );
+                setState(() {});
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
@@ -899,19 +900,23 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       );
     }
 
-    final String displayName = auth.userName ??
-        user?.userMetadata?['full_name'] ??
-        (user?.email != null ? user!.email!.split('@').first : 'Valued Customer');
+    final String displayName = (auth.userName != null && auth.userName!.isNotEmpty)
+        ? auth.userName!
+        : (user?.userMetadata?['full_name'] != null && user!.userMetadata!['full_name'].toString().isNotEmpty)
+            ? user.userMetadata!['full_name'].toString()
+            : (user?.email != null ? user!.email!.split('@').first : 'Valued Customer');
 
-    final String displayEmail = auth.userEmail ??
-        user?.email ??
-        (auth.isGuest ? auth.guestEmail : null) ??
-        'No email registered';
+    final String displayEmail = (auth.userEmail != null && auth.userEmail!.isNotEmpty)
+        ? auth.userEmail!
+        : (user?.email != null && user!.email!.isNotEmpty)
+            ? user.email!
+            : (auth.isGuest ? auth.guestEmail : null) ?? 'No email registered';
 
-    final String displayPhone = auth.userPhone ??
-        user?.phone ??
-        (auth.isGuest ? auth.guestPhone : null) ??
-        (auth.userPhone?.isNotEmpty == true ? auth.userPhone! : 'No phone provided');
+    final String displayPhone = (auth.userPhone != null && auth.userPhone!.isNotEmpty)
+        ? auth.userPhone!
+        : (user?.phone != null && user!.phone!.isNotEmpty)
+            ? user.phone!
+            : (auth.isGuest ? auth.guestPhone : null) ?? 'No phone provided';
 
     final String referCode = displayName.replaceAll(' ', '').toUpperCase();
     final String firstFirstName = displayName.split(' ').first;
