@@ -851,7 +851,6 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
   // Modal to apply/select coupons
   void _showCouponSelectionModal(BuildContext context) {
     final couponCtrl = TextEditingController();
-    final allCoupons = ref.read(couponProvider);
 
     showModalBottomSheet(
       context: context,
@@ -860,9 +859,11 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalCtx, setModalState) {
-            final currentCart = ref.watch(cartProvider);
+        return Consumer(
+          builder: (modalCtx, modalRef, child) {
+            final currentCart = modalRef.watch(cartProvider);
+            final liveCoupons = modalRef.watch(couponProvider);
+            final activeVisibleCoupons = liveCoupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList();
             final bool hasApplied = currentCart.appliedCouponCode != null && currentCart.appliedCouponCode!.isNotEmpty;
 
             return Padding(
@@ -913,7 +914,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                         onPressed: () {
                           final code = couponCtrl.text.trim();
                           if (code.isEmpty) return;
-                          final applied = ref.read(cartProvider.notifier).applyCoupon(code, availableCoupons: allCoupons);
+                          final applied = modalRef.read(cartProvider.notifier).applyCoupon(code, availableCoupons: liveCoupons);
                           if (applied) {
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -925,7 +926,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Invalid or ineligible coupon code "$code"!'),
+                                content: Text('Invalid, disabled, or ineligible coupon code "$code"!'),
                                 backgroundColor: Colors.red.shade700,
                               ),
                             );
@@ -960,7 +961,7 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                           ),
                           TextButton(
                             onPressed: () {
-                              ref.read(cartProvider.notifier).removeCoupon();
+                              modalRef.read(cartProvider.notifier).removeCoupon();
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Coupon removed')),
@@ -977,73 +978,98 @@ class _VaidyamMobileCheckoutScreenWidgetState extends ConsumerState<VaidyamMobil
                   const Text('Available Coupons:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark)),
                   const SizedBox(height: 8),
 
-                  ...allCoupons.where((c) => c.isActive && c.isVisibleAtCheckout).toList().map((coupon) {
-                    final bool isThisApplied = currentCart.appliedCouponCode == coupon.code;
-                    final bool isEligible = currentCart.subtotal >= coupon.minSpend;
+                  if (activeVisibleCoupons.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Text('No promo coupons currently available.', style: TextStyle(fontSize: 12, color: _textMuted)),
+                    )
+                  else
+                    ...activeVisibleCoupons.map((coupon) {
+                      final bool isThisApplied = currentCart.appliedCouponCode == coupon.code;
+                      final bool isEligible = currentCart.subtotal >= coupon.minSpend;
+                      final discountLabel = coupon.discountType == 'percentage'
+                          ? '${coupon.discountValue.toInt()}% OFF'
+                          : '₹${coupon.discountValue.toInt()} OFF';
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isThisApplied ? _primaryPurple : const Color(0xFFE2E8F0)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _primaryPurple.withOpacity(0.1),
-                              shape: BoxShape.circle,
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isThisApplied ? _primaryPurple : const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _primaryPurple.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.local_offer, color: _primaryPurple, size: 16),
                             ),
-                            child: const Icon(Icons.local_offer, color: _primaryPurple, size: 16),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  coupon.code,
-                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark),
-                                ),
-                                Text(
-                                  coupon.title,
-                                  style: const TextStyle(fontSize: 11, color: _textMuted),
-                                ),
-                              ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        coupon.code,
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: _textDark),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFECFDF5),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          discountLabel,
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    coupon.title,
+                                    style: const TextStyle(fontSize: 11, color: _textMuted),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (!isEligible) {
+                            ElevatedButton(
+                              onPressed: () {
+                                if (!isEligible) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Add items worth ₹${(coupon.minSpend - currentCart.subtotal).toInt()} more to use ${coupon.code}')),
+                                  );
+                                  return;
+                                }
+                                modalRef.read(cartProvider.notifier).applyCouponModel(coupon);
+                                Navigator.pop(ctx);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Add items worth ₹${(coupon.minSpend - currentCart.subtotal).toInt()} more to use ${coupon.code}')),
+                                  SnackBar(content: Text('Applied ${coupon.code}!')),
                                 );
-                                return;
-                              }
-                              ref.read(cartProvider.notifier).applyCouponModel(coupon);
-                              Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Applied ${coupon.code}!')),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isThisApplied ? const Color(0xFF16A34A) : _primaryPurple,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isThisApplied ? const Color(0xFF16A34A) : _primaryPurple,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: Text(
+                                isThisApplied ? 'APPLIED' : 'APPLY',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
                             ),
-                            child: Text(
-                              isThisApplied ? 'APPLIED' : 'APPLY',
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                          ],
+                        ),
+                      );
+                    }),
                 ],
               ),
             );

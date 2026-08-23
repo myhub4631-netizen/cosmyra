@@ -138,45 +138,12 @@ class CartNotifier extends StateNotifier<CartState> {
     if (cleanCode.isEmpty) return false;
 
     if (availableCoupons != null && availableCoupons.isNotEmpty) {
-      for (final c in availableCoupons) {
-        if (c.isActive && c.code.trim().toUpperCase() == cleanCode) {
-          return applyCouponModel(c);
-        }
+      final matchedList = availableCoupons.where((c) => c.code.trim().toUpperCase() == cleanCode).toList();
+      if (matchedList.isNotEmpty) {
+        final coupon = matchedList.first;
+        if (!coupon.isActive) return false;
+        return applyCouponModel(coupon);
       }
-    }
-
-    // Standard Preset Promo Codes
-    if (cleanCode == 'VAIDYAM20' || cleanCode == 'BOTANICAL20' || cleanCode == 'COSMYRA20') {
-      state = state.copyWith(
-        appliedCouponCode: cleanCode,
-        couponDiscountPercent: 20.0,
-        fixedDiscountAmount: 0.0,
-      );
-      return true;
-    }
-    if (cleanCode == 'WELCOME100' || cleanCode == 'ORGANIC100') {
-      state = state.copyWith(
-        appliedCouponCode: cleanCode,
-        couponDiscountPercent: 0.0,
-        fixedDiscountAmount: 100.0,
-      );
-      return true;
-    }
-    if (cleanCode == 'HERBAL50' || cleanCode == 'FLAT50') {
-      state = state.copyWith(
-        appliedCouponCode: cleanCode,
-        couponDiscountPercent: 0.0,
-        fixedDiscountAmount: 50.0,
-      );
-      return true;
-    }
-    if (cleanCode == 'COSMYRA10' || cleanCode == 'WELCOME10' || cleanCode == 'SAVE10') {
-      state = state.copyWith(
-        appliedCouponCode: cleanCode,
-        couponDiscountPercent: 10.0,
-        fixedDiscountAmount: 0.0,
-      );
-      return true;
     }
     return false;
   }
@@ -190,7 +157,10 @@ class CartNotifier extends StateNotifier<CartState> {
     final code = state.appliedCouponCode!.trim().toUpperCase();
     final matchedList = coupons.where((c) => c.code.trim().toUpperCase() == code).toList();
 
-    if (matchedList.isEmpty) return;
+    if (matchedList.isEmpty) {
+      state = state.copyWith(clearCoupon: true);
+      return;
+    }
     final matched = matchedList.first;
 
     if (!matched.isActive || state.subtotal < matched.minSpend) {

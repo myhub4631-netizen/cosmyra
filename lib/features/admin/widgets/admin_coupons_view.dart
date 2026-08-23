@@ -313,9 +313,24 @@ class _AdminCouponsViewState extends ConsumerState<AdminCouponsView> {
                           ),
                         ),
 
-                        // Toggle Visibility at Checkout
+                        // Toggle Active & Visibility at Checkout
                         Row(
                           children: [
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  c.isActive ? 'Active' : 'Disabled',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: c.isActive ? const Color(0xFF059669) : const Color(0xFFEF4444)),
+                                ),
+                                Switch(
+                                  value: c.isActive,
+                                  activeColor: const Color(0xFF10B981),
+                                  onChanged: (val) => notifier.toggleActive(c.id, val),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 12),
                             Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
