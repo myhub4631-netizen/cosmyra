@@ -170,117 +170,131 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          ),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        return Theme(
+          data: ThemeData.light().copyWith(
+            brightness: Brightness.light,
+            scaffoldBackgroundColor: Colors.white,
+            colorScheme: const ColorScheme.light(
+              primary: _darkGreen,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF0F172A),
             ),
-            padding: const EdgeInsets.all(24),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
+          ),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        child: const Icon(Icons.edit_note_rounded, color: _darkGreen, size: 24),
                       ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Edit Profile Info',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: _textDark,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.edit_note_rounded, color: _darkGreen, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Edit Profile Info',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F172A),
+                                ),
                               ),
-                            ),
-                            Text(
-                              'Update your name and mobile number below',
-                              style: TextStyle(fontSize: 12, color: _textMuted),
-                            ),
-                          ],
+                              Text(
+                                'Update your name and mobile number below',
+                                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    const Text('Full Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w700),
+                      cursorColor: _darkGreen,
+                      decoration: InputDecoration(
+                        hintText: 'Enter full name',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                        prefixIcon: const Icon(Icons.person_outline_rounded, color: _darkGreen, size: 20),
+                        filled: true,
+                        fillColor: const Color(0xFFF1F5F9),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _darkGreen, width: 2)),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('Full Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: nameController,
-                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600),
-                    decoration: InputDecoration(
-                      hintText: 'Enter full name',
-                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                      prefixIcon: const Icon(Icons.person_outline_rounded, color: _darkGreen, size: 20),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _darkGreen, width: 1.5)),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Mobile Phone Number', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    style: const TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600),
-                    decoration: InputDecoration(
-                      hintText: 'Enter mobile number',
-                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                      prefixIcon: const Icon(Icons.phone_android_rounded, color: _darkGreen, size: 20),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _darkGreen, width: 1.5)),
+                    const SizedBox(height: 16),
+                    const Text('Mobile Phone Number', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 15, fontWeight: FontWeight.w700),
+                      cursorColor: _darkGreen,
+                      decoration: InputDecoration(
+                        hintText: 'Enter mobile number',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                        prefixIcon: const Icon(Icons.phone_android_rounded, color: _darkGreen, size: 20),
+                        filled: true,
+                        fillColor: const Color(0xFFF1F5F9),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _darkGreen, width: 2)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Email Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: emailController,
-                    readOnly: true,
-                    enabled: false,
-                    style: const TextStyle(color: Color(0xFF475569), fontSize: 14, fontWeight: FontWeight.w500),
-                    decoration: InputDecoration(
-                      hintText: 'Email address',
-                      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-                      prefixIcon: const Icon(Icons.email_outlined, color: _textMuted, size: 20),
-                      filled: true,
-                      fillColor: const Color(0xFFF1F5F9),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    const SizedBox(height: 16),
+                    const Text('Email Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A))),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: emailController,
+                      readOnly: true,
+                      enabled: false,
+                      style: const TextStyle(color: Color(0xFF334155), fontSize: 14, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        hintText: 'Email address',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                        prefixIcon: const Icon(Icons.email_outlined, color: _textMuted, size: 20),
+                        filled: true,
+                        fillColor: const Color(0xFFE2E8F0),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                        disabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFCBD5E1))),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -318,9 +332,10 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
               ),
             ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
   }
 
   // 2. User Profile Card

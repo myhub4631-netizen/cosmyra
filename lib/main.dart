@@ -28,8 +28,8 @@ class CosmyraApp extends StatelessWidget {
       title: 'Cosmyra • Pure Ayurveda & Botanical Wellness',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      darkTheme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light,
       routerConfig: router,
       builder: (context, child) {
         return SelectionArea(
