@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../config/supabase_config.dart';
 import '../../cart/models/cart_item_model.dart';
@@ -20,11 +21,34 @@ final allAdminOrdersFutureProvider = FutureProvider<List<OrderModel>>((ref) asyn
 
 class OrderRepository {
   static const String _storageKey = 'cosmyra_all_orders_v3';
+  static const String _remoteUrl = 'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/orders.json';
+  static const String _remoteUploadUrl = 'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/orders.json';
+
   static final List<OrderModel> _localOrders = [];
   static bool _isLoaded = false;
 
+  Future<void> _syncToRemoteStorage() async {
+    try {
+      final jsonList = _localOrders.map((o) => o.toJson()).toList();
+      final bytes = utf8.encode(jsonEncode(jsonList));
+
+      await http.post(
+        Uri.parse(_remoteUploadUrl),
+        headers: {
+          'apikey': SupabaseConfig.anonKey,
+          'Authorization': 'Bearer ${SupabaseConfig.anonKey}',
+          'Content-Type': 'application/json',
+          'x-upsert': 'true',
+        },
+        body: bytes,
+      );
+    } catch (e) {
+      print('Sync orders to Supabase Storage error: $e');
+    }
+  }
+
   Future<void> _ensureLoaded() async {
-    if (_isLoaded && _localOrders.isNotEmpty) return;
+    // 1. Load from SharedPreferences first
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString(_storageKey);
@@ -38,6 +62,35 @@ class OrderRepository {
         );
       }
     } catch (_) {}
+
+    // 2. Fetch remote orders from Supabase Storage with HTTP cache-busting
+    try {
+      final cacheBustUrl = '$_remoteUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+      final response = await http.get(
+        Uri.parse(cacheBustUrl),
+        headers: {'Cache-Control': 'no-cache, no-store, must-revalidate'},
+      );
+
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(response.body);
+        final remoteList = decoded.map((item) => OrderModel.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+
+        final Map<String, OrderModel> mergedMap = {};
+        for (var o in _localOrders) {
+          mergedMap[o.orderNumber] = o;
+        }
+        for (var o in remoteList) {
+          mergedMap[o.orderNumber] = o;
+        }
+
+        _localOrders.clear();
+        _localOrders.addAll(mergedMap.values);
+        _localOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        await _saveOrdersToStorage();
+      }
+    } catch (e) {
+      print('Fetch orders from Supabase Storage error: $e');
+    }
 
     _localOrders.removeWhere((o) => o.id.startsWith('ord-demo-') || o.customerName == 'Aarav Sharma' || o.customerEmail.contains('example.com'));
     _isLoaded = true;
@@ -161,6 +214,7 @@ class OrderRepository {
 
     _localOrders.insert(0, placedOrder);
     await _saveOrdersToStorage();
+    await _syncToRemoteStorage();
     return placedOrder;
   }
 
@@ -329,6 +383,7 @@ class OrderRepository {
         items: current.items,
       );
       await _saveOrdersToStorage();
+      await _syncToRemoteStorage();
     }
     return true;
   }
@@ -344,6 +399,7 @@ class OrderRepository {
 
     _localOrders.removeWhere((o) => o.id == orderId || o.orderNumber == orderId);
     await _saveOrdersToStorage();
+    await _syncToRemoteStorage();
     return true;
   }
 
@@ -392,6 +448,7 @@ class OrderRepository {
       );
       _localOrders[index] = updated;
       await _saveOrdersToStorage();
+      await _syncToRemoteStorage();
     }
 
     if (SupabaseConfig.isConfigured) {
