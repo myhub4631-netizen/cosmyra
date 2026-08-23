@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../config/supabase_config.dart';
@@ -151,18 +152,24 @@ class CouponNotifier extends StateNotifier<List<CouponModel>> {
       }
     } catch (_) {}
 
-    // 2. Live Remote Supabase Storage sync
+    // 2. Live Remote Supabase Storage sync with Cache-Busting (prevents browser/CDN cache from returning stale JSON on page refresh)
     try {
       if (SupabaseConfig.isConfigured) {
-        final bytes = await supabase.storage.from('product-images').download(_storagePath);
-        final str = utf8.decode(bytes);
-        if (str.isNotEmpty) {
-          final List decoded = jsonDecode(str);
+        final rawUrl = supabase.storage.from('product-images').getPublicUrl(_storagePath);
+        final freshUrl = '$rawUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+
+        final response = await http.get(
+          Uri.parse(freshUrl),
+          headers: {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache'},
+        );
+
+        if (response.statusCode == 200 && response.body.isNotEmpty) {
+          final List decoded = jsonDecode(response.body);
           final loaded = decoded.map((x) => CouponModel.fromJson(Map<String, dynamic>.from(x))).toList();
           if (loaded.isNotEmpty) {
             state = loaded;
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString(_prefsKey, str);
+            await prefs.setString(_prefsKey, response.body);
           }
         }
       }
@@ -172,7 +179,7 @@ class CouponNotifier extends StateNotifier<List<CouponModel>> {
   Future<void> _saveToPrefsAndRemote(List<CouponModel> coupons) async {
     final jsonStr = jsonEncode(coupons.map((c) => c.toJson()).toList());
 
-    // 1. Save to local browser cache
+    // 1. Save to local browser cache immediately
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonStr);
