@@ -57,7 +57,7 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                             base64Decode(logoUrl.split(',').last),
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/cosmyra_logo.png',
+                              'assets/images/cosmyra_full_logo.png',
                               height: 36,
                               fit: BoxFit.contain,
                             ),
@@ -66,17 +66,22 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                             logoUrl,
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => Image.asset(
-                              'assets/images/cosmyra_logo.png',
+                              'assets/images/cosmyra_full_logo.png',
                               height: 36,
                               fit: BoxFit.contain,
                             ),
                           ),
                   )
                 : Image.asset(
-                    'assets/images/cosmyra_logo.png',
+                    'assets/images/cosmyra_full_logo.png',
                     height: 36,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
+                    errorBuilder: (_, __, ___) => Image.asset(
+                      'assets/images/cosmyra_logo.png',
+                      height: 36,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => _buildDefaultPurpleEmblem(),
+                    ),
                   ),
           ),
 

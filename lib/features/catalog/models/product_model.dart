@@ -234,17 +234,17 @@ class ProductModel {
         final slug = (json['slug'] ?? '').toString().toLowerCase();
         final name = (json['name'] ?? '').toString().toLowerCase();
         if (slug.contains('shampoo') || name.contains('shampoo')) {
-          imgs = ['assets/images/shampoo.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/shampoo.jpg'];
         } else if (slug.contains('soap') || name.contains('soap')) {
-          imgs = ['assets/images/soap.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/soap.jpg'];
         } else if (slug.contains('face') || slug.contains('cleanser') || name.contains('face') || name.contains('cleanser')) {
-          imgs = ['assets/images/facewash.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/facewash.jpg'];
         } else if (slug.contains('serum') || name.contains('serum') || slug.contains('kumkumadi') || name.contains('kumkumadi')) {
-          imgs = ['assets/images/facewash.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/facewash.jpg'];
         } else if (slug.contains('oil') || name.contains('oil') || slug.contains('thailam') || name.contains('thailam')) {
-          imgs = ['assets/images/soap.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/soap.jpg'];
         } else {
-          imgs = ['assets/images/shampoo.jpg'];
+          imgs = ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/shampoo.jpg'];
         }
       }
     }

@@ -112,15 +112,10 @@ class ProductImageWidget extends StatelessWidget {
       );
     }
 
-    // Native Android / iOS Build: Fetch fresh live images from Supabase Storage
-    final String liveNativeUrl = trimmedUrl.startsWith('http')
-        ? (trimmedUrl.contains('?') ? '$trimmedUrl&t=${DateTime.now().millisecondsSinceEpoch ~/ 300000}' : '$trimmedUrl?t=${DateTime.now().millisecondsSinceEpoch ~/ 300000}')
-        : trimmedUrl;
-
+    // Native Android / iOS Build: Stream live public HTTP URLs directly from Supabase Storage
     return CachedNetworkImage(
-      key: ValueKey('native_net_${liveNativeUrl.hashCode}'),
-      imageUrl: liveNativeUrl,
-      cacheKey: liveNativeUrl,
+      key: ValueKey('native_net_$trimmedUrl'),
+      imageUrl: trimmedUrl,
       width: width,
       height: height,
       fit: fit,
@@ -130,10 +125,16 @@ class ProductImageWidget extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.goldAccent),
         ),
       ),
-      errorWidget: (context, url, error) => Container(
-        color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
-        child: Center(
-          child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+      errorWidget: (context, url, error) => Image.network(
+        trimmedUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: (context, err, stack) => Container(
+          color: isDark ? AppColors.charcoalCard : AppColors.sageLight,
+          child: Center(
+            child: Image.asset('assets/images/cosmyra_logo.png', height: 24, fit: BoxFit.contain),
+          ),
         ),
       ),
     );

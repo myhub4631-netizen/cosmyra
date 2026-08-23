@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../config/supabase_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/web_helper.dart';
 
 class BrandSettings {
@@ -84,9 +86,28 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
         state = BrandSettings.fromJson(map);
         _updateDomFavicon(state.faviconUrl);
       }
-    } catch (e) {
-      // Use defaults if load fails
-    }
+    } catch (_) {}
+
+    try {
+      if (SupabaseConfig.isConfigured) {
+        final response = await supabase
+            .from('brands')
+            .select('logo_url')
+            .eq('id', '6242b75a-f2b3-4895-8927-95ce0e24fa3c')
+            .maybeSingle();
+
+        if (response != null && response['logo_url'] != null) {
+          final String remoteLogo = response['logo_url'].toString();
+          if (remoteLogo.isNotEmpty) {
+            state = state.copyWith(
+              headerLogoUrl: state.headerLogoUrl.isEmpty ? remoteLogo : state.headerLogoUrl,
+              footerLogoUrl: state.footerLogoUrl.isEmpty ? remoteLogo : state.footerLogoUrl,
+              appIconUrl: state.appIconUrl.isEmpty ? remoteLogo : state.appIconUrl,
+            );
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> updateSettings({
@@ -114,9 +135,15 @@ class BrandSettingsNotifier extends StateNotifier<BrandSettings> {
       if (faviconUrl != null) {
         _updateDomFavicon(faviconUrl);
       }
-    } catch (e) {
-      // Handle save error
-    }
+
+      final activeLogo = appIconUrl ?? headerLogoUrl ?? footerLogoUrl;
+      if (activeLogo != null && activeLogo.isNotEmpty && SupabaseConfig.isConfigured) {
+        await supabase
+            .from('brands')
+            .update({'logo_url': activeLogo})
+            .eq('id', '6242b75a-f2b3-4895-8927-95ce0e24fa3c');
+      }
+    } catch (_) {}
   }
 
   void _updateDomFavicon(String url) {

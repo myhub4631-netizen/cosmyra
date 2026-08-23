@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../config/supabase_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MobileAppSettings {
   final String mobileLogoUrl;
@@ -140,6 +142,23 @@ class MobileAppSettingsNotifier extends StateNotifier<MobileAppSettings> {
         state = MobileAppSettings.fromJson(map);
       }
     } catch (_) {}
+
+    try {
+      if (SupabaseConfig.isConfigured) {
+        final response = await supabase
+            .from('brands')
+            .select('logo_url')
+            .eq('id', '6242b75a-f2b3-4895-8927-95ce0e24fa3c')
+            .maybeSingle();
+
+        if (response != null && response['logo_url'] != null) {
+          final String remoteLogo = response['logo_url'].toString();
+          if (remoteLogo.isNotEmpty) {
+            state = state.copyWith(mobileLogoUrl: remoteLogo);
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> updateSettings(MobileAppSettings newSettings) async {
@@ -148,6 +167,13 @@ class MobileAppSettingsNotifier extends StateNotifier<MobileAppSettings> {
       final prefs = await SharedPreferences.getInstance();
       final String jsonStr = json.encode(newSettings.toJson());
       await prefs.setString(_prefsKey, jsonStr);
+
+      if (newSettings.mobileLogoUrl.isNotEmpty && SupabaseConfig.isConfigured) {
+        await supabase
+            .from('brands')
+            .update({'logo_url': newSettings.mobileLogoUrl})
+            .eq('id', '6242b75a-f2b3-4895-8927-95ce0e24fa3c');
+      }
     } catch (_) {}
   }
 }

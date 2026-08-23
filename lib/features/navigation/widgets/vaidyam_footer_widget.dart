@@ -122,17 +122,21 @@ class VaidyamFooterWidget extends ConsumerWidget {
                           logoUrl,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Image.asset(
-                            'assets/images/cosmyra_logo.png',
+                            'assets/images/cosmyra_full_logo.png',
                             height: 40,
                             fit: BoxFit.contain,
                           ),
                         ),
                 )
               : Image.asset(
-                  'assets/images/cosmyra_logo.png',
+                  'assets/images/cosmyra_full_logo.png',
                   height: 42,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.spa_rounded, color: Color(0xFF10B981), size: 28),
+                  errorBuilder: (_, __, ___) => Image.asset(
+                    'assets/images/cosmyra_logo.png',
+                    height: 42,
+                    fit: BoxFit.contain,
+                  ),
                 ),
         ),
 

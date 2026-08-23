@@ -154,16 +154,13 @@ class _VaidyamHeaderWidgetState extends ConsumerState<VaidyamHeaderWidget> {
                         ),
                       )
                     : Image.asset(
-                        'assets/images/cosmyra_logo.png',
+                        'assets/images/cosmyra_full_logo.png',
                         height: 48,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: _purpleTheme,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.local_florist, color: Colors.white, size: 24),
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          'assets/images/cosmyra_logo.png',
+                          height: 48,
+                          fit: BoxFit.contain,
                         ),
                       ),
               ),

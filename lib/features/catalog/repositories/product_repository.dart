@@ -135,36 +135,10 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
           !_deletedProductIds.contains(p.slug.trim().toLowerCase())
         ).toList();
 
-        final Map<String, ProductModel> resultMap = {};
-        for (final fp in ProductRepository._fallbackProducts) {
-          if (!_deletedProductIds.contains(fp.id.trim()) && !_deletedProductIds.contains(fp.slug.trim().toLowerCase())) {
-            resultMap[fp.slug.trim().toLowerCase()] = fp;
-          }
+        if (validRemote.isNotEmpty) {
+          state = validRemote;
+          await _saveProductsToStorage();
         }
-        for (final localP in state) {
-          if (!_deletedProductIds.contains(localP.id.trim()) && !_deletedProductIds.contains(localP.slug.trim().toLowerCase())) {
-            resultMap[localP.slug.trim().toLowerCase()] = localP;
-          }
-        }
-        for (final rp in validRemote) {
-          final key = rp.slug.trim().toLowerCase();
-          final bool rpHasCustomImg = rp.imageUrls.any((img) => !img.startsWith('assets/'));
-          if (rpHasCustomImg) {
-            resultMap[key] = rp;
-          } else if (resultMap.containsKey(key)) {
-            final existing = resultMap[key]!;
-            final bool existingHasCustomImg = existing.imageUrls.any((img) => !img.startsWith('assets/'));
-            if (existingHasCustomImg) {
-              resultMap[key] = rp.copyWith(imageUrls: existing.imageUrls);
-            } else {
-              resultMap[key] = rp;
-            }
-          } else {
-            resultMap[key] = rp;
-          }
-        }
-        state = resultMap.values.toList();
-        await _saveProductsToStorage();
       } catch (e) {
         print('Error fetching fresh products from Supabase: $e');
       }
@@ -179,6 +153,7 @@ class AdminProductsNotifier extends StateNotifier<List<ProductModel>> {
       await prefs.remove('cosmyra_admin_products_v2');
       await prefs.remove('cosmyra_admin_products_v3');
       await prefs.remove('cosmyra_admin_products_v4');
+      await prefs.remove('cosmyra_admin_products_v5');
     } catch (_) {}
 
     await fetchFreshFromSupabase();
@@ -642,14 +617,7 @@ class ProductRepository {
 
     final Map<String, ProductModel> resultMap = {};
 
-    // 1. Seed fallback products as baseline
-    for (final fp in _fallbackProducts) {
-      if (!deletedIds.contains(fp.id.trim()) && !deletedIds.contains(fp.slug.trim().toLowerCase())) {
-        resultMap[fp.id.trim()] = fp;
-      }
-    }
-
-    // 2. Load remote live products from Supabase database (Top Priority)
+    // 1. Load remote live products from Supabase database (Top Priority)
     try {
       if (SupabaseConfig.isConfigured) {
         final response = await supabase
@@ -669,6 +637,16 @@ class ProductRepository {
       }
     } catch (e) {
       print('Supabase fetch failed: $e');
+    }
+
+    // 2. Fallback to static products only if remote database is empty
+    if (resultMap.isEmpty) {
+      for (final fp in _fallbackProducts) {
+        final key = fp.slug.trim().toLowerCase();
+        if (!deletedIds.contains(fp.id.trim()) && !deletedIds.contains(key)) {
+          resultMap[key] = fp;
+        }
+      }
     }
 
     // 3. Fallback to local stored products if remote database is unavailable
@@ -732,7 +710,7 @@ class ProductRepository {
       ingredients: 'Organic Bhringraj, Neem Leaf Extract, Amla, Reetha, Shikakai, Virgin Coconut Oil, Purified Aqua.',
       howToUse: 'Apply 5-10ml on wet scalp, massage gently into rich lather for 2 minutes and rinse thoroughly with lukewarm water.',
       freeFromClaims: ['Paraben Free', 'Sulfate Free', 'Cruelty Free', '100% Vegan'],
-      imageUrls: ['assets/images/shampoo.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/shampoo.jpg'],
       isFeatured: true,
       variants: [
         ProductVariant(
@@ -758,7 +736,7 @@ class ProductRepository {
       ingredients: 'Kashmiri Saffron (Kesar), Kumkumadi Tailam, Aloe Vera Gel, Manjistha, Sandalwood Extract, Lotus Water.',
       howToUse: 'Squeeze small amount onto palms. Work into mild lather and massage on damp face in circular motions.',
       freeFromClaims: ['Soap Free', 'Paraben Free', 'Synthetic Color Free', 'Dermatologically Tested'],
-      imageUrls: ['assets/images/facewash.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/facewash.jpg'],
       isFeatured: true,
       variants: [
         ProductVariant(
@@ -784,7 +762,7 @@ class ProductRepository {
       ingredients: 'Cold-Pressed Coconut Oil, Wild Turmeric (Kasturi Manjal), Neem Leaves, Vetiver Root Oil, Pure Glycerin.',
       howToUse: 'Lather gently over wet body during shower. Leave on skin for 1 minute before rinsing clean.',
       freeFromClaims: ['Palm Oil Free', 'Chemical Free', '100% Handcrafted', 'Biodegradable'],
-      imageUrls: ['assets/images/soap.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/soap.jpg'],
       isFeatured: true,
       variants: [
         ProductVariant(
@@ -810,7 +788,7 @@ class ProductRepository {
       ingredients: 'Saffron (Kesar), Goat Milk, Sandalwood (Chandan), Vetiver, Licorice (Yasthimadhu), Manjistha, Sesame Oil.',
       howToUse: 'Apply 3-4 drops on cleansed face before bedtime. Gently press into face and neck using fingertips until absorbed.',
       freeFromClaims: ['100% Organic', 'Mineral Oil Free', 'No Artificial Fragrance', 'Cruelty Free'],
-      imageUrls: ['assets/images/facewash.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/facewash.jpg'],
       isFeatured: true,
       variants: [
         ProductVariant(
@@ -836,7 +814,7 @@ class ProductRepository {
       ingredients: 'Bark of 4 Ficus Trees (Nalpamara), Turmeric, Sesame Oil, Vetiver, Banyan Bark, Peepal Bark.',
       howToUse: 'Massage gently over body 30 minutes before bathing. Wash off with warm water and herbal soap.',
       freeFromClaims: ['100% Herbal', 'No Synthetic Colors', 'Ayurvedic Pharmacopoeia Grade'],
-      imageUrls: ['assets/images/soap.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/soap.jpg'],
       isFeatured: false,
       variants: [
         ProductVariant(
@@ -862,7 +840,7 @@ class ProductRepository {
       ingredients: 'Cold-Pressed Aloe Vera Leaf Juice, Organic Neem Water, Green Tea Extract, Natural Vegetable Glycerin.',
       howToUse: 'Apply directly onto face, scalp, or skin after sun exposure or daily cleansing for instant cooling hydration.',
       freeFromClaims: ['Alcohol Free', 'Silicone Free', 'Non-Sticky', '100% Pure Gel'],
-      imageUrls: ['assets/images/shampoo.jpg'],
+      imageUrls: ['https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/catalog_baseline/facewash.jpg'],
       isFeatured: false,
       variants: [
         ProductVariant(

@@ -81,15 +81,13 @@ class _VaidyamAppDrawerSheetState extends ConsumerState<VaidyamAppDrawerSheet> {
                     Row(
                       children: [
                         Image.asset(
-                          'assets/images/cosmyra_logo.png',
+                          'assets/images/cosmyra_full_logo.png',
                           height: 32,
                           fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => Row(
-                            children: const [
-                              Icon(Icons.shopping_bag_outlined, color: _primaryPurple, size: 24),
-                              SizedBox(width: 6),
-                              Text('COSMYRA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: _textDark, letterSpacing: 1.2)),
-                            ],
+                          errorBuilder: (_, __, ___) => Image.asset(
+                            'assets/images/cosmyra_logo.png',
+                            height: 32,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],

@@ -153,28 +153,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   // Brand Logo
                   InkWell(
                     onTap: () => context.go('/'),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 24),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Cosmyra',
-                          style: TextStyle(
-                            fontFamily: 'serif',
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.forestSageDark,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    child: Image.asset(
+                      'assets/images/cosmyra_full_logo.png',
+                      height: 44,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Image.asset(
+                        'assets/images/cosmyra_logo.png',
+                        height: 44,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
 
