@@ -15,6 +15,7 @@ import '../../navigation/widgets/vaidyam_mobile_bottom_nav_bar.dart';
 import '../widgets/vaidyam_mobile_account_screen_widget.dart';
 import '../../orders/widgets/vaidyam_mobile_orders_screen_widget.dart';
 import '../../orders/repositories/order_repository.dart';
+import '../services/user_cloud_sync_service.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   final String? initialTab;
@@ -234,16 +235,31 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? jsonStr = prefs.getString(_getAccountStorageKey('addresses_v3'));
-      if (jsonStr != null) {
+      if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
-        setState(() {
-          _userAddresses.clear();
-          _userAddresses.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
-        });
-      } else {
-        setState(() {
-          _userAddresses.clear();
-        });
+        if (mounted) {
+          setState(() {
+            _userAddresses.clear();
+            _userAddresses.addAll(decoded.map((item) => Map<String, dynamic>.from(item as Map)));
+          });
+        }
+      }
+    } catch (_) {}
+
+    try {
+      final auth = ref.read(authControllerProvider);
+      final user = ref.read(currentUserProvider);
+      final String email = (auth.userEmail ?? user?.email ?? '').toLowerCase().trim();
+      if (email.isNotEmpty && !email.contains('guest')) {
+        final cloudAddrs = await UserCloudSyncService.fetchUserAddressesFromCloud(email);
+        if (cloudAddrs.isNotEmpty && mounted) {
+          setState(() {
+            _userAddresses.clear();
+            _userAddresses.addAll(cloudAddrs);
+          });
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_userAddresses));
+        }
       }
     } catch (_) {}
   }
@@ -252,22 +268,26 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_userAddresses));
+
+      final auth = ref.read(authControllerProvider);
+      final user = ref.read(currentUserProvider);
+      final String email = (auth.userEmail ?? user?.email ?? '').toLowerCase().trim();
+
+      String aName = auth.userName ?? '';
+      String aPhone = auth.userPhone ?? '';
       if (_userAddresses.isNotEmpty) {
-        final firstAddr = _userAddresses.first;
-        final String aName = (firstAddr['name'] ?? '').toString();
-        final String aPhone = (firstAddr['phone'] ?? '').toString();
-        if (aName.isNotEmpty || aPhone.isNotEmpty) {
-          final String profKey = _getAccountStorageKey('profile_v2');
-          final String? profStr = prefs.getString(profKey);
-          Map<String, dynamic> profMap = {};
-          if (profStr != null && profStr.isNotEmpty) {
-            profMap = Map<String, dynamic>.from(jsonDecode(profStr));
-          }
-          if (aName.isNotEmpty) profMap['name'] = aName;
-          if (aPhone.isNotEmpty) profMap['phone'] = aPhone;
-          await prefs.setString(profKey, jsonEncode(profMap));
-          await prefs.setString('cosmyra_user_profile_v2', jsonEncode(profMap));
-        }
+        final first = _userAddresses.first;
+        if ((first['name'] ?? '').toString().isNotEmpty) aName = first['name'];
+        if ((first['phone'] ?? '').toString().isNotEmpty) aPhone = first['phone'];
+      }
+
+      if (email.isNotEmpty && !email.contains('guest')) {
+        await UserCloudSyncService.syncUserProfileAndAddress(
+          email: email,
+          name: aName.isNotEmpty ? aName : email.split('@').first,
+          phone: aPhone,
+          addressList: _userAddresses,
+        );
       }
     } catch (_) {}
   }

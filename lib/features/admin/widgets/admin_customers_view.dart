@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../config/supabase_config.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../account/services/user_cloud_sync_service.dart';
 
 class AdminCustomersView extends ConsumerStatefulWidget {
   const AdminCustomersView({super.key});
@@ -24,7 +25,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
   bool _showRightPanel = true;
 
   List<Map<String, dynamic>> _registeredProfiles = [];
-  bool _isLoadingProfiles = true;
+  bool _isLoadingProfiles = false;
 
   @override
   void initState() {
@@ -199,38 +200,45 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
       }
     } catch (_) {}
 
-    // 7. Read per-user saved addresses and profile from SharedPreferences to harmonize with user account dashboard
+    // 7. Read per-user saved addresses from Cloud Storage & SharedPreferences
     try {
+      final cloudAddresses = await UserCloudSyncService.fetchAllAddressesFromCloud();
       final prefs = await SharedPreferences.getInstance();
+
       for (var u in allFetchedUsers) {
         final email = (u['email'] ?? '').toString().toLowerCase().trim();
         if (email.isNotEmpty) {
-          final sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-          final String? addrJson = prefs.getString('cosmyra_${sanitized}_addresses_v3');
-          if (addrJson != null && addrJson.isNotEmpty) {
-            final List decodedAddr = json.decode(addrJson);
-            if (decodedAddr.isNotEmpty) {
-              final firstAddr = Map<String, dynamic>.from(decodedAddr.first as Map);
-              final String aName = (firstAddr['name'] ?? '').toString();
-              final String aPhone = (firstAddr['phone'] ?? '').toString();
-              if (aName.isNotEmpty) u['name'] = aName;
-              if (aPhone.isNotEmpty) u['phone'] = aPhone;
-              u['street'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
-              u['address'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
-              u['city'] = firstAddr['city'] ?? '';
-              u['state'] = firstAddr['state'] ?? '';
-              u['pincode'] = firstAddr['pincode'] ?? '';
-              u['addresses'] = decodedAddr.length;
+          if (cloudAddresses.containsKey(email) && cloudAddresses[email]!.isNotEmpty) {
+            final firstAddr = cloudAddresses[email]!.first;
+            final String aName = (firstAddr['name'] ?? '').toString();
+            final String aPhone = (firstAddr['phone'] ?? '').toString();
+            if (aName.isNotEmpty) u['name'] = aName;
+            if (aPhone.isNotEmpty) u['phone'] = aPhone;
+            u['street'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+            u['address'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+            u['city'] = firstAddr['city'] ?? '';
+            u['state'] = firstAddr['state'] ?? '';
+            u['pincode'] = firstAddr['pincode'] ?? '';
+            u['addresses'] = cloudAddresses[email]!.length;
+          } else {
+            final sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+            final String? addrJson = prefs.getString('cosmyra_${sanitized}_addresses_v3');
+            if (addrJson != null && addrJson.isNotEmpty) {
+              final List decodedAddr = json.decode(addrJson);
+              if (decodedAddr.isNotEmpty) {
+                final firstAddr = Map<String, dynamic>.from(decodedAddr.first as Map);
+                final String aName = (firstAddr['name'] ?? '').toString();
+                final String aPhone = (firstAddr['phone'] ?? '').toString();
+                if (aName.isNotEmpty) u['name'] = aName;
+                if (aPhone.isNotEmpty) u['phone'] = aPhone;
+                u['street'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+                u['address'] = firstAddr['street'] ?? firstAddr['address'] ?? '';
+                u['city'] = firstAddr['city'] ?? '';
+                u['state'] = firstAddr['state'] ?? '';
+                u['pincode'] = firstAddr['pincode'] ?? '';
+                u['addresses'] = decodedAddr.length;
+              }
             }
-          }
-
-          final String? profJson = prefs.getString('cosmyra_${sanitized}_profile_v2');
-          if (profJson != null && profJson.isNotEmpty) {
-            final Map<String, dynamic> prof = json.decode(profJson);
-            final String pName = (prof['name'] ?? '').toString();
-            final String pPhone = (prof['phone'] ?? '').toString();
-            if (pName.isNotEmpty) u['name'] = pName;
-            if (pPhone.isNotEmpty) u['phone'] = pPhone;
           }
         }
       }
@@ -427,38 +435,19 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                       }
                     });
 
-                    try {
-                      final prefs = await SharedPreferences.getInstance();
-                      final String sanitized = newEmail.toLowerCase().trim().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
-                      
-                      if (newStreet.isNotEmpty) {
-                        final addressList = [
-                          {
-                            'id': 'addr-admin-set',
-                            'name': newName,
-                            'phone': newPhone,
-                            'street': newStreet,
-                            'address': newStreet,
-                            'city': newCity,
-                            'state': newState,
-                            'pincode': newPincode,
-                            'type': 'HOME',
-                            'isDefault': 'true',
-                          }
-                        ];
-                        await prefs.setString('cosmyra_${sanitized}_addresses_v3', jsonEncode(addressList));
-                      }
+                    await UserCloudSyncService.syncUserProfileAndAddress(
+                      email: newEmail,
+                      name: newName,
+                      phone: newPhone,
+                      street: newStreet,
+                      city: newCity,
+                      state: newState,
+                      pincode: newPincode,
+                      role: roleVal,
+                      status: statusVal,
+                      password: passwordCtrl.text.trim(),
+                    );
 
-                      final profMap = {
-                        'name': newName,
-                        'email': newEmail,
-                        'phone': newPhone,
-                        'role': roleVal,
-                      };
-                      await prefs.setString('cosmyra_${sanitized}_profile_v2', jsonEncode(profMap));
-                    } catch (_) {}
-
-                    _syncProfilesToStorageAndSupabase();
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('User profile for $newName updated successfully! ✏️')),
