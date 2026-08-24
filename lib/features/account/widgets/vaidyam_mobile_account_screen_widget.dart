@@ -774,7 +774,7 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
         ? auth.userPhone!
         : (user?.phone?.isNotEmpty == true)
             ? user!.phone!
-            : (widget.phone.isNotEmpty ? widget.phone : '+91 98765 43210');
+            : widget.phone;
 
     final String email = (auth.userEmail?.isNotEmpty == true)
         ? auth.userEmail!

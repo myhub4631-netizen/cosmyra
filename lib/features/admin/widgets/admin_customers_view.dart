@@ -59,7 +59,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
             if (email.isNotEmpty) {
               final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email.toLowerCase());
               final name = row['full_name']?.toString() ?? (email.split('@').first);
-              final phone = row['phone']?.toString() ?? '+91 98765 43210';
+              final phone = row['phone']?.toString() ?? '';
               if (idx >= 0) {
                 if (name.isNotEmpty) allFetchedUsers[idx]['name'] = name;
                 if (phone.isNotEmpty) allFetchedUsers[idx]['phone'] = phone;
@@ -79,8 +79,13 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                   'joinedOn': row['created_at']?.toString().substring(0, 10) ?? '24 Aug 2026',
                   'lastLogin': '24 Aug 2026',
                   'emailVerified': true,
-                  'phoneVerified': true,
-                  'addresses': 1,
+                  'phoneVerified': phone.isNotEmpty,
+                  'addresses': 0,
+                  'street': '',
+                  'address': '',
+                  'city': '',
+                  'state': '',
+                  'pincode': '',
                 });
               }
             }
@@ -110,7 +115,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               'id': '#USR-000${allFetchedUsers.length + 1}',
               'name': localName.isNotEmpty ? localName : localEmail.split('@').first,
               'email': localEmail,
-              'phone': localPhone.isNotEmpty ? localPhone : '+91 98765 43210',
+              'phone': localPhone,
               'role': isLocalAdmin ? 'Master Admin' : 'Customer',
               'status': 'Active',
               'isVip': isLocalAdmin,
@@ -120,8 +125,13 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               'joinedOn': '24 Aug 2026',
               'lastLogin': 'Just now',
               'emailVerified': true,
-              'phoneVerified': true,
-              'addresses': 1,
+              'phoneVerified': localPhone.isNotEmpty,
+              'addresses': 0,
+              'street': '',
+              'address': '',
+              'city': '',
+              'state': '',
+              'pincode': '',
             });
           }
         }
@@ -177,11 +187,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 allFetchedUsers[idx]['isVip'] = true;
               }
             } else {
+              final ordPhone = (ord['customerPhone'] ?? ord['customer_phone'] ?? '').toString().trim();
               allFetchedUsers.add({
                 'id': '#USR-000${allFetchedUsers.length + 1}',
                 'name': (ord['customerName'] ?? ord['customer_name'] ?? email.split('@').first).toString().trim(),
                 'email': email,
-                'phone': (ord['customerPhone'] ?? ord['customer_phone'] ?? '+91 94730 40903').toString().trim(),
+                'phone': ordPhone,
                 'role': 'Customer',
                 'status': 'Active',
                 'isVip': false,
@@ -191,8 +202,13 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 'joinedOn': '24 Aug 2026',
                 'lastLogin': '24 Aug 2026',
                 'emailVerified': true,
-                'phoneVerified': true,
-                'addresses': 1,
+                'phoneVerified': ordPhone.isNotEmpty,
+                'addresses': 0,
+                'street': '',
+                'address': '',
+                'city': '',
+                'state': '',
+                'pincode': '',
               });
             }
           }
@@ -237,7 +253,21 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 u['state'] = firstAddr['state'] ?? '';
                 u['pincode'] = firstAddr['pincode'] ?? '';
                 u['addresses'] = decodedAddr.length;
+              } else {
+                u['street'] = '';
+                u['address'] = '';
+                u['city'] = '';
+                u['state'] = '';
+                u['pincode'] = '';
+                u['addresses'] = 0;
               }
+            } else {
+              u['street'] = u['street'] ?? '';
+              u['address'] = u['address'] ?? '';
+              u['city'] = u['city'] ?? '';
+              u['state'] = u['state'] ?? '';
+              u['pincode'] = u['pincode'] ?? '';
+              u['addresses'] = (u['street'] != null && (u['street'] as String).isNotEmpty) ? 1 : 0;
             }
           }
         }
@@ -278,9 +308,9 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
     final phoneCtrl = TextEditingController(text: user['phone']?.toString() ?? '');
     final passwordCtrl = TextEditingController(text: user['password']?.toString() ?? '');
     final addressCtrl = TextEditingController(text: user['street']?.toString() ?? user['address']?.toString() ?? '');
-    final cityCtrl = TextEditingController(text: user['city']?.toString() ?? 'Bengaluru');
-    final stateCtrl = TextEditingController(text: user['state']?.toString() ?? 'Karnataka');
-    final pincodeCtrl = TextEditingController(text: user['pincode']?.toString() ?? '560103');
+    final cityCtrl = TextEditingController(text: user['city']?.toString() ?? '');
+    final stateCtrl = TextEditingController(text: user['state']?.toString() ?? '');
+    final pincodeCtrl = TextEditingController(text: user['pincode']?.toString() ?? '');
 
     String roleVal = user['role']?.toString() ?? 'Customer';
     String statusVal = user['status']?.toString() ?? 'Active';
@@ -775,11 +805,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               ),
               onPressed: () async {
                 if (nameCtrl.text.trim().isNotEmpty && emailCtrl.text.trim().isNotEmpty) {
+                  final String phoneVal = phoneCtrl.text.trim();
                   final newUser = {
                     'id': '#USR-000${_registeredProfiles.length + 1}',
                     'name': nameCtrl.text.trim(),
                     'email': emailCtrl.text.trim(),
-                    'phone': phoneCtrl.text.trim().isEmpty ? '+91 98765 43210' : phoneCtrl.text.trim(),
+                    'phone': phoneVal,
                     'role': roleVal,
                     'status': 'Active',
                     'isVip': false,
@@ -789,8 +820,13 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                     'joinedOn': '24 Aug 2026',
                     'lastLogin': 'Never',
                     'emailVerified': true,
-                    'phoneVerified': false,
+                    'phoneVerified': phoneVal.isNotEmpty,
                     'addresses': 0,
+                    'street': '',
+                    'address': '',
+                    'city': '',
+                    'state': '',
+                    'pincode': '',
                   };
                   setState(() {
                     _registeredProfiles.insert(0, newUser);
@@ -1438,7 +1474,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 const SizedBox(height: 2),
                 Text(user['email'], style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
                 const SizedBox(height: 2),
-                Text(user['phone'], style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                Text((user['phone'] ?? '').toString().isNotEmpty ? user['phone'] : '—', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1476,10 +1512,21 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
           // Details List
           _buildDrawerDetailRow('Role', user['role']),
           _buildDrawerDetailRow('Status', user['status'], isStatus: true),
+          _buildDrawerDetailRow('Address', ([
+            user['street']?.toString() ?? '',
+            user['city']?.toString() ?? '',
+            user['state']?.toString() ?? '',
+            user['pincode']?.toString() ?? '',
+          ].where((s) => s.trim().isNotEmpty).join(', ')).isNotEmpty ? [
+            user['street']?.toString() ?? '',
+            user['city']?.toString() ?? '',
+            user['state']?.toString() ?? '',
+            user['pincode']?.toString() ?? '',
+          ].where((s) => s.trim().isNotEmpty).join(', ') : '—'),
           _buildDrawerDetailRow('Member Since', user['joinedOn']),
           _buildDrawerDetailRow('Last Login', user['lastLogin']),
           _buildDrawerDetailRow('Email Verified', user['emailVerified'] == true ? 'Yes ✓' : 'No ✗', isVerified: user['emailVerified'] == true),
-          _buildDrawerDetailRow('Phone Verified', user['phoneVerified'] == true ? 'Yes ✓' : 'No ✗', isVerified: user['phoneVerified'] == true),
+          _buildDrawerDetailRow('Phone Verified', (user['phoneVerified'] == true && (user['phone'] ?? '').toString().isNotEmpty) ? 'Yes ✓' : 'No ✗', isVerified: user['phoneVerified'] == true && (user['phone'] ?? '').toString().isNotEmpty),
 
           const SizedBox(height: 20),
 

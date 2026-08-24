@@ -113,13 +113,14 @@ class UserCloudSyncService {
       'email': cleanEmail,
       'joinedOn': '24 Aug 2026',
       'emailVerified': true,
-      'phoneVerified': true,
+      'phoneVerified': phone.trim().isNotEmpty,
       'orders': 0,
       'totalSpent': 0,
     };
 
     userRecord['name'] = name;
     userRecord['phone'] = phone;
+    userRecord['phoneVerified'] = phone.trim().isNotEmpty;
     if (role != null) userRecord['role'] = role;
     if (status != null) userRecord['status'] = status;
     if (password != null && password.isNotEmpty) userRecord['password'] = password;
@@ -144,6 +145,8 @@ class UserCloudSyncService {
       userRecord['addresses'] = addressList.length;
     } else if (street != null && street.isNotEmpty) {
       userRecord['addresses'] = 1;
+    } else {
+      userRecord['addresses'] = idx >= 0 ? (cloudUsers[idx]['addresses'] ?? 0) : 0;
     }
 
     if (idx >= 0) {

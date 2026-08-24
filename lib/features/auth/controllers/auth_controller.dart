@@ -413,7 +413,7 @@ class AuthController extends StateNotifier<AuthStateModel> {
         'id': idx >= 0 ? usersList[idx]['id'] : '#USR-000${usersList.length + 1}',
         'name': name.isNotEmpty ? name : (cleanEmail.contains('@') ? cleanEmail.split('@').first : 'User'),
         'email': cleanEmail,
-        'phone': phone.isNotEmpty ? phone : (idx >= 0 ? usersList[idx]['phone'] ?? '' : ''),
+        'phone': phone.trim(),
         'role': role,
         'status': 'Active',
         'isVip': role.contains('Admin') || (idx >= 0 ? usersList[idx]['isVip'] == true : false),
@@ -423,8 +423,8 @@ class AuthController extends StateNotifier<AuthStateModel> {
         'joinedOn': idx >= 0 ? usersList[idx]['joinedOn'] : '24 Aug 2026',
         'lastLogin': '24 Aug 2026',
         'emailVerified': true,
-        'phoneVerified': true,
-        'addresses': 1,
+        'phoneVerified': phone.trim().isNotEmpty,
+        'addresses': idx >= 0 ? (usersList[idx]['addresses'] ?? 0) : 0,
       };
 
       if (idx >= 0) {
