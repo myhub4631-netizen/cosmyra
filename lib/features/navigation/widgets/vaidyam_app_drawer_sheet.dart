@@ -216,7 +216,7 @@ class _VaidyamAppDrawerSheetState extends ConsumerState<VaidyamAppDrawerSheet> {
                         badgeColor: const Color(0xFF6366F1),
                         onTap: () {
                           Navigator.pop(context);
-                          context.push('/shop');
+                          context.push('/deals');
                         },
                       ),
                       _buildMenuItem(

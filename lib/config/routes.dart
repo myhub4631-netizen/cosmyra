@@ -19,6 +19,7 @@ import '../features/catalog/screens/vaidyam_home_screen.dart';
 import '../features/catalog/screens/vaidyam_shop_screen.dart';
 import '../features/catalog/screens/vaidyam_wishlist_screen.dart';
 import '../features/orders/screens/vaidyam_orders_screen.dart';
+import '../features/coupons/screens/deals_and_offers_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -26,6 +27,18 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const VaidyamHomeScreen(),
+    ),
+    GoRoute(
+      path: '/deals',
+      builder: (context, state) => const DealsAndOffersScreen(),
+    ),
+    GoRoute(
+      path: '/offers',
+      builder: (context, state) => const DealsAndOffersScreen(),
+    ),
+    GoRoute(
+      path: '/deals-and-offers',
+      builder: (context, state) => const DealsAndOffersScreen(),
     ),
     GoRoute(
       path: '/shop',
