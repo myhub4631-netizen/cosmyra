@@ -183,12 +183,34 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
           final double amount = (ord['totalAmount'] ?? ord['total_amount'] ?? ord['total_amount_inr'] ?? 0).toDouble();
 
           if (email.isNotEmpty) {
+            String ordStreet = '';
+            String ordCity = '';
+            String ordState = '';
+            String ordPincode = '';
+            final shipAddr = ord['shippingAddress'] ?? ord['shipping_address'] ?? ord['delivery_address'] ?? ord['address'];
+            if (shipAddr is Map) {
+              ordStreet = (shipAddr['street'] ?? shipAddr['address'] ?? '').toString();
+              ordCity = (shipAddr['city'] ?? '').toString();
+              ordState = (shipAddr['state'] ?? '').toString();
+              ordPincode = (shipAddr['pincode'] ?? '').toString();
+            } else if (shipAddr is String && shipAddr.isNotEmpty) {
+              ordStreet = shipAddr;
+            }
+
             final idx = allFetchedUsers.indexWhere((u) => u['email']?.toString().toLowerCase() == email);
             if (idx >= 0) {
               allFetchedUsers[idx]['orders'] = ((allFetchedUsers[idx]['orders'] as int? ?? 0) + 1);
               allFetchedUsers[idx]['totalSpent'] = ((allFetchedUsers[idx]['totalSpent'] as double? ?? 0.0) + amount);
               if ((allFetchedUsers[idx]['orders'] as int) > 3) {
                 allFetchedUsers[idx]['isVip'] = true;
+              }
+              if (ordStreet.isNotEmpty && (allFetchedUsers[idx]['street'] == null || allFetchedUsers[idx]['street'].toString().isEmpty)) {
+                allFetchedUsers[idx]['street'] = ordStreet;
+                allFetchedUsers[idx]['address'] = ordStreet;
+                allFetchedUsers[idx]['city'] = ordCity;
+                allFetchedUsers[idx]['state'] = ordState;
+                allFetchedUsers[idx]['pincode'] = ordPincode;
+                allFetchedUsers[idx]['addresses'] = 1;
               }
             } else {
               final ordPhone = (ord['customerPhone'] ?? ord['customer_phone'] ?? '').toString().trim();
@@ -207,12 +229,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 'lastLogin': '24 Aug 2026',
                 'emailVerified': true,
                 'phoneVerified': ordPhone.isNotEmpty,
-                'addresses': 0,
-                'street': '',
-                'address': '',
-                'city': '',
-                'state': '',
-                'pincode': '',
+                'addresses': ordStreet.isNotEmpty ? 1 : 0,
+                'street': ordStreet,
+                'address': ordStreet,
+                'city': ordCity,
+                'state': ordState,
+                'pincode': ordPincode,
               });
             }
           }
