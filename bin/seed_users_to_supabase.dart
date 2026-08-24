@@ -2,9 +2,19 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() async {
-  print('=== RE-SEEDING CLEAN REAL USERS TO SUPABASE STORAGE (settings/users.json) ===');
+  print('=== MERGING & PRESERVING ALL REAL USERS ON SUPABASE STORAGE ===');
 
   final String anonKey = 'sb_publishable_8qq6FNGeCch_xx3kWM9wcw_jmoleoON';
+  final String getUrl = 'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/users.json?t=${DateTime.now().millisecondsSinceEpoch}';
+
+  List<Map<String, dynamic>> existingUsers = [];
+  final getRes = await http.get(Uri.parse(getUrl));
+  if (getRes.statusCode == 200 && getRes.body.isNotEmpty) {
+    try {
+      final List decoded = json.decode(getRes.body);
+      existingUsers = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {}
+  }
 
   final List<Map<String, dynamic>> initialRealUsers = [
     {
@@ -26,9 +36,9 @@ void main() async {
     },
     {
       'id': '#USR-0002',
-      'name': 'MyHub User',
+      'name': 'Mahboob 2 Add',
       'email': 'myhub4632@gmail.com',
-      'phone': '+91 94730 40903',
+      'phone': '9988776602',
       'role': 'Customer',
       'status': 'Active',
       'isVip': false,
@@ -75,9 +85,32 @@ void main() async {
       'phoneVerified': true,
       'addresses': 1,
     },
+    {
+      'id': '#USR-0005',
+      'name': 'Mmmmm',
+      'email': 'myhub4633@gmail.com',
+      'phone': '9999999999',
+      'role': 'Customer',
+      'status': 'Active',
+      'isVip': false,
+      'isYou': false,
+      'orders': 0,
+      'totalSpent': 0.0,
+      'joinedOn': '24 Aug 2026',
+      'lastLogin': '24 Aug 2026',
+      'emailVerified': true,
+      'phoneVerified': true,
+      'addresses': 2,
+    }
   ];
 
-  final String jsonString = json.encode(initialRealUsers);
+  for (var defaultUser in initialRealUsers) {
+    if (!existingUsers.any((u) => u['email']?.toString().toLowerCase() == defaultUser['email'])) {
+      existingUsers.add(defaultUser);
+    }
+  }
+
+  final String jsonString = json.encode(existingUsers);
   final Uri uploadUrl = Uri.parse('https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json');
 
   final response = await http.post(
@@ -95,7 +128,7 @@ void main() async {
   print('Upload Response: ${response.body}');
 
   if (response.statusCode == 200 || response.statusCode == 201) {
-    print('SUCCESS! Real users file settings/users.json re-seeded to Supabase Storage with ZERO demo orders.');
+    print('SUCCESS! Merged and preserved all real users on Supabase Storage.');
   } else {
     print('FAILED to upload settings/users.json');
   }

@@ -106,9 +106,141 @@ class UserCloudSyncService {
       }
     } catch (_) {}
 
-    // 2. Fetch current users.json & addresses.json from cloud
-    final List<Map<String, dynamic>> cloudUsers = await fetchUsersFromCloud();
-    final Map<String, List<Map<String, dynamic>>> cloudAddresses = await fetchAllAddressesFromCloud();
+    // 2. Fetch current users.json & addresses.json from cloud with retries
+    List<Map<String, dynamic>> cloudUsers = await fetchUsersFromCloud();
+    Map<String, List<Map<String, dynamic>>> cloudAddresses = await fetchAllAddressesFromCloud();
+
+    if (cloudUsers.isEmpty) {
+      for (int retry = 0; retry < 3; retry++) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        final retryUsers = await fetchUsersFromCloud();
+        if (retryUsers.isNotEmpty) {
+          cloudUsers = retryUsers;
+          break;
+        }
+      }
+    }
+
+    if (cloudAddresses.isEmpty) {
+      for (int retry = 0; retry < 3; retry++) {
+        await Future.delayed(const Duration(milliseconds: 400));
+        final retryAddresses = await fetchAllAddressesFromCloud();
+        if (retryAddresses.isNotEmpty) {
+          cloudAddresses = retryAddresses;
+          break;
+        }
+      }
+    }
+
+    // Safety fallback: Ensure core system users are never dropped if fetch failed
+    final List<Map<String, dynamic>> defaultSystemUsers = [
+      {
+        'id': '#USR-0001',
+        'name': 'Mahboob Hasan',
+        'email': '1mdollar2027@gmail.com',
+        'phone': '+91 98765 43210',
+        'role': 'Master Admin',
+        'status': 'Active',
+        'isVip': true,
+        'isYou': true,
+        'orders': 4,
+        'totalSpent': 1455.0,
+        'joinedOn': '15 Aug 2026 10:30 AM',
+        'lastLogin': '24 Aug 2026 01:45 AM',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 2,
+        'street': 'Flat 402, Green Valley',
+        'address': 'Flat 402, Green Valley',
+        'city': 'Patna',
+        'state': 'Bihar',
+        'pincode': '800001'
+      },
+      {
+        'id': '#USR-0002',
+        'name': 'Mahboob 2 Add',
+        'email': 'myhub4632@gmail.com',
+        'phone': '9988776602',
+        'role': 'Customer',
+        'status': 'Active',
+        'isVip': false,
+        'isYou': false,
+        'orders': 0,
+        'totalSpent': 0.0,
+        'joinedOn': '24 Aug 2026 02:00 AM',
+        'lastLogin': '24 Aug 2026',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1,
+        'street': 'Deepak Residency E70',
+        'address': 'Deepak Residency E70',
+        'city': 'Kota',
+        'state': 'Rajasthan',
+        'pincode': '324002'
+      },
+      {
+        'id': '#USR-0003',
+        'name': 'Cosmyra Admin',
+        'email': 'admin@cosmyra.cloud',
+        'phone': '+91 94730 40903',
+        'role': 'Master Admin',
+        'status': 'Active',
+        'isVip': true,
+        'isYou': false,
+        'orders': 0,
+        'totalSpent': 0.0,
+        'joinedOn': '01 Aug 2026 08:00 AM',
+        'lastLogin': '24 Aug 2026 01:00 AM',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1
+      },
+      {
+        'id': '#USR-0004',
+        'name': 'Netizen Admin',
+        'email': 'myhub4631@gmail.com',
+        'phone': '+91 98765 43210',
+        'role': 'Admin',
+        'status': 'Active',
+        'isVip': false,
+        'isYou': false,
+        'orders': 0,
+        'totalSpent': 0.0,
+        'joinedOn': '10 Aug 2026 09:00 AM',
+        'lastLogin': '23 Aug 2026 11:30 PM',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 1
+      },
+      {
+        'id': '#USR-0005',
+        'name': 'Mmmmm',
+        'email': 'myhub4633@gmail.com',
+        'phone': '9999999999',
+        'role': 'Customer',
+        'status': 'Active',
+        'isVip': false,
+        'isYou': false,
+        'orders': 0,
+        'totalSpent': 0.0,
+        'joinedOn': '24 Aug 2026',
+        'lastLogin': '24 Aug 2026',
+        'emailVerified': true,
+        'phoneVerified': true,
+        'addresses': 2,
+        'street': 'E 12 Kabsb',
+        'address': 'E 12 Kabsb',
+        'city': 'ksbs',
+        'state': 'bihar',
+        'pincode': '324001'
+      }
+    ];
+
+    for (var defUser in defaultSystemUsers) {
+      if (!cloudUsers.any((u) => u['email']?.toString().toLowerCase().trim() == defUser['email'])) {
+        cloudUsers.add(defUser);
+      }
+    }
 
     // 3. Update or Add user in cloudUsers
     final idx = cloudUsers.indexWhere((u) => u['email']?.toString().toLowerCase().trim() == cleanEmail);
