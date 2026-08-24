@@ -691,84 +691,88 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 12,
-                              crossAxisAlignment: WrapCrossAlignment.center,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // Search Input Box
-                                Container(
-                                  width: 260,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF9FAFB),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                                  ),
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Search by name, SKU, or category...',
-                                      hintStyle: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
-                                      prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    // Search Input Box
+                                    Container(
+                                      width: 260,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      child: TextField(
+                                        decoration: const InputDecoration(
+                                          hintText: 'Search by name, SKU, or category...',
+                                          hintStyle: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                                          prefixIcon: Icon(Icons.search, size: 18, color: Color(0xFF9CA3AF)),
+                                          border: InputBorder.none,
+                                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                        ),
+                                        onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+                                      ),
                                     ),
-                                    onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-                                  ),
-                                ),
 
-                                // Category Dropdown
-                                Container(
-                                  height: 38,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedCategory,
-                                      style: const TextStyle(fontSize: 12, color: Color(0xFF374151), fontWeight: FontWeight.w500),
-                                      items: ['All Categories', 'cat-haircare', 'cat-skincare', 'cat-wellness']
-                                          .map((c) => DropdownMenuItem(value: c, child: Text(c == 'All Categories' ? 'Category: All' : 'Category: ${c.replaceAll('cat-', '')}')))
-                                          .toList(),
-                                      onChanged: (val) => setState(() => _selectedCategory = val ?? 'All Categories'),
+                                    // Category Dropdown
+                                    Container(
+                                      height: 38,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: _selectedCategory,
+                                          style: const TextStyle(fontSize: 12, color: Color(0xFF374151), fontWeight: FontWeight.w500),
+                                          items: ['All Categories', 'cat-haircare', 'cat-skincare', 'cat-wellness']
+                                              .map((c) => DropdownMenuItem(value: c, child: Text(c == 'All Categories' ? 'Category: All' : 'Category: ${c.replaceAll('cat-', '')}')))
+                                              .toList(),
+                                          onChanged: (val) => setState(() => _selectedCategory = val ?? 'All Categories'),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
 
-                                // Stock Status Dropdown
-                                Container(
-                                  height: 38,
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: _selectedStockStatus,
-                                      style: const TextStyle(fontSize: 12, color: Color(0xFF374151), fontWeight: FontWeight.w500),
-                                      items: ['All', 'In Stock', 'Low Stock', 'Out of Stock']
-                                          .map((s) => DropdownMenuItem(value: s, child: Text('Stock: $s')))
-                                          .toList(),
-                                      onChanged: (val) => setState(() => _selectedStockStatus = val ?? 'All'),
+                                    // Stock Status Dropdown
+                                    Container(
+                                      height: 38,
+                                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          value: _selectedStockStatus,
+                                          style: const TextStyle(fontSize: 12, color: Color(0xFF374151), fontWeight: FontWeight.w500),
+                                          items: ['All', 'In Stock', 'Low Stock', 'Out of Stock']
+                                              .map((s) => DropdownMenuItem(value: s, child: Text('Stock: $s')))
+                                              .toList(),
+                                          onChanged: (val) => setState(() => _selectedStockStatus = val ?? 'All'),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
 
-                                if (_searchQuery.isNotEmpty || _selectedCategory != 'All Categories' || _selectedStockStatus != 'All')
-                                  TextButton(
-                                    onPressed: () => setState(() {
-                                      _searchQuery = '';
-                                      _selectedCategory = 'All Categories';
-                                      _selectedStockStatus = 'All';
-                                    }),
-                                    child: const Text('Clear Filters', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
-                                  ),
-                                const Spacer(),
+                                    if (_searchQuery.isNotEmpty || _selectedCategory != 'All Categories' || _selectedStockStatus != 'All')
+                                      TextButton(
+                                        onPressed: () => setState(() {
+                                          _searchQuery = '';
+                                          _selectedCategory = 'All Categories';
+                                          _selectedStockStatus = 'All';
+                                        }),
+                                        child: const Text('Clear Filters', style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
+                                      ),
+                                  ],
+                                ),
                                 Row(
                                   children: [
                                     OutlinedButton.icon(
