@@ -1116,6 +1116,7 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                             Expanded(flex: 3, child: Text('User', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                             Expanded(flex: 2, child: Text('Role', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                             Expanded(flex: 2, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                            Expanded(flex: 3, child: Text('Delivery Address', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                             Expanded(flex: 1, child: Text('Orders', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                             Expanded(flex: 2, child: Text('Total Spend', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
                             Expanded(flex: 2, child: Text('Joined On', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
@@ -1240,6 +1241,33 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                                           user['status'],
                                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getStatusPillTextColor(user['status'])),
                                         ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Delivery Address Column
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: Builder(
+                                        builder: (context) {
+                                          final String fullAddr = [
+                                            user['street']?.toString() ?? '',
+                                            user['city']?.toString() ?? '',
+                                            user['state']?.toString() ?? '',
+                                            user['pincode']?.toString() ?? '',
+                                          ].where((s) => s.trim().isNotEmpty).join(', ');
+                                          return Text(
+                                            fullAddr.isNotEmpty ? fullAddr : '—',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: fullAddr.isNotEmpty ? const Color(0xFF374151) : const Color(0xFF9CA3AF),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 2,
+                                          );
+                                        },
                                       ),
                                     ),
                                   ),
@@ -1509,6 +1537,59 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 child: _buildDrawerStatBox('${user['addresses']}', 'Addresses'),
               ),
             ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Delivery Address Box inside Drawer
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.location_on_outlined, size: 16, color: Color(0xFF4F46E5)),
+                    SizedBox(width: 6),
+                    Text('Delivery Address', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF111827))),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Builder(
+                  builder: (context) {
+                    final String street = user['street']?.toString() ?? user['address']?.toString() ?? '';
+                    final String city = user['city']?.toString() ?? '';
+                    final String state = user['state']?.toString() ?? '';
+                    final String pincode = user['pincode']?.toString() ?? '';
+                    final String fullAddr = [street, city, state, pincode].where((s) => s.trim().isNotEmpty).join(', ');
+
+                    if (fullAddr.isEmpty) {
+                      return const Text(
+                        'No delivery address added yet',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), fontStyle: FontStyle.italic),
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (street.isNotEmpty) Text(street, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF111827))),
+                        if (city.isNotEmpty || state.isNotEmpty || pincode.isNotEmpty)
+                          Text(
+                            [city, state, pincode].where((s) => s.isNotEmpty).join(', '),
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 20),
