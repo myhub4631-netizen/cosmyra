@@ -638,6 +638,32 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     }
   }
 
+  void _setDefaultAddress(int index) {
+    if (index < 0 || index >= _userAddresses.length) return;
+
+    setState(() {
+      final selected = _userAddresses.removeAt(index);
+      for (var a in _userAddresses) {
+        a['isDefault'] = false;
+      }
+      selected['isDefault'] = true;
+      _userAddresses.insert(0, selected);
+    });
+
+    _saveAddressesToStorage();
+
+    if (mounted) {
+      showCenterActionToast(
+        context,
+        title: 'Default Address Updated! 📍',
+        message: 'Default delivery location set to ${_userAddresses.first['type'] ?? 'HOME'}.',
+        icon: Icons.check_circle_outline,
+        iconColor: const Color(0xFF4F46E5),
+        primaryActionLabel: null,
+      );
+    }
+  }
+
   @override
   void didUpdateWidget(covariant UserDashboardScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -1907,23 +1933,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                       const SizedBox(height: 12),
                       if (!isDefault)
                         OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              for (var a in _userAddresses) {
-                                a['isDefault'] = false;
-                              }
-                              addr['isDefault'] = true;
-                            });
-                            _saveAddressesToStorage();
-                            showCenterActionToast(
-                              context,
-                              title: 'Default Address Updated! 📍',
-                              message: '${addr['type']} address set as default delivery location.',
-                              icon: Icons.check_circle_rounded,
-                              iconColor: const Color(0xFF059669),
-                              primaryActionLabel: null,
-                            );
-                          },
+                          onPressed: () => _setDefaultAddress(idx),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
                           child: const Text('Set as Default', style: TextStyle(fontSize: 11)),
                         ),

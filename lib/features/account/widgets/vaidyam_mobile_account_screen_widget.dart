@@ -400,6 +400,30 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     );
   }
 
+  void _setDefaultAddress(int index) {
+    if (index < 0 || index >= _mobileAddresses.length) return;
+
+    setState(() {
+      final selected = _mobileAddresses.removeAt(index);
+      for (var a in _mobileAddresses) {
+        a['isDefault'] = 'false';
+      }
+      selected['isDefault'] = 'true';
+      _mobileAddresses.insert(0, selected);
+    });
+
+    _saveMobileAddresses();
+
+    showCenterActionToast(
+      context,
+      title: 'Default Location Updated! 📍',
+      message: 'Default delivery location set to ${_mobileAddresses.first['type'] ?? 'HOME'}.',
+      icon: Icons.check_circle_outline,
+      iconColor: const Color(0xFF10B981),
+      primaryActionLabel: null,
+    );
+  }
+
   void _confirmDeleteAddress(BuildContext context, int index) {
     if (index < 0 || index >= _mobileAddresses.length) return;
     final addr = _mobileAddresses[index];
@@ -484,49 +508,78 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
                               final String name = (addr['name'] ?? '').toString();
                               final String phone = (addr['phone'] ?? '').toString();
 
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: isDef ? const Color(0xFFECFDF5) : Colors.white,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: isDef ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text((addr['type'] ?? 'HOME').toString().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
-                                        const SizedBox(width: 8),
-                                        if (isDef)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(6)),
-                                            child: const Text('DEFAULT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                              return InkWell(
+                                onTap: isDef
+                                    ? null
+                                    : () {
+                                        setModalState(() {
+                                          _setDefaultAddress(index);
+                                        });
+                                      },
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: isDef ? const Color(0xFFECFDF5) : Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: isDef ? const Color(0xFF10B981) : const Color(0xFFE2E8F0), width: isDef ? 2 : 1),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text((addr['type'] ?? 'HOME').toString().toUpperCase(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _textDark)),
+                                          const SizedBox(width: 8),
+                                          if (isDef)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(color: const Color(0xFF10B981), borderRadius: BorderRadius.circular(6)),
+                                              child: const Text('DEFAULT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold)),
+                                            )
+                                          else
+                                            InkWell(
+                                              onTap: () {
+                                                setModalState(() {
+                                                  _setDefaultAddress(index);
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFECFDF5),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                  border: Border.all(color: const Color(0xFF064E3B)),
+                                                ),
+                                                child: const Text(
+                                                  'Set as Default 📍',
+                                                  style: TextStyle(color: Color(0xFF064E3B), fontSize: 10, fontWeight: FontWeight.bold),
+                                                ),
+                                              ),
+                                            ),
+                                          const Spacer(),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit_outlined, size: 18, color: _darkGreen),
+                                            onPressed: () {
+                                              Navigator.pop(modalCtx);
+                                              _showAddAddressDialog(context, editAddress: addr);
+                                            },
                                           ),
-                                        const Spacer(),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit_outlined, size: 18, color: _darkGreen),
-                                          onPressed: () {
-                                            Navigator.pop(modalCtx);
-                                            _showAddAddressDialog(context, editAddress: addr);
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                                          onPressed: () {
-                                            Navigator.pop(modalCtx);
-                                            _confirmDeleteAddress(context, index);
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text('$name • $phone', style: const TextStyle(fontSize: 12, color: _textMuted, fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Text('$street, $city - $pincode, $state', style: const TextStyle(fontSize: 12, color: _textDark)),
-                                  ],
+                                          IconButton(
+                                            icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                                            onPressed: () {
+                                              Navigator.pop(modalCtx);
+                                              _confirmDeleteAddress(context, index);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text('$name • $phone', style: const TextStyle(fontSize: 12, color: _textMuted, fontWeight: FontWeight.w600)),
+                                      const SizedBox(height: 4),
+                                      Text('$street, $city - $pincode, $state', style: const TextStyle(fontSize: 12, color: _textDark)),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
