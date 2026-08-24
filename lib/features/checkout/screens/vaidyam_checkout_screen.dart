@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/theme/app_colors.dart';
+import '../../../core/utils/location_helper.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
 import '../../catalog/repositories/product_repository.dart';
@@ -23,6 +24,7 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
   final _phoneController = TextEditingController();
   final _pincodeController = TextEditingController(text: '800001');
   final _addressController = TextEditingController();
+  bool _isDetectingLocation = false;
   final _cityController = TextEditingController(text: 'Patna');
   final _couponController = TextEditingController();
   String _selectedState = 'Bihar';
@@ -510,7 +512,70 @@ class _VaidyamCheckoutScreenState extends ConsumerState<VaidyamCheckoutScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Delivery Address', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          // Location Permission & Autofill Button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isDetectingLocation
+                  ? null
+                  : () async {
+                      setState(() => _isDetectingLocation = true);
+                      final loc = await LocationHelper.getCurrentLocationAddress();
+                      setState(() => _isDetectingLocation = false);
+
+                      if (loc.hasError) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(loc.error!),
+                              backgroundColor: const Color(0xFFDC2626),
+                            ),
+                          );
+                        }
+                      } else {
+                        if (loc.street.isNotEmpty) _addressController.text = loc.street;
+                        if (loc.city.isNotEmpty) _cityController.text = loc.city;
+                        if (loc.pincode.isNotEmpty) _pincodeController.text = loc.pincode;
+                        if (loc.state.isNotEmpty) {
+                          final String matchState = _indianStates.firstWhere(
+                            (s) => s.toLowerCase() == loc.state.toLowerCase(),
+                            orElse: () => _selectedState,
+                          );
+                          setState(() => _selectedState = matchState);
+                        }
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('📍 Location permission granted & address autofilled!'),
+                              backgroundColor: Color(0xFF4F46E5),
+                            ),
+                          );
+                        }
+                      }
+                    },
+              icon: _isDetectingLocation
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)),
+                    )
+                  : const Icon(Icons.my_location, size: 18, color: Color(0xFF4F46E5)),
+              label: Text(
+                _isDetectingLocation ? 'Requesting Location & Autofilling...' : 'Use My Current Location 📍 (Autofill)',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5)),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                side: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+                backgroundColor: const Color(0xFFEEF2FF),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           _buildInputField('Full Name', _nameController, 'Enter your full name'),
           const SizedBox(height: 16),

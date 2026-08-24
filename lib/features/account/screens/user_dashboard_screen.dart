@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/utils/location_helper.dart';
 import '../../../shared/widgets/center_action_toast.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
@@ -682,6 +683,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     final stateCtrl = TextEditingController(text: editAddress?['state'] ?? '');
     final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '');
     String type = editAddress?['type'] ?? 'HOME';
+    bool isDetectingLocation = false;
 
     final bool isMobile = MediaQuery.of(context).size.width < 600;
 
@@ -725,6 +727,64 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 12),
+
+                          // Location Permission & Autofill Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: isDetectingLocation
+                                  ? null
+                                  : () async {
+                                      setDlgState(() => isDetectingLocation = true);
+                                      final loc = await LocationHelper.getCurrentLocationAddress();
+                                      setDlgState(() => isDetectingLocation = false);
+
+                                      if (loc.hasError) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(loc.error!),
+                                              backgroundColor: const Color(0xFFDC2626),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        if (loc.street.isNotEmpty) streetCtrl.text = loc.street;
+                                        if (loc.city.isNotEmpty) cityCtrl.text = loc.city;
+                                        if (loc.state.isNotEmpty) stateCtrl.text = loc.state;
+                                        if (loc.pincode.isNotEmpty) pincodeCtrl.text = loc.pincode;
+
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('📍 Location permission granted & address autofilled!'),
+                                              backgroundColor: Color(0xFF4F46E5),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                              icon: isDetectingLocation
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)),
+                                    )
+                                  : const Icon(Icons.my_location, size: 18, color: Color(0xFF4F46E5)),
+                              label: Text(
+                                isDetectingLocation ? 'Requesting Location & Autofilling...' : 'Use My Current Location 📍 (Autofill)',
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5)),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                side: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+                                backgroundColor: const Color(0xFFEEF2FF),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
                           TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.person_outline))),
                           const SizedBox(height: 12),
                           TextField(controller: phoneCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Mobile Number *', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone_outlined))),
@@ -827,6 +887,63 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Location Permission & Autofill Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: isDetectingLocation
+                        ? null
+                        : () async {
+                            setDlgState(() => isDetectingLocation = true);
+                            final loc = await LocationHelper.getCurrentLocationAddress();
+                            setDlgState(() => isDetectingLocation = false);
+
+                            if (loc.hasError) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(loc.error!),
+                                    backgroundColor: const Color(0xFFDC2626),
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (loc.street.isNotEmpty) streetCtrl.text = loc.street;
+                              if (loc.city.isNotEmpty) cityCtrl.text = loc.city;
+                              if (loc.state.isNotEmpty) stateCtrl.text = loc.state;
+                              if (loc.pincode.isNotEmpty) pincodeCtrl.text = loc.pincode;
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('📍 Location permission granted & address autofilled!'),
+                                    backgroundColor: Color(0xFF4F46E5),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    icon: isDetectingLocation
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)),
+                          )
+                        : const Icon(Icons.my_location, size: 18, color: Color(0xFF4F46E5)),
+                    label: Text(
+                      isDetectingLocation ? 'Requesting Location & Autofilling...' : 'Use My Current Location 📍 (Autofill)',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5)),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+                      backgroundColor: const Color(0xFFEEF2FF),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
                 TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder())),
                 const SizedBox(height: 10),
                 TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'Mobile Number', border: OutlineInputBorder())),
