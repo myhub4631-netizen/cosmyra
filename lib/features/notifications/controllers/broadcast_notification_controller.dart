@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -14,9 +15,19 @@ final broadcastNotificationProvider =
 class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotificationModel>> {
   static const String _prefsKey = 'cosmyra_broadcast_notifications_v1';
   static const String _storagePath = 'broadcast_notifications.json';
+  Timer? _timer;
 
   BroadcastNotificationNotifier() : super(_defaultNotifications) {
     loadNotificationsFromCloud();
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+      loadNotificationsFromCloud();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   static const List<BroadcastNotificationModel> _defaultNotifications = [

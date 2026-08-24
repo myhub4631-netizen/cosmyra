@@ -430,9 +430,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               _buildCmsTile('App Collections', 'Manage app collections', Icons.style_outlined, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
               _buildCmsTile('Bottom Navigation', 'Manage bottom menu', Icons.format_list_bulleted_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
               _buildCmsTile('App Configurations', 'Manage app settings', Icons.settings_suggest_outlined, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
-              _buildCmsTile('Push Notifications', 'Manage push messages', Icons.notifications_none_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () {}),
-              _buildCmsTile('App Version', 'Manage app versions', Icons.system_update_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () {}),
-              _buildCmsTile('Splash & Onboarding', 'Manage app screens', Icons.smartphone_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () {}),
+              _buildCmsTile('Push Notifications', 'Manage push messages', Icons.notifications_none_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
+              _buildCmsTile('App Version', 'Manage app versions', Icons.system_update_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
+              _buildCmsTile('Splash & Onboarding', 'Manage app screens', Icons.smartphone_rounded, const Color(0xFFECFDF5), const Color(0xFF10B981), () => widget.onNavigateToView?.call(10)),
             ],
           ),
 
