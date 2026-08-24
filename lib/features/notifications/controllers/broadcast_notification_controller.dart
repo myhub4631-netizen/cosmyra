@@ -52,21 +52,24 @@ class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotifica
       }
     } catch (_) {}
 
-    // 2. Sync from Supabase Cloud Storage settings bucket
+    // 2. Sync from Supabase Cloud Storage product-images bucket
     try {
-      final freshUrl = '${SupabaseConfig.url}/storage/v1/object/public/settings/$_storagePath?t=${DateTime.now().millisecondsSinceEpoch}';
-      final response = await http.get(
-        Uri.parse(freshUrl),
-        headers: {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache'},
-      );
+      if (SupabaseConfig.isConfigured) {
+        final rawUrl = Supabase.instance.client.storage.from('product-images').getPublicUrl(_storagePath);
+        final freshUrl = '$rawUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+        final response = await http.get(
+          Uri.parse(freshUrl),
+          headers: {'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache'},
+        );
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final List decoded = jsonDecode(response.body);
-        final loaded = decoded.map((x) => BroadcastNotificationModel.fromJson(Map<String, dynamic>.from(x))).toList();
-        if (loaded.isNotEmpty) {
-          state = loaded;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_prefsKey, response.body);
+        if (response.statusCode == 200 && response.body.isNotEmpty) {
+          final List decoded = jsonDecode(response.body);
+          final loaded = decoded.map((x) => BroadcastNotificationModel.fromJson(Map<String, dynamic>.from(x))).toList();
+          if (loaded.isNotEmpty) {
+            state = loaded;
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString(_prefsKey, response.body);
+          }
         }
       }
     } catch (_) {}
@@ -112,12 +115,14 @@ class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotifica
     } catch (_) {}
 
     try {
-      final client = Supabase.instance.client;
-      await client.storage.from('settings').uploadBinary(
-            _storagePath,
-            utf8.encode(jsonStr),
-            fileOptions: const FileOptions(upsert: true, contentType: 'application/json'),
-          );
+      if (SupabaseConfig.isConfigured) {
+        final client = Supabase.instance.client;
+        await client.storage.from('product-images').uploadBinary(
+              _storagePath,
+              utf8.encode(jsonStr),
+              fileOptions: const FileOptions(upsert: true, contentType: 'application/json'),
+            );
+      }
     } catch (_) {}
   }
 }

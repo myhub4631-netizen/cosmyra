@@ -60,13 +60,16 @@ class DealsOffersNotifier extends StateNotifier<List<DealOfferModel>> {
 
   Future<void> loadDealsFromCloud() async {
     try {
-      final url = '${SupabaseConfig.url}/storage/v1/object/public/settings/deals_and_offers.json?t=${DateTime.now().millisecondsSinceEpoch}';
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List jsonList = jsonDecode(response.body);
-        final loaded = jsonList.map((item) => DealOfferModel.fromJson(item)).toList();
-        if (loaded.isNotEmpty) {
-          state = loaded;
+      if (SupabaseConfig.isConfigured) {
+        final rawUrl = Supabase.instance.client.storage.from('product-images').getPublicUrl('deals_and_offers.json');
+        final url = '$rawUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200 && response.body.isNotEmpty) {
+          final List jsonList = jsonDecode(response.body);
+          final loaded = jsonList.map((item) => DealOfferModel.fromJson(item)).toList();
+          if (loaded.isNotEmpty) {
+            state = loaded;
+          }
         }
       }
     } catch (_) {}
@@ -75,13 +78,15 @@ class DealsOffersNotifier extends StateNotifier<List<DealOfferModel>> {
   Future<void> saveDealsToCloud(List<DealOfferModel> newDeals) async {
     state = newDeals;
     try {
-      final String jsonStr = jsonEncode(newDeals.map((d) => d.toJson()).toList());
-      final client = Supabase.instance.client;
-      await client.storage.from('settings').uploadBinary(
-            'deals_and_offers.json',
-            utf8.encode(jsonStr),
-            fileOptions: const FileOptions(upsert: true, contentType: 'application/json'),
-          );
+      if (SupabaseConfig.isConfigured) {
+        final String jsonStr = jsonEncode(newDeals.map((d) => d.toJson()).toList());
+        final client = Supabase.instance.client;
+        await client.storage.from('product-images').uploadBinary(
+              'deals_and_offers.json',
+              utf8.encode(jsonStr),
+              fileOptions: const FileOptions(upsert: true, contentType: 'application/json'),
+            );
+      }
     } catch (_) {}
   }
 
