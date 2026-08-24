@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/utils/web_image_picker.dart';
 import '../controllers/brand_settings_controller.dart';
 import '../controllers/mobile_app_settings_controller.dart';
+import '../../notifications/controllers/broadcast_notification_controller.dart';
 
 class AdminMobileAppView extends ConsumerStatefulWidget {
   final int initialSubTab;
@@ -3463,26 +3464,143 @@ class _AdminMobileAppViewState extends ConsumerState<AdminMobileAppView> with Si
   }
 
   Widget _buildPushNotificationsTab() {
+    final notifications = ref.watch(broadcastNotificationProvider);
+    final notifier = ref.read(broadcastNotificationProvider.notifier);
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE2E8F0))),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Send Push Notifications', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Row(
+            children: const [
+              Icon(Icons.send_rounded, color: Color(0xFF10B981), size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Broadcast Push Notifications',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Broadcast real-time push announcements & offer notifications to all user devices.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _pushTitleCtrl,
+            decoration: InputDecoration(
+              labelText: 'Push Notification Title *',
+              hintText: 'e.g. 🌿 Special Weekend Offer!',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
           const SizedBox(height: 14),
-          TextField(controller: _pushTitleCtrl, decoration: InputDecoration(labelText: 'Push Title', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
-          const SizedBox(height: 14),
-          TextField(controller: _pushBodyCtrl, maxLines: 3, decoration: InputDecoration(labelText: 'Push Body', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
+          TextField(
+            controller: _pushBodyCtrl,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: 'Push Notification Message Body *',
+              hintText: 'e.g. Get flat 30% off on all Ayurvedic Hair Oils today!',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🚀 Push Notification broadcasted to all mobile app users!'), backgroundColor: Color(0xFF10B981)));
+            onPressed: () async {
+              final title = _pushTitleCtrl.text.trim();
+              final body = _pushBodyCtrl.text.trim();
+              if (title.isEmpty || body.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter both Title and Message Body!'), backgroundColor: Colors.red),
+                );
+                return;
+              }
+
+              await notifier.sendBroadcastNotification(title: title, body: body);
+              _pushTitleCtrl.clear();
+              _pushBodyCtrl.clear();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🚀 Push Notification broadcasted live to all users!'),
+                    backgroundColor: Color(0xFF10B981),
+                  ),
+                );
+              }
             },
             icon: const Icon(Icons.send_rounded, size: 18),
-            label: const Text('Broadcast Notification'),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), foregroundColor: Colors.white),
+            label: const Text('Broadcast Notification Now', style: TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
+
+          const SizedBox(height: 32),
+          const Divider(),
+          const SizedBox(height: 12),
+
+          // Broadcast History List
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Broadcast History 📜',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+              ),
+              if (notifications.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () => notifier.clearAllNotifications(),
+                  icon: const Icon(Icons.delete_sweep_outlined, size: 16, color: Colors.red),
+                  label: const Text('Clear History', style: TextStyle(color: Colors.red, fontSize: 12)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          if (notifications.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: Text('No broadcast notifications sent yet.')),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                final notif = notifications[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      backgroundColor: Color(0xFFECFDF5),
+                      child: Icon(Icons.notifications_active_rounded, color: Color(0xFF10B981), size: 20),
+                    ),
+                    title: Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text('${notif.body}\nSent: ${notif.sentAt.split("T").first}', style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                      onPressed: () => notifier.deleteNotification(notif.id),
+                    ),
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );

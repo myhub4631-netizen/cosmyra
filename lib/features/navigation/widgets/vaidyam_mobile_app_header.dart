@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../admin/controllers/brand_settings_controller.dart';
 import '../../admin/controllers/mobile_app_settings_controller.dart';
 import '../../cart/controllers/cart_controller.dart';
+import '../../notifications/controllers/broadcast_notification_controller.dart';
 import 'vaidyam_app_drawer_sheet.dart';
 
 class VaidyamMobileAppHeader extends ConsumerWidget {
@@ -97,7 +98,7 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
                 icon: const Icon(Icons.notifications_none_rounded, color: _textDark, size: 24),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                onPressed: () => _showNotificationsSheet(context),
+                onPressed: () => _showNotificationsSheet(context, ref),
               ),
               Positioned(
                 top: 4,
@@ -253,29 +254,76 @@ class VaidyamMobileAppHeader extends ConsumerWidget {
   }
 
   // Notifications Bottom Sheet
-  void _showNotificationsSheet(BuildContext context) {
+  void _showNotificationsSheet(BuildContext context, WidgetRef ref) {
+    final notifications = ref.read(broadcastNotificationProvider);
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) {
         return Container(
           padding: const EdgeInsets.all(20),
+          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Notifications 🔔', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
-              const SizedBox(height: 14),
-              ListTile(
-                leading: const Icon(Icons.local_shipping_outlined, color: Color(0xFF16A34A)),
-                title: const Text('Order Out for Delivery! 🚚'),
-                subtitle: const Text('Order #COS-9482 will be delivered today.'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Push Notifications 🔔', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _textDark)),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
+                ],
               ),
-              ListTile(
-                leading: const Icon(Icons.local_offer_outlined, color: _primaryPurple),
-                title: const Text('Special Offer: 20% OFF Hair Care! 🌿'),
-                subtitle: const Text('Use code BOTANICAL20 at checkout.'),
-              ),
+              const Divider(),
+              const SizedBox(height: 8),
+              if (notifications.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: Text('No active notifications at the moment.')),
+                )
+              else
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: notifications.length,
+                    itemBuilder: (context, index) {
+                      final notif = notifications[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(color: Color(0xFFEEF2FF), shape: BoxShape.circle),
+                              child: const Icon(Icons.notifications_active_rounded, color: _primaryPurple, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: _textDark)),
+                                  const SizedBox(height: 4),
+                                  Text(notif.body, style: const TextStyle(fontSize: 12, color: _textMuted, height: 1.35)),
+                                  const SizedBox(height: 6),
+                                  Text('Sent: ${notif.sentAt.split("T").first}', style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         );

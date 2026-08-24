@@ -506,7 +506,10 @@ class _AdminMasterScreenState extends ConsumerState<AdminMasterScreen> {
                 _expandedParentMenus.add(title);
               }
             }
-            if (index >= 0) {
+            if (title == 'Push Notifications') {
+              _activeViewIndex = 10;
+              _mobileAppSubTab = 6;
+            } else if (index >= 0) {
               _activeViewIndex = index;
             }
           });
