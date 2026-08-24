@@ -172,6 +172,8 @@ class ProductModel {
     return imageUrls.map((url) => appendVersionToUrl(url)).toList();
   }
 
+  double get rating => 4.8;
+
   ProductVariant get defaultVariant => variants.firstWhere(
         (v) => v.isDefault,
         orElse: () => variants.isNotEmpty

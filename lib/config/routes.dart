@@ -29,15 +29,39 @@ final router = GoRouter(
     ),
     GoRoute(
       path: '/shop',
-      builder: (context, state) => const VaidyamShopScreen(),
+      builder: (context, state) => VaidyamShopScreen(
+        initialCategory: state.uri.queryParameters['cat'] ?? state.uri.queryParameters['category'],
+        showCategoriesFirst: state.uri.queryParameters['view'] == 'categories',
+        searchParam: state.uri.queryParameters['q'],
+        initialSort: state.uri.queryParameters['sort'],
+      ),
+    ),
+    GoRoute(
+      path: '/catalog',
+      builder: (context, state) => VaidyamShopScreen(
+        initialCategory: state.uri.queryParameters['cat'] ?? state.uri.queryParameters['category'],
+        showCategoriesFirst: state.uri.queryParameters['view'] == 'categories',
+        searchParam: state.uri.queryParameters['q'],
+        initialSort: state.uri.queryParameters['sort'],
+      ),
     ),
     GoRoute(
       path: '/categories',
-      builder: (context, state) => const VaidyamShopScreen(),
+      builder: (context, state) => VaidyamShopScreen(
+        initialCategory: state.uri.queryParameters['cat'] ?? state.uri.queryParameters['category'],
+        showCategoriesFirst: true,
+        searchParam: state.uri.queryParameters['q'],
+        initialSort: state.uri.queryParameters['sort'],
+      ),
     ),
     GoRoute(
       path: '/category',
-      builder: (context, state) => const VaidyamShopScreen(),
+      builder: (context, state) => VaidyamShopScreen(
+        initialCategory: state.uri.queryParameters['cat'] ?? state.uri.queryParameters['category'],
+        showCategoriesFirst: state.uri.queryParameters['cat'] == null && state.uri.queryParameters['category'] == null,
+        searchParam: state.uri.queryParameters['q'],
+        initialSort: state.uri.queryParameters['sort'],
+      ),
     ),
     GoRoute(
       path: '/explore',

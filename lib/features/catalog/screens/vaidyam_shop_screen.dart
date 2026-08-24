@@ -13,7 +13,18 @@ import '../repositories/product_repository.dart';
 import '../widgets/product_image_widget.dart';
 
 class VaidyamShopScreen extends ConsumerStatefulWidget {
-  const VaidyamShopScreen({super.key});
+  final String? initialCategory;
+  final bool showCategoriesFirst;
+  final String? searchParam;
+  final String? initialSort;
+
+  const VaidyamShopScreen({
+    super.key,
+    this.initialCategory,
+    this.showCategoriesFirst = false,
+    this.searchParam,
+    this.initialSort,
+  });
 
   @override
   ConsumerState<VaidyamShopScreen> createState() => _VaidyamShopScreenState();
@@ -30,6 +41,22 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
   final Set<String> _selectedConcerns = {};
   String _sortBy = 'Popularity';
   bool _isGridView = true;
+  bool _showingCategoryView = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialCategory != null && widget.initialCategory!.isNotEmpty) {
+      _selectedCategory = widget.initialCategory;
+    }
+    if (widget.searchParam != null && widget.searchParam!.isNotEmpty) {
+      _searchController.text = widget.searchParam!;
+    }
+    if (widget.initialSort != null && widget.initialSort!.isNotEmpty) {
+      _sortBy = widget.initialSort!;
+    }
+    _showingCategoryView = widget.showCategoriesFirst;
+  }
 
   @override
   void dispose() {
@@ -81,21 +108,32 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
       return true;
     }).toList();
 
-    // Sorting
+    // Enhanced Sorting options
     if (_sortBy == 'Price: Low to High') {
       filteredProducts.sort((a, b) => a.defaultVariant.price.compareTo(b.defaultVariant.price));
+    } else if (_sortBy == 'Price: High to Low') {
+      filteredProducts.sort((a, b) => b.defaultVariant.price.compareTo(a.defaultVariant.price));
     } else if (_sortBy == 'Newest') {
       filteredProducts.sort((a, b) => b.id.compareTo(a.id));
+    } else if (_sortBy == 'Customer Rating') {
+      filteredProducts.sort((a, b) => b.rating.compareTo(a.rating));
+    } else if (_sortBy == 'Highest Discount') {
+      filteredProducts.sort((a, b) {
+        final discA = a.defaultVariant.mrp > 0 ? (a.defaultVariant.mrp - a.defaultVariant.price) / a.defaultVariant.mrp : 0;
+        final discB = b.defaultVariant.mrp > 0 ? (b.defaultVariant.mrp - b.defaultVariant.price) / b.defaultVariant.mrp : 0;
+        return discB.compareTo(discA);
+      });
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
     final isWide = screenWidth > 900;
 
-    if (screenWidth <= 768 && _selectedCategory == null) {
+    if (screenWidth <= 768 && _showingCategoryView) {
       return VaidyamMobileCategoryScreenWidget(
         onSelectCategory: (catId) {
           setState(() {
             _selectedCategory = catId;
+            _showingCategoryView = false;
           });
         },
       );
@@ -562,7 +600,14 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
                 child: DropdownButton<String>(
                   value: _sortBy,
                   style: const TextStyle(fontSize: 11, color: Color(0xFF374151), fontWeight: FontWeight.w500),
-                  items: ['Popularity', 'Price: Low to High', 'Price: High to Low', 'Newest']
+                  items: [
+                    'Popularity',
+                    'Price: Low to High',
+                    'Price: High to Low',
+                    'Newest',
+                    'Customer Rating',
+                    'Highest Discount',
+                  ]
                       .map((s) => DropdownMenuItem(value: s, child: Text(isWide ? 'Sort by: $s' : s)))
                       .toList(),
                   onChanged: (val) => setState(() => _sortBy = val ?? 'Popularity'),

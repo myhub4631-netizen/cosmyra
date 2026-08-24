@@ -198,7 +198,7 @@ class _VaidyamAppDrawerSheetState extends ConsumerState<VaidyamAppDrawerSheet> {
                         label: 'Categories',
                         onTap: () {
                           Navigator.pop(context);
-                          context.push('/shop');
+                          context.push('/categories');
                         },
                       ),
                       _buildMenuItem(
