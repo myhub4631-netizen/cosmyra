@@ -804,486 +804,89 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
                       SingleChildScrollView(
                         controller: _horizontalScrollController,
                         scrollDirection: Axis.horizontal,
-                        physics: const ClampingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            minWidth: 1150,
-                          ),
+                        physics: const BouncingScrollPhysics(),
+                        child: SizedBox(
+                          width: 1150,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Data Table Header Row
                               Container(
-                        color: const Color(0xFFFAFAFA),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 40,
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    if (isAllSelected) {
-                                      _selectedProductIds.clear();
-                                    } else {
-                                      _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
-                                    }
-                                  });
-                                },
-                                child: Icon(
-                                  isAllSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                                  size: 16,
-                                  color: isAllSelected ? const Color(0xFF4F46E5) : const Color(0xFF9CA3AF),
+                                color: const Color(0xFFFAFAFA),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 40,
+                                      child: InkWell(
+                                        onTap: () {
+                                          setState(() {
+                                            if (isAllSelected) {
+                                              _selectedProductIds.clear();
+                                            } else {
+                                              _selectedProductIds.addAll(filteredProducts.map((p) => p.id));
+                                            }
+                                          });
+                                        },
+                                        child: Icon(
+                                          isAllSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                                          size: 16,
+                                          color: isAllSelected ? const Color(0xFF4F46E5) : const Color(0xFF9CA3AF),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 260, child: Text('Product Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 160, child: Text('SKU / Product ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 130, child: Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 120, child: Text('Price', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 130, child: Text('Stock', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 90, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
+                                    const SizedBox(width: 220, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
+                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 260, child: Text('Product Details', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 160, child: Text('SKU / Product ID', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 130, child: Text('Category', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 120, child: Text('Price', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 130, child: Text('Stock', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 90, child: Text('Status', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)))),
-                            const SizedBox(width: 180, child: Text('Actions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6B7280)), textAlign: TextAlign.right)),
-                          ],
-                        ),
-                      ),
 
-                      const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                              const Divider(height: 1, color: Color(0xFFF3F4F6)),
 
-                      // Table Data Rows List
-                      filteredProducts.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.inventory_2_outlined, size: 48, color: Color(0xFF9CA3AF)),
-                                  const SizedBox(height: 12),
-                                  const Text('No products found in catalog.', style: TextStyle(color: Color(0xFF374151), fontWeight: FontWeight.bold, fontSize: 14)),
-                                  const SizedBox(height: 6),
-                                  const Text('Click "+ Add New Product" or "Import" to populate your store.', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    onPressed: () => _showBulkImportModal(context),
-                                    icon: const Icon(Icons.file_download_outlined, size: 16),
-                                    label: const Text('Load 5 Sample SKUs'),
-                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: filteredProducts.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                              itemBuilder: (context, index) {
-                                try {
-                                  final prod = filteredProducts[index];
-                                  final v = prod.defaultVariant;
-                                  final imageUrl = prod.imageUrls.isNotEmpty ? prod.imageUrls.first : '';
-                                  final isSelected = _selectedProductIds.contains(prod.id);
-
-                                return Container(
-                                  color: isSelected ? const Color(0xFFEEF2FF) : Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
+                              // Table Data Rows List
+                              if (filteredProducts.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.all(32),
+                                  child: Column(
                                     children: [
-                                      SizedBox(
-                                        width: 40,
-                                        child: InkWell(
-                                          onTap: () {
-                                            setState(() {
-                                              if (isSelected) {
-                                                _selectedProductIds.remove(prod.id);
-                                              } else {
-                                                _selectedProductIds.add(prod.id);
-                                              }
-                                            });
-                                          },
-                                          child: Icon(
-                                            isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                                            size: 16,
-                                            color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB),
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Product Image & Name & Variant (Width: 260)
-                                      SizedBox(
-                                        width: 260,
-                                        child: Row(
-                                          children: [
-                                            ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: SizedBox(
-                                                width: 44,
-                                                height: 44,
-                                                child: ProductImageWidget(imageUrl: imageUrl, fit: BoxFit.cover),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    prod.name,
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 3),
-                                                  Row(
-                                                    children: [
-                                                      Text(v.sizeLabel, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-                                                      if (prod.isFeatured) ...[
-                                                        const SizedBox(width: 6),
-                                                        Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                                          decoration: BoxDecoration(
-                                                            color: const Color(0xFFD1FAE5),
-                                                            borderRadius: BorderRadius.circular(4),
-                                                          ),
-                                                          child: const Text('Featured', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-                                                        ),
-                                                      ],
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // SKU / ID (Width: 160)
-                                      SizedBox(
-                                        width: 160,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF3F4F6),
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                v.sku,
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151), fontFamily: 'monospace'),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(prod.id, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), overflow: TextOverflow.ellipsis),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Category Pill (Width: 130)
-                                      SizedBox(
-                                        width: 130,
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: _getCategoryPillBg(prod.categoryId),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              prod.categoryId.replaceAll('cat-', '').toUpperCase(),
-                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _getCategoryPillTextColor(prod.categoryId)),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Price & MRP (Width: 120)
-                                      SizedBox(
-                                        width: 120,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text('₹${v.price.toInt()}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                                                if (v.mrp > v.price) ...[
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '₹${v.mrp.toInt()}',
-                                                    style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough),
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                            if (v.discountPercent > 0) ...[
-                                              const SizedBox(height: 2),
-                                              Text('${v.discountPercent.toInt()}% OFF', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Stock Units & Restock CTA (Width: 130)
-                                      SizedBox(
-                                        width: 130,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Text('${v.stock} Units', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
-                                                const SizedBox(width: 4),
-                                                InkWell(
-                                                  onTap: () => _showQuickRestockDialog(context, prod),
-                                                  child: const Icon(Icons.add_circle_outline, size: 14, color: Color(0xFF4F46E5)),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              v.stock > 0 ? 'In Stock' : 'Out of Stock',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Status Badge (Width: 90)
-                                      SizedBox(
-                                        width: 90,
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                            decoration: BoxDecoration(
-                                              color: v.stock > 0 ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              v.stock > 0 ? 'Active' : 'Inactive',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                                color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFF6B7280),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Actions (View, Edit, Delete & 3-dot Menu) (Width: 220)
-                                      SizedBox(
-                                        width: 220,
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            // View icon
-                                            Tooltip(
-                                              message: 'View Product Page',
-                                              child: InkWell(
-                                                onTap: () => context.push('/product/${prod.id}', extra: prod),
-                                                borderRadius: BorderRadius.circular(6),
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(5),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFF3F4F6),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                                                  ),
-                                                  child: const Icon(Icons.remove_red_eye_outlined, size: 14, color: Color(0xFF6B7280)),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            // Edit button
-                                            Tooltip(
-                                              message: 'Edit Product',
-                                              child: InkWell(
-                                                onTap: () => _showAddProductModal(context, prod),
-                                                borderRadius: BorderRadius.circular(6),
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFEEF2FF),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                    border: Border.all(color: const Color(0xFFC7D2FE)),
-                                                  ),
-                                                  child: const Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Icon(Icons.edit_outlined, size: 14, color: Color(0xFF4F46E5)),
-                                                      SizedBox(width: 3),
-                                                      Text('Edit', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            // Delete button
-                                            Tooltip(
-                                              message: 'Delete Product',
-                                              child: InkWell(
-                                                onTap: () => _showDeleteConfirmationDialog(context, prod),
-                                                borderRadius: BorderRadius.circular(6),
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFFEE2E2),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                    border: Border.all(color: const Color(0xFFFCA5A5)),
-                                                  ),
-                                                  child: const Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Icon(Icons.delete_outline, size: 14, color: Color(0xFFDC2626)),
-                                                      SizedBox(width: 3),
-                                                      Text('Delete', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            // 3-dots menu
-                                            PopupMenuButton<String>(
-                                              padding: EdgeInsets.zero,
-                                              icon: Container(
-                                                padding: const EdgeInsets.all(5),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xFFF3F4F6),
-                                                  borderRadius: BorderRadius.circular(6),
-                                                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                                                ),
-                                                child: const Icon(Icons.more_vert, size: 14, color: Color(0xFF4B5563)),
-                                              ),
-                                              tooltip: 'More Options',
-                                              onSelected: (action) {
-                                                switch (action) {
-                                                  case 'edit':
-                                                    _showAddProductModal(context, prod);
-                                                    break;
-                                                  case 'duplicate':
-                                                    _duplicateProduct(context, prod);
-                                                    break;
-                                                  case 'change_image':
-                                                    _showAddProductModal(context, prod);
-                                                    break;
-                                                  case 'restock':
-                                                    _showQuickRestockDialog(context, prod);
-                                                    break;
-                                                  case 'copy_sku':
-                                                    Clipboard.setData(ClipboardData(text: v.sku));
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text('Copied SKU "${v.sku}" to clipboard!')),
-                                                    );
-                                                    break;
-                                                  case 'view':
-                                                    context.push('/product/${prod.id}', extra: prod);
-                                                    break;
-                                                  case 'delete':
-                                                    _showDeleteConfirmationDialog(context, prod);
-                                                    break;
-                                                }
-                                              },
-                                              itemBuilder: (context) => <PopupMenuEntry<String>>[
-                                                const PopupMenuItem<String>(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.edit_outlined, size: 16, color: Color(0xFF4F46E5)),
-                                                      SizedBox(width: 8),
-                                                      Text('Edit Product', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'duplicate',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.control_point_duplicate_outlined, size: 16, color: Color(0xFFD97706)),
-                                                      SizedBox(width: 8),
-                                                      Text('Duplicate / Clone SKU', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'change_image',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.image_outlined, size: 16, color: Color(0xFF059669)),
-                                                      SizedBox(width: 8),
-                                                      Text('Change Image / Assets', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'restock',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF2563EB)),
-                                                      SizedBox(width: 8),
-                                                      Text('Quick Restock (+25)', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'copy_sku',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.copy_outlined, size: 16, color: Color(0xFF374151)),
-                                                      SizedBox(width: 8),
-                                                      Text('Copy SKU', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'view',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.remove_red_eye_outlined, size: 16, color: Color(0xFF6B7280)),
-                                                      SizedBox(width: 8),
-                                                      Text('View Product Page', style: TextStyle(fontSize: 12)),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  enabled: false,
-                                                  height: 1,
-                                                  child: Divider(height: 1, color: Color(0xFFE5E7EB)),
-                                                ),
-                                                const PopupMenuItem<String>(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.delete_outline, size: 16, color: Color(0xFFDC2626)),
-                                                      SizedBox(width: 8),
-                                                      Text('Delete Product', style: TextStyle(fontSize: 12, color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                      const Icon(Icons.inventory_2_outlined, size: 48, color: Color(0xFF9CA3AF)),
+                                      const SizedBox(height: 12),
+                                      const Text('No products found in catalog.', style: TextStyle(color: Color(0xFF374151), fontWeight: FontWeight.bold, fontSize: 14)),
+                                      const SizedBox(height: 6),
+                                      const Text('Click "+ Add New Product" or "Import" to populate your store.', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton.icon(
+                                        onPressed: () => _showBulkImportModal(context),
+                                        icon: const Icon(Icons.file_download_outlined, size: 16),
+                                        label: const Text('Load 5 Sample SKUs'),
+                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4F46E5), foregroundColor: Colors.white),
                                       ),
                                     ],
                                   ),
-                                );
-                            } catch (_) {
-                              return const SizedBox.shrink();
-                            }
-                          },
+                                )
+                              else
+                                Column(
+                                  children: List.generate(filteredProducts.length, (index) {
+                                    final prod = filteredProducts[index];
+                                    final isSelected = _selectedProductIds.contains(prod.id);
+                                    return Column(
+                                      children: [
+                                        _buildProductDataRow(prod, isSelected),
+                                        if (index < filteredProducts.length - 1)
+                                          const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                                      ],
+                                    );
+                                  }),
+                                ),
+                            ],
+                          ),
                         ),
-                        ],
                       ),
-                    ),
-                  ),
 
                       // Pagination Footer Bar
                       Padding(
@@ -1614,6 +1217,390 @@ class _AdminCatalogViewState extends ConsumerState<AdminCatalogView> {
           child: Text(badgeText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: badgeColor)),
         ),
       ],
+    );
+  }
+
+  Widget _buildProductDataRow(ProductModel prod, bool isSelected) {
+    final v = prod.defaultVariant;
+    final imageUrl = prod.imageUrls.isNotEmpty ? prod.imageUrls.first : '';
+
+    return Container(
+      color: isSelected ? const Color(0xFFEEF2FF) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    _selectedProductIds.remove(prod.id);
+                  } else {
+                    _selectedProductIds.add(prod.id);
+                  }
+                });
+              },
+              child: Icon(
+                isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                size: 16,
+                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFD1D5DB),
+              ),
+            ),
+          ),
+
+          // Product Image & Name & Variant (Width: 260)
+          SizedBox(
+            width: 260,
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: ProductImageWidget(imageUrl: imageUrl, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        prod.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF111827)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 3),
+                      Row(
+                        children: [
+                          Text(v.sizeLabel, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                          if (prod.isFeatured) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFD1FAE5),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text('Featured', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // SKU / ID (Width: 160)
+          SizedBox(
+            width: 160,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    v.sku,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF374151), fontFamily: 'monospace'),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(prod.id, style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)), overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+
+          // Category Pill (Width: 130)
+          SizedBox(
+            width: 130,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _getCategoryPillBg(prod.categoryId),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  prod.categoryId.replaceAll('cat-', '').toUpperCase(),
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _getCategoryPillTextColor(prod.categoryId)),
+                ),
+              ),
+            ),
+          ),
+
+          // Price & MRP (Width: 120)
+          SizedBox(
+            width: 120,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('₹${v.price.toInt()}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                    if (v.mrp > v.price) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '₹${v.mrp.toInt()}',
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF), decoration: TextDecoration.lineThrough),
+                      ),
+                    ],
+                  ],
+                ),
+                if (v.discountPercent > 0) ...[
+                  const SizedBox(height: 2),
+                  Text('${v.discountPercent.toInt()}% OFF', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                ],
+              ],
+            ),
+          ),
+
+          // Stock Units & Restock CTA (Width: 130)
+          SizedBox(
+            width: 130,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text('${v.stock} Units', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF111827))),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () => _showQuickRestockDialog(context, prod),
+                      child: const Icon(Icons.add_circle_outline, size: 14, color: Color(0xFF4F46E5)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  v.stock > 0 ? 'In Stock' : 'Out of Stock',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Status Badge (Width: 90)
+          SizedBox(
+            width: 90,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: v.stock > 0 ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  v.stock > 0 ? 'Active' : 'Inactive',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: v.stock > 0 ? const Color(0xFF059669) : const Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Actions (View, Edit, Delete & 3-dot Menu) (Width: 220)
+          SizedBox(
+            width: 220,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Tooltip(
+                  message: 'View Product Page',
+                  child: InkWell(
+                    onTap: () => context.push('/product/${prod.id}', extra: prod),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: const Icon(Icons.remove_red_eye_outlined, size: 14, color: Color(0xFF6B7280)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Edit Product',
+                  child: InkWell(
+                    onTap: () => _showAddProductModal(context, prod),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.edit_outlined, size: 14, color: Color(0xFF4F46E5)),
+                          SizedBox(width: 3),
+                          Text('Edit', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Delete Product',
+                  child: InkWell(
+                    onTap: () => _showDeleteConfirmationDialog(context, prod),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFFCA5A5)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.delete_outline, size: 14, color: Color(0xFFDC2626)),
+                          SizedBox(width: 3),
+                          Text('Delete', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                PopupMenuButton<String>(
+                  padding: EdgeInsets.zero,
+                  icon: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3F4F6),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE5E7EB)),
+                    ),
+                    child: const Icon(Icons.more_vert, size: 14, color: Color(0xFF4B5563)),
+                  ),
+                  tooltip: 'More Options',
+                  onSelected: (action) {
+                    switch (action) {
+                      case 'edit':
+                        _showAddProductModal(context, prod);
+                        break;
+                      case 'duplicate':
+                        _duplicateProduct(context, prod);
+                        break;
+                      case 'change_image':
+                        _showAddProductModal(context, prod);
+                        break;
+                      case 'restock':
+                        _showQuickRestockDialog(context, prod);
+                        break;
+                      case 'copy_sku':
+                        Clipboard.setData(ClipboardData(text: v.sku));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Copied SKU "${v.sku}" to clipboard!')),
+                        );
+                        break;
+                      case 'view':
+                        context.push('/product/${prod.id}', extra: prod);
+                        break;
+                      case 'delete':
+                        _showDeleteConfirmationDialog(context, prod);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 16, color: Color(0xFF4F46E5)),
+                          SizedBox(width: 8),
+                          Text('Edit Product', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'duplicate',
+                      child: Row(
+                        children: [
+                          Icon(Icons.control_point_duplicate_outlined, size: 16, color: Color(0xFFD97706)),
+                          SizedBox(width: 8),
+                          Text('Duplicate Product', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'restock',
+                      child: Row(
+                        children: [
+                          Icon(Icons.add_shopping_cart, size: 16, color: Color(0xFF059669)),
+                          SizedBox(width: 8),
+                          Text('Quick Restock (+25)', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'copy_sku',
+                      child: Row(
+                        children: [
+                          Icon(Icons.copy_rounded, size: 16, color: Color(0xFF3B82F6)),
+                          SizedBox(width: 8),
+                          Text('Copy SKU Code', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'view',
+                      child: Row(
+                        children: [
+                          Icon(Icons.open_in_new, size: 16, color: Color(0xFF6B7280)),
+                          SizedBox(width: 8),
+                          Text('View Product Page', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      enabled: false,
+                      height: 1,
+                      child: Divider(height: 1, color: Color(0xFFE5E7EB)),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, size: 16, color: Color(0xFFDC2626)),
+                          SizedBox(width: 8),
+                          Text('Delete Product', style: TextStyle(fontSize: 12, color: Color(0xFFDC2626), fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
