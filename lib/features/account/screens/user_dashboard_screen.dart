@@ -99,10 +99,20 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     return 'default';
   }
 
-  String _getAccountStorageKey(String prefix) {
+  String _resolveCleanEmail([String fallback = 'guest']) {
     final auth = ref.read(authControllerProvider);
     final user = ref.read(currentUserProvider);
-    final String email = (auth.userEmail ?? user?.email ?? 'guest').toLowerCase().trim();
+    if (auth.userEmail != null && auth.userEmail!.trim().isNotEmpty) {
+      return auth.userEmail!.trim().toLowerCase();
+    }
+    if (user?.email != null && user!.email!.trim().isNotEmpty) {
+      return user.email!.trim().toLowerCase();
+    }
+    return fallback.trim().toLowerCase();
+  }
+
+  String _getAccountStorageKey(String prefix) {
+    final String email = _resolveCleanEmail('guest');
     final String sanitized = email.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
     return 'cosmyra_${sanitized}_$prefix';
   }
@@ -247,9 +257,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     } catch (_) {}
 
     try {
-      final auth = ref.read(authControllerProvider);
-      final user = ref.read(currentUserProvider);
-      final String email = (auth.userEmail ?? user?.email ?? '').toLowerCase().trim();
+      final String email = _resolveCleanEmail('');
       if (email.isNotEmpty && !email.contains('guest')) {
         final cloudAddrs = await UserCloudSyncService.fetchUserAddressesFromCloud(email);
         if (cloudAddrs.isNotEmpty && mounted) {
@@ -270,8 +278,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
       await prefs.setString(_getAccountStorageKey('addresses_v3'), jsonEncode(_userAddresses));
 
       final auth = ref.read(authControllerProvider);
-      final user = ref.read(currentUserProvider);
-      final String email = (auth.userEmail ?? user?.email ?? '').toLowerCase().trim();
+      final String email = _resolveCleanEmail('');
 
       String aName = auth.userName ?? '';
       String aPhone = auth.userPhone ?? '';
