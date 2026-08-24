@@ -9,6 +9,11 @@ class UserCloudSyncService {
   static const String _addressesUrl =
       'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/public/product-images/settings/addresses.json';
 
+  static const String _uploadUsersUrl =
+      'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/users.json';
+  static const String _uploadAddressesUrl =
+      'https://tkwxkmmxweqrfdttkjfd.supabase.co/storage/v1/object/product-images/settings/addresses.json';
+
   /// Fetches all users from Supabase Storage `settings/users.json`
   static Future<List<Map<String, dynamic>>> fetchUsersFromCloud() async {
     try {
@@ -178,7 +183,7 @@ class UserCloudSyncService {
     // 5. Upload updated users.json & addresses.json to Supabase Storage
     try {
       final String anonKey = SupabaseConfig.anonKey;
-      final Uri usersPostUrl = Uri.parse(_usersUrl);
+      final Uri usersPostUrl = Uri.parse(_uploadUsersUrl);
       await http.post(
         usersPostUrl,
         headers: {
@@ -190,7 +195,7 @@ class UserCloudSyncService {
         body: json.encode(cloudUsers),
       );
 
-      final Uri addrPostUrl = Uri.parse(_addressesUrl);
+      final Uri addrPostUrl = Uri.parse(_uploadAddressesUrl);
       await http.post(
         addrPostUrl,
         headers: {

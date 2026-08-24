@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,15 +27,27 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
 
   List<Map<String, dynamic>> _registeredProfiles = [];
   bool _isLoadingProfiles = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchSupabaseProfiles();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        _fetchSupabaseProfiles(silent: true);
+      }
+    });
   }
 
-  Future<void> _fetchSupabaseProfiles() async {
-    if (mounted) setState(() => _isLoadingProfiles = true);
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchSupabaseProfiles({bool silent = false}) async {
+    if (!silent && mounted) setState(() => _isLoadingProfiles = true);
     final List<Map<String, dynamic>> allFetchedUsers = [];
 
     // 1. Fetch settings/users.json from Supabase Storage
