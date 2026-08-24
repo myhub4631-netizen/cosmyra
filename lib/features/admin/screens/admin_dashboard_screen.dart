@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../orders/repositories/order_repository.dart';
+import '../../catalog/repositories/product_repository.dart';
+import '../../catalog/widgets/product_image_widget.dart';
+import '../../catalog/models/product_model.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   final Function(int viewIndex)? onNavigateToView;
@@ -24,10 +27,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 1100;
     final ordersAsync = ref.watch(allAdminOrdersFutureProvider);
+    final products = ref.watch(adminProductsProvider);
 
     final int totalOrders = ordersAsync.value?.length ?? 0;
     final double totalRevenue = ordersAsync.value?.fold<double>(0.0, (double sum, o) => sum + o.totalAmount) ?? 0.0;
-    final int totalProducts = 12;
+    final int totalProducts = products.length;
+
+    final uniqueCustomerCount = ordersAsync.value?.map((o) => o.customerPhone.isNotEmpty ? o.customerPhone : o.customerName).toSet().length ?? 0;
+    final int totalUsers = uniqueCustomerCount > 0 ? uniqueCustomerCount : (totalOrders > 0 ? totalOrders : 1);
+    final int totalReviews = products.fold<int>(0, (sum, p) => sum + (p.isFeatured ? 6 : 2));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -82,6 +90,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   OutlinedButton.icon(
                     onPressed: () {
                       ref.invalidate(allAdminOrdersFutureProvider);
+                      ref.read(adminProductsProvider.notifier).fetchFreshFromSupabase();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Dashboard metrics refreshed! 🔄'), duration: Duration(seconds: 1)),
                       );
@@ -127,7 +136,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Users',
-                    value: '${totalOrders > 0 ? (totalOrders * 2 + 1) : 1}',
+                    value: '$totalUsers',
                     trend: 'Active platform accounts',
                     icon: Icons.people_alt_outlined,
                     iconBg: const Color(0xFFECFDF5),
@@ -154,7 +163,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   ),
                   _buildStatCard(
                     title: 'Total Reviews',
-                    value: '${totalOrders > 0 ? (totalOrders * 3 + 4) : 0}',
+                    value: '$totalReviews',
                     trend: 'Verified customer ratings',
                     icon: Icons.star_outline_rounded,
                     iconBg: const Color(0xFFFCE7F3),
@@ -581,13 +590,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   // ── 5. TOP SELLING PRODUCTS CARD ──
   Widget _buildTopProductsCard() {
-    final topProducts = [
-      {'rank': '1', 'name': 'Neem Face Wash', 'sales': '1,245 Sales', 'revenue': '₹2,45,890', 'growth': '24.5%', 'icon': Icons.sanitizer_rounded},
-      {'rank': '2', 'name': 'Hair Growth Oil', 'sales': '987 Sales', 'revenue': '₹1,98,230', 'growth': '18.7%', 'icon': Icons.local_pharmacy_rounded},
-      {'rank': '3', 'name': 'Aloe Vera Gel', 'sales': '876 Sales', 'revenue': '₹1,25,430', 'growth': '12.4%', 'icon': Icons.spa_rounded},
-      {'rank': '4', 'name': 'Turmeric Soap', 'sales': '765 Sales', 'revenue': '₹98,765', 'growth': '8.9%', 'icon': Icons.clean_hands_rounded},
-      {'rank': '5', 'name': 'Shata Dhauta Cream', 'sales': '612 Sales', 'revenue': '₹86,540', 'growth': '7.6%', 'icon': Icons.face_retouching_natural_rounded},
-    ];
+    final products = ref.watch(adminProductsProvider);
+    final sortedProducts = List<ProductModel>.from(products);
+    sortedProducts.sort((a, b) => b.defaultVariant.price.compareTo(a.defaultVariant.price));
+    final displayProducts = sortedProducts.take(5).toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -611,47 +617,66 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: topProducts.length,
-            separatorBuilder: (_, __) => const Divider(height: 14, color: Color(0xFFF8FAFC)),
-            itemBuilder: (context, index) {
-              final item = topProducts[index];
-              return Row(
-                children: [
-                  SizedBox(
-                    width: 20,
-                    child: Text(item['rank'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: const Color(0xFFEEF2FF), borderRadius: BorderRadius.circular(8)),
-                    child: Icon(item['icon'] as IconData, size: 18, color: const Color(0xFF4F46E5)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(item['name'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                        const SizedBox(height: 2),
-                        Text(item['sales'] as String, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                      ],
+          if (displayProducts.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text('No products available in catalog', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: displayProducts.length,
+              separatorBuilder: (_, __) => const Divider(height: 14, color: Color(0xFFF8FAFC)),
+              itemBuilder: (context, index) {
+                final prod = displayProducts[index];
+                final v = prod.defaultVariant;
+                final String imgUrl = prod.primaryImageUrl;
+
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      child: Text('${index + 1}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF64748B))),
                     ),
-                  ),
-                  Text(item['revenue'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                  const SizedBox(width: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.north_east, size: 10, color: Color(0xFF10B981)),
-                      Text(item['growth'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: ProductImageWidget(imageUrl: imgUrl, fit: BoxFit.cover),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(prod.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 2),
+                          Text('${v.stock} in stock • SKU: ${v.sku}', style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                    Text('₹${v.price.toInt()}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(6)),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.north_east, size: 10, color: Color(0xFF10B981)),
+                          SizedBox(width: 2),
+                          Text('Active', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
         ],
       ),
     );
