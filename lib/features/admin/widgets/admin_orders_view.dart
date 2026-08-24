@@ -156,8 +156,10 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
     final courierCtrl = TextEditingController(text: order['courier']?.toString() == '-' ? '' : order['courier']?.toString() ?? '');
     final awbCtrl = TextEditingController(text: order['awb']?.toString() == '-' ? '' : order['awb']?.toString() ?? '');
     final amountCtrl = TextEditingController(text: order['amount']?.toString() ?? '0');
-
     String paymentStatus = order['paymentStatus']?.toString().toLowerCase() ?? 'pending';
+    String paymentMethod = (order['paymentMethod']?.toString().trim().isNotEmpty == true)
+        ? order['paymentMethod'].toString().trim()
+        : 'Cash on Delivery';
     String fulfillmentStatus = order['status']?.toString().toLowerCase() ?? 'placed';
 
     showDialog(
@@ -208,13 +210,27 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                           ),
                           const SizedBox(width: 10),
                           Expanded(
-                            child: TextField(
-                              controller: amountCtrl,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Total Amount (₹)', border: OutlineInputBorder()),
+                            child: DropdownButtonFormField<String>(
+                              value: ['Cash on Delivery', 'UPI / QR', 'Credit / Debit Card', 'Net Banking', 'COD'].contains(paymentMethod)
+                                  ? (paymentMethod == 'COD' ? 'Cash on Delivery' : paymentMethod)
+                                  : 'Cash on Delivery',
+                              decoration: const InputDecoration(labelText: 'Payment Method', border: OutlineInputBorder()),
+                              items: const [
+                                DropdownMenuItem(value: 'Cash on Delivery', child: Text('Cash on Delivery (COD)')),
+                                DropdownMenuItem(value: 'UPI / QR', child: Text('UPI / QR Code')),
+                                DropdownMenuItem(value: 'Credit / Debit Card', child: Text('Credit / Debit Card')),
+                                DropdownMenuItem(value: 'Net Banking', child: Text('Net Banking')),
+                              ],
+                              onChanged: (val) => setModalState(() => paymentMethod = val ?? 'Cash on Delivery'),
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: amountCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Total Amount (₹)', border: OutlineInputBorder()),
                       ),
                       const SizedBox(height: 16),
                       const Text('Fulfillment & Shipping', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF4F46E5))),
@@ -257,6 +273,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
                       customerPhone: phoneCtrl.text.trim(),
                       shippingAddress: {'address': addressCtrl.text.trim()},
                       paymentStatus: paymentStatus,
+                      paymentMethod: paymentMethod,
                       fulfillmentStatus: fulfillmentStatus,
                       courierPartner: courierCtrl.text.trim(),
                       trackingNumber: awbCtrl.text.trim(),
@@ -443,6 +460,9 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
     final double subtotal = (order['subtotal'] as num?)?.toDouble() ?? amount;
     final double discount = (order['discount'] as num?)?.toDouble() ?? 0.0;
     final double shipping = (order['shippingCharge'] as num?)?.toDouble() ?? 0.0;
+    final String paymentMethod = order['paymentMethod']?.toString().trim().isNotEmpty == true
+        ? order['paymentMethod'].toString().trim()
+        : 'Cash on Delivery';
     final items = (order['items'] as List?) ?? [];
 
     final String itemsHtml = items.map((i) {
@@ -510,6 +530,7 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
       <div style="font-size: 16px; font-weight: bold; color: #0f172a;">$customerName</div>
       <div style="font-size: 13px; color: #475569;">Email: $customerEmail | Phone: $customerPhone</div>
       <div style="font-size: 13px; color: #475569; margin-top: 4px;">Address: $address</div>
+      <div style="font-size: 13px; color: #475569; margin-top: 4px;">Payment Method: <strong style="color: #4f46e5;">$paymentMethod</strong></div>
     </div>
 
     <div class="section-title">Order Items</div>
@@ -1192,6 +1213,65 @@ class _AdminOrdersViewState extends ConsumerState<AdminOrdersView> {
           const Text('Delivery Address', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
           const SizedBox(height: 6),
           Text(order['address'], style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280), height: 1.4)),
+
+          const SizedBox(height: 16),
+
+          // Payment Details Card
+          const Text('Payment Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF374151))),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Payment Method', style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          (order['paymentMethod'] ?? '').toString().toLowerCase().contains('cod') || (order['paymentMethod'] ?? '').toString().toLowerCase().contains('cash')
+                              ? Icons.payments_outlined
+                              : ((order['paymentMethod'] ?? '').toString().toLowerCase().contains('upi')
+                                  ? Icons.qr_code_scanner
+                                  : Icons.credit_card),
+                          size: 14,
+                          color: const Color(0xFF4F46E5),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          (order['paymentMethod'] ?? 'Cash on Delivery').toString(),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: order['paymentStatus'] == 'Captured' ? const Color(0xFFD1FAE5) : const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    order['paymentStatus'] == 'Captured' ? 'PAID ✅' : 'PENDING ⏳',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: order['paymentStatus'] == 'Captured' ? const Color(0xFF059669) : const Color(0xFFD97706),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 16),
 
