@@ -145,7 +145,7 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
       body: SingleChildScrollView(
         child: Column(
         children: [
-          const VaidyamHeaderWidget(activeTab: 'Shop', showValuePropositions: true),
+          const VaidyamHeaderWidget(activeTab: 'Shop', showValuePropositions: false),
 
           if (screenWidth <= 768 && _selectedCategory != null)
             Container(
@@ -527,52 +527,59 @@ class _VaidyamShopScreenState extends ConsumerState<VaidyamShopScreen> {
   ) {
     return Column(
       children: [
-        // Top Featured Promo Banner
-        Container(
-          width: double.infinity,
-          height: isWide ? 160 : 130,
-          padding: EdgeInsets.symmetric(horizontal: isWide ? 32 : 16, vertical: isWide ? 24 : 16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFF3E8FF), Color(0xFFFAF5FF), Color(0xFFF8FAFC)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        // First 4 Featured Products Section
+        if (allProducts.isNotEmpty) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
             ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('UP TO 40% OFF', style: TextStyle(color: Color(0xFF6366F1), fontWeight: FontWeight.bold, fontSize: 11)),
-                    const SizedBox(height: 4),
-                    Text('Summer Botanical Collection', style: TextStyle(fontFamily: 'serif', fontSize: isWide ? 26 : 18, fontWeight: FontWeight.w900, color: const Color(0xFF111827))),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6366F1),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Shop Now', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 20),
+                    SizedBox(width: 6),
+                    Text(
+                      'Featured Products ⭐',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF111827)),
+                    ),
+                    Spacer(),
+                    Text(
+                      'Top Formulations',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF6366F1)),
                     ),
                   ],
                 ),
-              ),
-              if (isWide)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset('assets/images/shampoo.jpg', width: 140, height: 110, fit: BoxFit.cover),
+                const SizedBox(height: 12),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final featured4 = allProducts.take(4).toList();
+                    final double cardWidth = isWide ? (constraints.maxWidth - 36) / 4 : (constraints.maxWidth - 12) / 2;
+                    return Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: featured4.map((p) {
+                        return SizedBox(
+                          width: cardWidth,
+                          child: _buildProductCard(context, p),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 20),
+        ],
 
         const SizedBox(height: 16),
 
