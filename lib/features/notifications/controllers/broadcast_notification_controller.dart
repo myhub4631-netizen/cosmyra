@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../config/supabase_config.dart';
 import '../models/broadcast_notification_model.dart';
+import '../services/local_notification_helper.dart';
 
 final broadcastNotificationProvider =
     StateNotifierProvider<BroadcastNotificationNotifier, List<BroadcastNotificationModel>>((ref) {
@@ -18,6 +19,7 @@ class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotifica
   Timer? _timer;
 
   BroadcastNotificationNotifier() : super(_defaultNotifications) {
+    LocalNotificationHelper.initialize();
     loadNotificationsFromCloud();
     _timer = Timer.periodic(const Duration(seconds: 10), (_) {
       loadNotificationsFromCloud();
@@ -77,6 +79,13 @@ class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotifica
           final List decoded = jsonDecode(response.body);
           final loaded = decoded.map((x) => BroadcastNotificationModel.fromJson(Map<String, dynamic>.from(x))).toList();
           if (loaded.isNotEmpty) {
+            // Check if there is a brand new top notification
+            if (state.isNotEmpty && loaded.first.id != state.first.id) {
+              LocalNotificationHelper.showNotification(
+                title: loaded.first.title,
+                body: loaded.first.body,
+              );
+            }
             state = loaded;
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString(_prefsKey, response.body);
@@ -103,6 +112,10 @@ class BroadcastNotificationNotifier extends StateNotifier<List<BroadcastNotifica
 
     final updated = [newNotif, ...state.where((n) => n.id != newNotif.id)];
     state = updated;
+    LocalNotificationHelper.showNotification(
+      title: newNotif.title,
+      body: newNotif.body,
+    );
     await _saveToLocalAndCloud(updated);
   }
 
