@@ -61,8 +61,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
               final name = row['full_name']?.toString() ?? (email.split('@').first);
               final phone = row['phone']?.toString() ?? '';
               if (idx >= 0) {
-                if (name.isNotEmpty) allFetchedUsers[idx]['name'] = name;
-                if (phone.isNotEmpty) allFetchedUsers[idx]['phone'] = phone;
+                if (name.isNotEmpty && (allFetchedUsers[idx]['name'] == null || allFetchedUsers[idx]['name'].toString().isEmpty || allFetchedUsers[idx]['name'].toString().contains('@'))) {
+                  allFetchedUsers[idx]['name'] = name;
+                }
+                if (phone.isNotEmpty && (allFetchedUsers[idx]['phone'] == null || allFetchedUsers[idx]['phone'].toString().isEmpty)) {
+                  allFetchedUsers[idx]['phone'] = phone;
+                }
               } else {
                 final isMaster = email.toLowerCase() == '1mdollar2027@gmail.com';
                 allFetchedUsers.add({
@@ -254,12 +258,12 @@ class _AdminCustomersViewState extends ConsumerState<AdminCustomersView> {
                 u['pincode'] = firstAddr['pincode'] ?? '';
                 u['addresses'] = decodedAddr.length;
               } else {
-                u['street'] = '';
-                u['address'] = '';
-                u['city'] = '';
-                u['state'] = '';
-                u['pincode'] = '';
-                u['addresses'] = 0;
+                u['street'] = u['street'] ?? '';
+                u['address'] = u['address'] ?? '';
+                u['city'] = u['city'] ?? '';
+                u['state'] = u['state'] ?? '';
+                u['pincode'] = u['pincode'] ?? '';
+                u['addresses'] = (u['street'] != null && (u['street'] as String).isNotEmpty) ? 1 : 0;
               }
             } else {
               u['street'] = u['street'] ?? '';

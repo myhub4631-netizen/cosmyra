@@ -671,9 +671,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     final nameCtrl = TextEditingController(text: editAddress?['name'] ?? '');
     final phoneCtrl = TextEditingController(text: editAddress?['phone'] ?? '');
     final streetCtrl = TextEditingController(text: editAddress?['street'] ?? '');
-    final cityCtrl = TextEditingController(text: editAddress?['city'] ?? 'Bangalore');
-    final stateCtrl = TextEditingController(text: editAddress?['state'] ?? 'Karnataka');
-    final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '560001');
+    final cityCtrl = TextEditingController(text: editAddress?['city'] ?? '');
+    final stateCtrl = TextEditingController(text: editAddress?['state'] ?? '');
+    final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '');
     String type = editAddress?['type'] ?? 'HOME';
 
     final bool isMobile = MediaQuery.of(context).size.width < 600;

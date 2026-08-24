@@ -409,23 +409,24 @@ class AuthController extends StateNotifier<AuthStateModel> {
       final cleanEmail = email.trim().toLowerCase();
       final idx = usersList.indexWhere((u) => u['email']?.toString().toLowerCase() == cleanEmail);
 
-      final Map<String, dynamic> userRecord = {
-        'id': idx >= 0 ? usersList[idx]['id'] : '#USR-000${usersList.length + 1}',
-        'name': name.isNotEmpty ? name : (cleanEmail.contains('@') ? cleanEmail.split('@').first : 'User'),
-        'email': cleanEmail,
-        'phone': phone.trim(),
-        'role': role,
-        'status': 'Active',
-        'isVip': role.contains('Admin') || (idx >= 0 ? usersList[idx]['isVip'] == true : false),
-        'isYou': false,
-        'orders': idx >= 0 ? (usersList[idx]['orders'] ?? 0) : 0,
-        'totalSpent': idx >= 0 ? (usersList[idx]['totalSpent'] ?? 0.0) : 0.0,
-        'joinedOn': idx >= 0 ? usersList[idx]['joinedOn'] : '24 Aug 2026',
-        'lastLogin': '24 Aug 2026',
-        'emailVerified': true,
-        'phoneVerified': phone.trim().isNotEmpty,
-        'addresses': idx >= 0 ? (usersList[idx]['addresses'] ?? 0) : 0,
+      final Map<String, dynamic> userRecord = idx >= 0 ? Map<String, dynamic>.from(usersList[idx]) : {
+        'id': '#USR-000${usersList.length + 1}',
+        'joinedOn': '24 Aug 2026',
       };
+
+      userRecord['name'] = name.isNotEmpty ? name : (cleanEmail.contains('@') ? cleanEmail.split('@').first : 'User');
+      userRecord['email'] = cleanEmail;
+      userRecord['phone'] = phone.trim();
+      userRecord['role'] = role;
+      userRecord['status'] = 'Active';
+      userRecord['isVip'] = role.contains('Admin') || (idx >= 0 ? usersList[idx]['isVip'] == true : false);
+      userRecord['isYou'] = false;
+      userRecord['orders'] = idx >= 0 ? (usersList[idx]['orders'] ?? 0) : 0;
+      userRecord['totalSpent'] = idx >= 0 ? (usersList[idx]['totalSpent'] ?? 0.0) : 0.0;
+      userRecord['lastLogin'] = '24 Aug 2026';
+      userRecord['emailVerified'] = true;
+      userRecord['phoneVerified'] = phone.trim().isNotEmpty;
+      userRecord['addresses'] = idx >= 0 ? (usersList[idx]['addresses'] ?? 0) : 0;
 
       if (idx >= 0) {
         usersList[idx] = userRecord;

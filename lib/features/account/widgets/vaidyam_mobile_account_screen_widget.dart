@@ -133,9 +133,9 @@ class _VaidyamMobileAccountScreenWidgetState extends ConsumerState<VaidyamMobile
     final nameCtrl = TextEditingController(text: editAddress?['name'] ?? '');
     final phoneCtrl = TextEditingController(text: editAddress?['phone'] ?? '');
     final streetCtrl = TextEditingController(text: editAddress?['street'] ?? editAddress?['address'] ?? '');
-    final cityCtrl = TextEditingController(text: editAddress?['city'] ?? 'Bangalore');
-    final stateCtrl = TextEditingController(text: editAddress?['state'] ?? 'Karnataka');
-    final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '560001');
+    final cityCtrl = TextEditingController(text: editAddress?['city'] ?? '');
+    final stateCtrl = TextEditingController(text: editAddress?['state'] ?? '');
+    final pincodeCtrl = TextEditingController(text: editAddress?['pincode'] ?? '');
     String type = editAddress?['type'] ?? 'HOME';
 
     showModalBottomSheet(
