@@ -334,7 +334,7 @@ class _VaidyamAppDrawerSheetState extends ConsumerState<VaidyamAppDrawerSheet> {
                         label: 'About Cosmyra',
                         onTap: () {
                           Navigator.pop(context);
-                          context.push('/account');
+                          context.push('/about');
                         },
                       ),
                       _buildMenuItem(

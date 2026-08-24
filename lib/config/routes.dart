@@ -20,6 +20,7 @@ import '../features/catalog/screens/vaidyam_shop_screen.dart';
 import '../features/catalog/screens/vaidyam_wishlist_screen.dart';
 import '../features/orders/screens/vaidyam_orders_screen.dart';
 import '../features/coupons/screens/deals_and_offers_screen.dart';
+import '../features/navigation/screens/about_cosmyra_screen.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -27,6 +28,14 @@ final router = GoRouter(
     GoRoute(
       path: '/',
       builder: (context, state) => const VaidyamHomeScreen(),
+    ),
+    GoRoute(
+      path: '/about',
+      builder: (context, state) => const AboutCosmyraScreen(),
+    ),
+    GoRoute(
+      path: '/about-us',
+      builder: (context, state) => const AboutCosmyraScreen(),
     ),
     GoRoute(
       path: '/deals',
