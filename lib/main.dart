@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'config/routes.dart';
 import 'config/supabase_config.dart';
 import 'config/theme/app_theme.dart';
+import 'core/widgets/app_back_navigation_guard_widget.dart';
 
 void main() async {
   usePathUrlStrategy();
@@ -33,7 +34,9 @@ class CosmyraApp extends StatelessWidget {
       routerConfig: router,
       builder: (context, child) {
         return SelectionArea(
-          child: child ?? const SizedBox.shrink(),
+          child: AppBackNavigationGuardWidget(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );
